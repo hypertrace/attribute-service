@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -24,8 +25,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.concurrent.TimeoutException;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadata;
+import org.hypertrace.core.attribute.service.v1.AttributeMetadataFilter;
 import org.hypertrace.core.attribute.service.v1.AttributeScope;
 import org.hypertrace.core.attribute.service.v1.AttributeServiceGrpc.AttributeServiceImplBase;
 import org.hypertrace.core.grpcutils.context.RequestContext;
@@ -171,5 +172,40 @@ class CachingAttributeClientTest {
         this.metadata1,
         this.grpcTestContext.call(() -> this.attributeClient.get("EVENT", "first").blockingGet()));
     verify(this.mockAttributeService, times(2)).findAttributes(any(), any());
+  }
+
+  @Test
+  void hasConfigurableCacheSize() throws Exception {
+    this.attributeClient =
+        CachingAttributeClient.builder()
+            .withExistingChannel(this.grpcChannel)
+            .withMaximumCacheContexts(1)
+            .build();
+
+    RequestContext otherMockContext = mock(RequestContext.class);
+    when(otherMockContext.getTenantId()).thenReturn(Optional.of("other tenant"));
+    this.grpcTestContext.call(() -> this.attributeClient.get("EVENT", "first").blockingGet());
+
+    // This call should evict the original call
+    Context.current()
+        .withValue(RequestContext.CURRENT, otherMockContext)
+        .call(() -> this.attributeClient.get("EVENT", "first").blockingGet());
+
+    // Rerunning this call now fire again, a third server call
+    this.grpcTestContext.call(() -> this.attributeClient.get("EVENT", "first").blockingGet());
+    verify(this.mockAttributeService, times(3)).findAttributes(any(), any());
+  }
+
+  @Test
+  void supportsAppliedFilter() throws Exception {
+    AttributeMetadataFilter attributeMetadataFilter =
+        AttributeMetadataFilter.newBuilder().addScope(AttributeScope.EVENT).build();
+    this.attributeClient =
+        CachingAttributeClient.builder()
+            .withExistingChannel(this.grpcChannel)
+            .withAttributeFilter(attributeMetadataFilter)
+            .build();
+    this.grpcTestContext.call(() -> this.attributeClient.get("EVENT", "first").blockingGet());
+    verify(this.mockAttributeService, times(1)).findAttributes(eq(attributeMetadataFilter), any());
   }
 }

@@ -7,8 +7,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.reactivex.rxjava3.observers.TestObserver;
-import java.util.Map;
 import java.util.Optional;
 import org.hypertrace.core.grpcutils.context.RequestContext;
 import org.junit.jupiter.api.Test;
@@ -40,32 +38,5 @@ class AttributeCacheContextKeyTest {
     assertNotEquals(
         AttributeCacheContextKey.forContext(this.mockRequestContext),
         AttributeCacheContextKey.forContext(matchingContext));
-  }
-
-  @Test
-  void addsGrpcContextToStreamedRequest() {
-    when(this.mockRequestContext.getRequestHeaders()).thenReturn(Map.of("foo", "bar"));
-    AttributeCacheContextKey cacheKey =
-        AttributeCacheContextKey.forContext(this.mockRequestContext);
-
-    TestObserver testObserver = new TestObserver<>();
-    cacheKey
-        .streamInContext(
-            streamObserver -> streamObserver.onNext(RequestContext.CURRENT.get().get("foo")))
-        .subscribe(testObserver);
-
-    testObserver.assertValue(Optional.of("bar"));
-  }
-
-  @Test
-  void propagatesErrorsFromStreamedRequest() {
-    AttributeCacheContextKey cacheKey =
-        AttributeCacheContextKey.forContext(this.mockRequestContext);
-    TestObserver testObserver = new TestObserver<>();
-    cacheKey
-        .streamInContext(streamObserver -> streamObserver.onError(new IllegalStateException()))
-        .subscribe(testObserver);
-
-    testObserver.assertError(IllegalStateException.class);
   }
 }

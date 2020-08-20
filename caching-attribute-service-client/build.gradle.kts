@@ -2,6 +2,7 @@ plugins {
   `java-library`
   jacoco
   id("org.hypertrace.jacoco-report-plugin")
+  id("org.hypertrace.publish-plugin")
 }
 
 dependencies {
@@ -10,8 +11,9 @@ dependencies {
   api("io.grpc:grpc-api:1.31.1")
 
   implementation("io.grpc:grpc-stub:1.31.1")
-  implementation("org.hypertrace.core.grpcutils:grpc-client-utils:0.1.4")
-  implementation("org.hypertrace.core.grpcutils:grpc-context-utils:0.1.4")
+  implementation("org.hypertrace.core.grpcutils:grpc-client-utils:0.2.0")
+  implementation("org.hypertrace.core.grpcutils:grpc-client-rx-utils:0.2.0")
+  implementation("org.hypertrace.core.grpcutils:grpc-context-utils:0.2.0")
   implementation("com.google.guava:guava:29.0-jre")
 
   testImplementation("org.junit.jupiter:junit-jupiter:5.6.2")

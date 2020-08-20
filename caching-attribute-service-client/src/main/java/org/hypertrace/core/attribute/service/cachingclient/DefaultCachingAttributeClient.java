@@ -58,7 +58,7 @@ class DefaultCachingAttributeClient implements CachingAttributeClient {
   }
 
   private Single<Table<String, String, AttributeMetadata>> loadTable(AttributeCacheContextKey key) {
-    return key.<AttributeMetadata>streamInContext(
+    return key.getExecutionContext().<AttributeMetadata>stream(
             streamObserver ->
                 this.attributeServiceClient.findAttributes(this.attributeFilter, streamObserver))
         .toList()

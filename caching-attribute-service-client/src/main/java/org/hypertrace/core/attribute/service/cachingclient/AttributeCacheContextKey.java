@@ -1,13 +1,8 @@
 package org.hypertrace.core.attribute.service.cachingclient;
 
-import static java.util.Objects.isNull;
-
-import io.grpc.stub.StreamObserver;
-import io.reactivex.rxjava3.core.Observable;
 import java.util.Objects;
-import java.util.function.Consumer;
 import javax.annotation.Nonnull;
-import org.hypertrace.core.grpcutils.client.GrpcClientRequestContextUtil;
+import org.hypertrace.core.grpcutils.client.rx.GrpcRxExecutionContext;
 import org.hypertrace.core.grpcutils.context.RequestContext;
 
 class AttributeCacheContextKey {
@@ -16,30 +11,21 @@ class AttributeCacheContextKey {
   }
 
   static AttributeCacheContextKey forContext(RequestContext context) {
-    assert !isNull(context) : "RequestContext must be set to use Attribute Client";
-    return new AttributeCacheContextKey(context);
+    return new AttributeCacheContextKey(Objects.requireNonNull(context));
   }
 
   private static final String DEFAULT_IDENTITY = "default";
 
-  private final RequestContext requestContext;
+  private final GrpcRxExecutionContext executionContext;
   private final String identity;
 
   private AttributeCacheContextKey(@Nonnull RequestContext requestContext) {
-    this.requestContext = requestContext;
+    this.executionContext = GrpcRxExecutionContext.forContext(requestContext);
     this.identity = requestContext.getTenantId().orElse(DEFAULT_IDENTITY);
   }
 
-  public <T> Observable<T> streamInContext(Consumer<StreamObserver<T>> requestExecutor) {
-    return Observable.create(
-        emitter ->
-            this.runInContext(
-                () -> requestExecutor.accept(new StreamingClientResponseObserver<>(emitter))));
-  }
-
-  private void runInContext(Runnable runnable) {
-    GrpcClientRequestContextUtil.executeWithHeadersContext(
-        requestContext.getRequestHeaders(), runnable);
+  public GrpcRxExecutionContext getExecutionContext() {
+    return executionContext;
   }
 
   @Override
