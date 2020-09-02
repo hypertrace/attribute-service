@@ -5,7 +5,8 @@ Attribute service provides CRUD operations for the attributes in Hypertrace.
 It fetches all attributes relevant to the scope of what is being shown on UI. The concept of Attributes helps build a generic framework of communication between the UI and backend.
 
 ## What are Attributes?
-An attribute represents a piece of data that's present in Hypertrace that's available for querying. It is a highly generic building block of what queries/show/display/represent in the UI. Attribute metadata gives the type of the data, kind of aggregations allowed on it, services which serve that attribute, etc.
+An attribute is a granular piece of information that is present in Hypertrace and available for querying/displaying in the UI. An attribute encapsulates information like 1) the type of the data, 2) kind of aggregations allowed on it, 3) underlying service/source that can serve this data etc.
+This helps in building a generic framework of communication between the UI and the backend and also assists the backend to fetch data from the appropriate sources in a generic way.
 
 Ex.
 ```
@@ -44,7 +45,6 @@ The Attribute service uses gradlew to compile/install/distribute. Gradle wrapper
 
 ## Docker Image Source:
 - [DockerHub > Attribute service](https://hub.docker.com/r/hypertrace/attribute-service)
-
 
 
 
