@@ -1,4 +1,4 @@
-# Attribute service
+# Attribute Service
 
 Attribute service provides CRUD operations for the attributes in Hypertrace.
 
@@ -29,7 +29,7 @@ An initial list of attributes needed by Hypertrace are seeded from `helm/configs
 
 Attribute service is a part of query architecture in Hypertrace and here is the use of it in context of its callers: [hypertrace-graphql](https://github.com/hypertrace/hypertrace-graphql) and [gateway-service](https://github.com/hypertrace/gateway-service). 
 
-| ![space-1.jpg](https://hypertrace-docs.s3.amazonaws.com/HT-query-architecture.png) | 
+| ![space-1.jpg](https://hypertrace-docs.s3.amazonaws.com/HT-query-arch.png) | 
 |:--:| 
 | *Hypertrace Query Architecture* |
 
