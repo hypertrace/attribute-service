@@ -16,6 +16,9 @@ scope: API_TRACE,
 sources: [QS],
 type: ATTRIBUTE
 ```
+While hypertrace offers a simple service model, it also permits storing certain fields in different backends. Attributes include tags to help locate the service hosting their corresponding data.
+
+For example, `apiName` is generated from raw trace data streams. `sources: [QS]`  communicates this, as **Q**uery **S**ervice is the api that queries that data (via Pinot).
 
 You can check out structure of attribute [here](https://github.com/hypertrace/attribute-service/blob/main/attribute-service-api/src/main/proto/org/hypertrace/core/attribute/service/v1/attribute_metadata.proto).
 
