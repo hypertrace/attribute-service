@@ -25,7 +25,7 @@ You can check out structure of attribute [here](https://github.com/hypertrace/at
 ### How are attributes created?
 An initial list of attributes needed by Hypertrace are seeded from `helm/configs` but they can also be dynamically registered and queried using the APIs of AttributeService.
 
-## How do we use Attribute service
+## Description
 
 Attribute service is a part of query architecture in Hypertrace and here is the use of it in context of its callers: [hypertrace-graphql](https://github.com/hypertrace/hypertrace-graphql) and [gateway-service](https://github.com/hypertrace/gateway-service). 
 
