@@ -56,6 +56,9 @@ To test your image using the docker-compose setup follow the steps:
 
 - Commit you changes to a branch say `attribute-service-test`.
 - Go to [hypertrace-service](https://github.com/hypertrace/hypertrace-service) and checkout the above branch in the submodule.
+```
+cd attribute-service && git checkout attribute-service-test && cd ..
+```
 - Change tag for `hypertrace-service` from `:main` to `:test` in [docker-compose file](https://github.com/hypertrace/hypertrace/blob/main/docker/docker-compose.yml) like this.
 
 ```yaml
