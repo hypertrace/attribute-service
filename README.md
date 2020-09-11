@@ -73,11 +73,6 @@ and then run `docker-compose up` to test the setup.
 ## Docker Image Source:
 - [DockerHub > Attribute service](https://hub.docker.com/r/hypertrace/attribute-service)
 
-## Contributing
-see [CONTRIBUTING](/CONTRIBUTING.md).
-
-## Code of conduct
-see [Code of conduct](https://github.com/hypertrace/hypertrace/blob/hypertrace/code_of_conduct.md).
 
 
 
