@@ -27,7 +27,12 @@ abstract class AbstractAttributeProjection<R> implements AttributeProjection {
       AttributeKind attributeKind = this.argumentKinds.get(argumentIndex);
       Object unwrappedArgument =
           ValueCoercer.fromLiteral(argumentLiteral, attributeKind)
-          .orElseThrow(() -> new IllegalArgumentException(String.format("Projection argument %s at index %d could not be converted to expected type %s", argumentLiteral, argumentIndex, attributeKind)))
+              .orElseThrow(
+                  () ->
+                      new IllegalArgumentException(
+                          String.format(
+                              "Projection argument %s at index %d could not be converted to expected type %s",
+                              argumentLiteral, argumentIndex, attributeKind)));
 
       unwrappedArguments.set(index, unwrappedArgument);
     }
