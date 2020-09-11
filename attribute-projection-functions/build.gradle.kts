@@ -6,8 +6,10 @@ plugins {
 }
 
 dependencies {
-  api(project(":attribute-service-api"))
+  api("com.google.code.findbugs:jsr305:3.0.2")
   implementation("com.github.f4b6a3:uuid-creator:2.7.7")
+
+  testImplementation("org.junit.jupiter:junit-jupiter:5.6.2")
 }
 
 tasks.test {
