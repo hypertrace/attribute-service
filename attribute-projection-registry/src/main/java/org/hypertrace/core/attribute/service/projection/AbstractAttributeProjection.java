@@ -3,7 +3,6 @@ package org.hypertrace.core.attribute.service.projection;
 import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import org.hypertrace.core.attribute.service.v1.AttributeKind;
 import org.hypertrace.core.attribute.service.v1.LiteralValue;
 
@@ -23,8 +22,13 @@ abstract class AbstractAttributeProjection<R> implements AttributeProjection {
     Preconditions.checkArgument(arguments.size() == argumentKinds.size());
     List<Object> unwrappedArguments = new ArrayList<>(argumentKinds.size());
     for (int index = 0; index < arguments.size(); index++) {
-      Optional<?> unwrappedArgument =
-          ValueCoercer.fromLiteral(arguments.get(index), this.argumentKinds.get(index));
+      int argumentIndex = index;
+      LiteralValue argumentLiteral = arguments.get(argumentIndex);
+      AttributeKind attributeKind = this.argumentKinds.get(argumentIndex);
+      Object unwrappedArgument =
+          ValueCoercer.fromLiteral(argumentLiteral, attributeKind)
+          .orElseThrow(() -> new IllegalArgumentException(String.format("Projection argument %s at index %d could not be converted to expected type %s", argumentLiteral, argumentIndex, attributeKind)))
+
       unwrappedArguments.set(index, unwrappedArgument);
     }
     Object unwrappedResult = this.doUnwrappedProjection(unwrappedArguments);
