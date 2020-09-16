@@ -26,7 +26,6 @@ class ValueCoercer {
       case TYPE_BOOL:
         return extractBooleanValue(value);
       case TYPE_STRING:
-      case TYPE_BYTES: // Treating bytes as equivalent to string
         return extractStringValue(value);
       default:
         return Optional.empty();
@@ -43,7 +42,14 @@ class ValueCoercer {
     if (isAssignableToAnyOfClasses(value.getClass(), Boolean.class)) {
       return toLiteral((boolean) value, attributeKind);
     }
-    if (isAssignableToAnyOfClasses(value.getClass(), Long.class, Integer.class, BigInteger.class, Double.class, Float.class, BigDecimal.class)) {
+    if (isAssignableToAnyOfClasses(
+        value.getClass(),
+        Long.class,
+        Integer.class,
+        BigInteger.class,
+        Double.class,
+        Float.class,
+        BigDecimal.class)) {
       return toLiteral((Number) value, attributeKind);
     }
     if (isAssignableToAnyOfClasses(value.getClass(), TemporalAccessor.class)) {
@@ -90,6 +96,8 @@ class ValueCoercer {
     switch (attributeKind) {
       case TYPE_STRING:
         return Optional.of(stringLiteral(instant.toString()));
+      case TYPE_DOUBLE:
+        return Optional.of(doubleLiteral(instant.toEpochMilli()));
       case TYPE_INT64:
       case TYPE_TIMESTAMP:
         return Optional.of(longLiteral(instant.toEpochMilli()));
@@ -102,9 +110,12 @@ class ValueCoercer {
     switch (attributeKind) {
       case TYPE_DOUBLE:
         return Optional.of(doubleLiteral(numberValue));
-      case TYPE_TIMESTAMP:
-      case TYPE_INT64: // Timestamp and long both convert the same
+      case TYPE_INT64:
         return Optional.of(longLiteral(numberValue));
+      case TYPE_TIMESTAMP:
+        return numberValue.longValue() >= 0
+            ? Optional.of(longLiteral(numberValue))
+            : Optional.empty();
       case TYPE_STRING:
         return Optional.of(stringLiteral(String.valueOf(numberValue)));
       default:
@@ -141,7 +152,7 @@ class ValueCoercer {
   private static Optional<Long> extractLongValue(LiteralValue value) {
     switch (value.getValueCase()) {
       case FLOAT_VALUE:
-        return Optional.of(Double.valueOf(value.getFloatValue()).longValue());
+        return Optional.of((long) value.getFloatValue());
       case INT_VALUE:
         return Optional.of(value.getIntValue());
       case STRING_VALUE:
@@ -156,7 +167,7 @@ class ValueCoercer {
       case FLOAT_VALUE:
         return Optional.of(value.getFloatValue());
       case INT_VALUE:
-        return Optional.of(Long.valueOf(value.getIntValue()).doubleValue());
+        return Optional.of((double) value.getIntValue());
       case STRING_VALUE:
         return tryParseDouble(value.getStringValue());
       default:

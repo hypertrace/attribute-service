@@ -34,13 +34,13 @@ abstract class AbstractAttributeProjection<R> implements AttributeProjection {
                               "Projection argument %s at index %d could not be converted to expected type %s",
                               argumentLiteral, argumentIndex, attributeKind)));
 
-      unwrappedArguments.set(index, unwrappedArgument);
+      unwrappedArguments.add(argumentIndex, unwrappedArgument);
     }
     Object unwrappedResult = this.doUnwrappedProjection(unwrappedArguments);
     return ValueCoercer.toLiteral(unwrappedResult, this.resultKind)
         .orElseThrow(
             () ->
-                new IllegalArgumentException(
+                new UnsupportedOperationException(
                     String.format(
                         "Projection result %s could not be converted to expected type %s",
                         unwrappedResult, this.resultKind)));
