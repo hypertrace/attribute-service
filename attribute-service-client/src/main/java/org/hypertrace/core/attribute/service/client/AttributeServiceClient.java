@@ -1,10 +1,12 @@
 package org.hypertrace.core.attribute.service.client;
 
 import io.grpc.Channel;
+import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import org.hypertrace.core.attribute.service.client.config.AttributeServiceClientConfig;
 import org.hypertrace.core.attribute.service.v1.AttributeCreateRequest;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadata;
@@ -93,5 +95,13 @@ public class AttributeServiceClient {
   public void deleteSourceMetadata(
       Map<String, String> headers, AttributeSourceMetadataDeleteRequest req) {
     execute(headers, () -> blockingStub.deleteSourceMetadata(req));
+  }
+
+  public void shutDown() throws InterruptedException {
+    Channel channel = blockingStub.getChannel();
+    if(channel instanceof ManagedChannel) {
+      ManagedChannel managedChannel = (ManagedChannel) channel;
+      managedChannel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
+    }
   }
 }
