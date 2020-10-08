@@ -1,13 +1,9 @@
 package org.hypertrace.core.attribute.service.client;
 
 import io.grpc.Channel;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
-import org.hypertrace.core.attribute.service.client.config.AttributeServiceClientConfig;
 import org.hypertrace.core.attribute.service.v1.AttributeCreateRequest;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadata;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadataFilter;
@@ -20,7 +16,7 @@ import org.hypertrace.core.grpcutils.client.RequestContextClientCallCredsProvide
 /** Client for accessing the AttributeService This is a proto based implementation */
 public class AttributeServiceClient {
   private final AttributeServiceGrpc.AttributeServiceBlockingStub blockingStub;
-  
+
   public AttributeServiceClient(Channel channel) {
     this.blockingStub =
         AttributeServiceGrpc.newBlockingStub(channel)
