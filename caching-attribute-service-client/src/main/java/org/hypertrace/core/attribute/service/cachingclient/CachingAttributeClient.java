@@ -20,8 +20,8 @@ public interface CachingAttributeClient {
 
   Single<List<AttributeMetadata>> getAll();
 
-  static Builder builder(Channel channel) {
-    return new Builder(channel);
+  static Builder builder(@Nonnull Channel channel) {
+    return new Builder(Objects.requireNonNull(channel));
   }
 
   final class Builder {
@@ -37,10 +37,6 @@ public interface CachingAttributeClient {
     }
 
     public CachingAttributeClient build() {
-      Objects.requireNonNull(
-          this.channel,
-          "Channel must be defined with either CachingAttributeClientBuilder.withNewChannel or CachingAttributeClientBuilder.withExistingChannel");
-
       return new DefaultCachingAttributeClient(
           this.channel,
           this.callCredentials,
