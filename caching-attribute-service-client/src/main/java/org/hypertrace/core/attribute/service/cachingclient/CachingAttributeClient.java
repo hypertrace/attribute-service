@@ -2,7 +2,6 @@ package org.hypertrace.core.attribute.service.cachingclient;
 
 import io.grpc.CallCredentials;
 import io.grpc.Channel;
-import io.grpc.ManagedChannelBuilder;
 import io.reactivex.rxjava3.core.Single;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -21,17 +20,21 @@ public interface CachingAttributeClient {
 
   Single<List<AttributeMetadata>> getAll();
 
-  static Builder builder() {
-    return new Builder();
+  static Builder builder(Channel channel) {
+    return new Builder(channel);
   }
 
   final class Builder {
+    private final Channel channel;
     private int maxCacheContexts = 100;
     private Duration cacheExpiration = Duration.of(15, ChronoUnit.MINUTES);
-    private Channel channel;
     private CallCredentials callCredentials =
         RequestContextClientCallCredsProviderFactory.getClientCallCredsProvider().get();
     private AttributeMetadataFilter attributeFilter = AttributeMetadataFilter.getDefaultInstance();
+
+    private Builder(Channel channel) {
+      this.channel = channel;
+    }
 
     public CachingAttributeClient build() {
       Objects.requireNonNull(
@@ -44,30 +47,6 @@ public interface CachingAttributeClient {
           this.maxCacheContexts,
           this.cacheExpiration,
           this.attributeFilter);
-    }
-
-    /**
-     * Use a new channel for attribute queries created with the provided host and port. Replaces any
-     * channel set.
-     *
-     * @param host
-     * @param port
-     * @return
-     */
-    public Builder withNewChannel(String host, int port) {
-      this.channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
-      return this;
-    }
-
-    /**
-     * Use the provided channel to query attributes. Replaces any channel set.
-     *
-     * @param channel
-     * @return
-     */
-    public Builder withExistingChannel(@Nonnull Channel channel) {
-      this.channel = channel;
-      return this;
     }
 
     /**
