@@ -20,15 +20,7 @@ import org.hypertrace.core.grpcutils.client.RequestContextClientCallCredsProvide
 /** Client for accessing the AttributeService This is a proto based implementation */
 public class AttributeServiceClient {
   private final AttributeServiceGrpc.AttributeServiceBlockingStub blockingStub;
-
-  public AttributeServiceClient(String host, int port) {
-    this(ManagedChannelBuilder.forAddress(host, port).usePlaintext().build());
-  }
-
-  public AttributeServiceClient(AttributeServiceClientConfig attributeServiceClientConfig) {
-    this(attributeServiceClientConfig.getHost(), attributeServiceClientConfig.getPort());
-  }
-
+  
   public AttributeServiceClient(Channel channel) {
     this.blockingStub =
         AttributeServiceGrpc.newBlockingStub(channel)
@@ -95,13 +87,5 @@ public class AttributeServiceClient {
   public void deleteSourceMetadata(
       Map<String, String> headers, AttributeSourceMetadataDeleteRequest req) {
     execute(headers, () -> blockingStub.deleteSourceMetadata(req));
-  }
-
-  public void shutDown() throws InterruptedException {
-    Channel channel = blockingStub.getChannel();
-    if(channel instanceof ManagedChannel) {
-      ManagedChannel managedChannel = (ManagedChannel) channel;
-      managedChannel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
-    }
   }
 }
