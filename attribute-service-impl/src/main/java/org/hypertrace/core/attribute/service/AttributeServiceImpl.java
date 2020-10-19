@@ -332,7 +332,7 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
 
   private Query getQueryForFilter(
       String tenantId, AttributeMetadataFilter attributeMetadataFilter) {
-    List<String> scopeFilterRequest =
+    List<String> scopeFilterList =
         Stream.concat(
                 attributeMetadataFilter.getScopeStringList().stream(),
                 attributeMetadataFilter.getScopeList().stream().map(AttributeScope::name))
@@ -347,10 +347,10 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
       andFilters.add(new Filter(Filter.Op.IN, ATTRIBUTE_FQN_KEY, fqnFilterRequest));
     }
 
-    if (!scopeFilterRequest.isEmpty()) {
+    if (!scopeFilterList.isEmpty()) {
       andFilters.add(
-          new Filter(Filter.Op.IN, ATTRIBUTE_SCOPE_STRING_KEY, scopeFilterRequest)
-              .or(new Filter(Filter.Op.IN, ATTRIBUTE_SCOPE_KEY, scopeFilterRequest)));
+          new Filter(Filter.Op.IN, ATTRIBUTE_SCOPE_STRING_KEY, scopeFilterList)
+              .or(new Filter(Filter.Op.IN, ATTRIBUTE_SCOPE_KEY, scopeFilterList)));
     }
 
     if (!keyFilterRequest.isEmpty()) {
