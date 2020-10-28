@@ -14,7 +14,7 @@ dependencies {
   implementation("org.hypertrace.core.grpcutils:grpc-client-utils:0.2.0")
   implementation("org.hypertrace.core.grpcutils:grpc-client-rx-utils:0.2.0")
   implementation("org.hypertrace.core.grpcutils:grpc-context-utils:0.2.0")
-  implementation("com.google.guava:guava:29.0-jre")
+  implementation("com.google.guava:guava:30.0-jre")
 
   testImplementation("org.junit.jupiter:junit-jupiter:5.6.2")
   testImplementation("org.mockito:mockito-core:3.5.0")

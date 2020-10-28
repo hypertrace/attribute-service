@@ -84,7 +84,9 @@ commands:
   docker_login:
     description: "Login to dockerhub with readonly credentials"
     steps:
-      - run: echo $DOCKERHUB_PASSWORD | docker login --username $DOCKERHUB_USERNAME --password-stdin
+      - run:
+          name: Dockerhub login
+          command: echo $DOCKERHUB_PASSWORD | docker login --username $DOCKERHUB_USERNAME --password-stdin
 
 jobs:
   build:
