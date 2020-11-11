@@ -11,6 +11,11 @@ executors:
         auth:
           username: $DOCKERHUB_USERNAME
           password: $DOCKERHUB_PASSWORD
+  gradle_machine:
+    machine:
+      image: ubuntu-1604:201903-01
+    environment:
+      JVM_OPTS: -Xmx2g
   helm:
     docker:
       - image: hypertrace/helm-gcs-packager:0.3.0
