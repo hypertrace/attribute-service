@@ -3,7 +3,7 @@ package org.hypertrace.core.attribute.service.projection;
 import static org.hypertrace.core.attribute.service.v1.ProjectionOperator.PROJECTION_OPERATOR_CONCAT;
 import static org.hypertrace.core.attribute.service.v1.ProjectionOperator.PROJECTION_OPERATOR_CONDITIONAL;
 import static org.hypertrace.core.attribute.service.v1.ProjectionOperator.PROJECTION_OPERATOR_HASH;
-import static org.hypertrace.core.attribute.service.v1.ProjectionOperator.PROJECTION_OPERATOR_STRINGS_EQUAL;
+import static org.hypertrace.core.attribute.service.v1.ProjectionOperator.PROJECTION_OPERATOR_STRING_EQUALS;
 
 import java.util.Map;
 import java.util.Optional;
@@ -27,7 +27,7 @@ public class AttributeProjectionRegistry {
           PROJECTION_OPERATOR_HASH,
           new UnaryAttributeProjection<>(
               AttributeKind.TYPE_STRING, AttributeKind.TYPE_STRING, Hash::hash),
-          PROJECTION_OPERATOR_STRINGS_EQUAL,
+          PROJECTION_OPERATOR_STRING_EQUALS,
           new BinaryAttributeProjection<>(
               AttributeKind.TYPE_STRING,
               AttributeKind.TYPE_STRING,
