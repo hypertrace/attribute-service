@@ -50,13 +50,5 @@ abstract class AbstractAttributeProjection<R> implements AttributeProjection {
                         unwrappedResult, this.resultKind)));
   }
 
-  private <T> T nullOrThrow(
-      AttributeKindWithNullability maybeNullableKind, RuntimeException exception) {
-    if (maybeNullableKind.isNullable()) {
-      return null;
-    }
-    throw exception;
-  }
-
   protected abstract R doUnwrappedProjection(List<Object> arguments);
 }
