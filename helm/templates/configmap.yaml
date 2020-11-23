@@ -27,10 +27,8 @@ data:
         {{- if .Values.configMap.postgres.database }}
         database= {{ .Values.configMap.postgres.database }}
         {{- end }}
-        {{- if .Values.configMap.postgres.user }}
+        {{- if and .Values.configMap.postgres.user .Values.configMap.postgres.password}}
         user={{ .Values.configMap.postgres.user }}
-        {{- end }}
-        {{- if .Values.configMap.postgres.password }}
         password={{ .Values.configMap.postgres.password }}
         {{- end }}
       }
