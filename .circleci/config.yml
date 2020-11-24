@@ -44,7 +44,7 @@ commands:
       - checkout
       - run:
           name: Generate cache key
-          command: find . -type f -name "*.gradle-wrapper*" -exec shasum {} + | sort > /tmp/checksum.txt && cat /tmp/checksum.txt
+          command: find . -type f -name "*.gradle*" -o -name "gradle-wrapper*" | xargs shasum | sort > /tmp/checksum.txt && cat /tmp/checksum.txt
       - restore_cache:
           keys:
             - v1-dependencies-{{ checksum "/tmp/checksum.txt" }}
@@ -181,7 +181,7 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             # This ssh key gives write permission needed for the following step.
-            - '76:7a:c8:91:c0:cd:eb:71:96:3c:44:c6:cf:b0:26:83'
+            - 'e3:b6:18:f1:68:bd:71:fe:9a:8b:08:aa:94:f5:1a:31'
       - run:
           name: Update remote tags
           command: git push origin refs/tags/$(git describe --abbrev=0) :refs/tags/release-$(git describe --abbrev=0)
@@ -208,6 +208,7 @@ workflows:
             - dockerhub-read
           requires:
             - build
+            - integration-test
             - validate-charts
             - snyk-scan
           filters:
