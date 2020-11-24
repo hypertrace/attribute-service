@@ -155,7 +155,6 @@ jobs:
           additional-arguments: --all-sub-projects --policy-path=.snyk
   release-charts:
     executor: helm
-    working_directory: ~/repo
     steps:
       - checkout
       - run:
