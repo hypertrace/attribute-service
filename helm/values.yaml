@@ -53,7 +53,7 @@ serviceSelectorLabels:
 configMap:
   name: attribute-service-config
   dataStoreType: "mongo"
-  mongodb:
+  mongo:
     host: mongo
     url: ""
   postgres:

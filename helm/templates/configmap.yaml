@@ -7,30 +7,13 @@ metadata:
 data:
   application.conf: |-
     document.store {
-      dataStoreType = {{ .Values.configMap.dataStoreType }}
-      {{- if eq .Values.configMap.dataStoreType "mongo" }}
-      mongo {
-        {{- if .Values.configMap.mongodb.url }}
-        url = {{ .Values.configMap.mongodb.url | quote }}
-        {{- else }}
-        host = {{ .Values.configMap.mongodb.host }}
+      {{- $dst := .Values.configMap.dataStoreType }}
+      dataStoreType = {{ $dst }}
+      {{ $dst }} {
+        {{- range $key, $value := (index .Values "configMap" (printf "%s" $dst)) }}
+        {{- if $value }}
+        {{ $key }} = {{ $value }}
+        {{- end }}
         {{- end }}
       }
-      {{ else if eq .Values.configMap.dataStoreType "postgres" }}
-      postgres {
-        {{- if .Values.configMap.postgres.url }}
-        url={{ .Values.configMap.postgres.url | quote }}
-        {{- else }}
-        host={{ .Values.configMap.postgres.host }}
-        port={{ .Values.configMap.postgres.port }}
-        {{- end }}
-        {{- if .Values.configMap.postgres.database }}
-        database= {{ .Values.configMap.postgres.database }}
-        {{- end }}
-        {{- if and .Values.configMap.postgres.user .Values.configMap.postgres.password}}
-        user={{ .Values.configMap.postgres.user }}
-        password={{ .Values.configMap.postgres.password }}
-        {{- end }}
-      }
-      {{- end }}
     }
