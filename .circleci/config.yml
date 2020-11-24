@@ -44,6 +44,7 @@ commands:
       - checkout
       - run:
           name: Generate cache key
+          # Find all gradle related files, hash each and order them consistently, then save to file for later use
           command: find . -type f -name "*.gradle*" -o -name "gradle-wrapper*" | xargs shasum | sort > /tmp/checksum.txt && cat /tmp/checksum.txt
       - restore_cache:
           keys:
