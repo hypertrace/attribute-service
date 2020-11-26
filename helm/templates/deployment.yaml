@@ -48,7 +48,7 @@ spec:
     {{- end }}
       containers:
         - name: {{ .Chart.Name }}
-          image: "{{ include "service.image" . }}"
+          image: "{{ include "attributeservice.image" . }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: grpc-port
