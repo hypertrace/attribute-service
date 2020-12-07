@@ -1,9 +1,7 @@
 
 name: Continuous Build Docker
 on:
-  push:
-    branches:
-      - main
+  push: 
     paths-ignore:
       - '**/*.md'
   pull_request:
