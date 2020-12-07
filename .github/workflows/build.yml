@@ -1,9 +1,6 @@
 name: build and test
 on:
   push:
-    branches:
-      - main
-      - gh-action-ci
   pull_request:
   # workflow_dispatch will let us manually trigger the workflow from GitHub actions dashboard.
   # See https://docs.github.com/en/free-pro-team@latest/actions/managing-workflow-runs/manually-running-a-workflow
