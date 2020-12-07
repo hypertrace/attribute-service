@@ -55,13 +55,9 @@ jobs:
           path: ./build/reports/tests/integrationTest
       - name: Build with Gradle
         run: ./gradlew clean build jacocoTestReport
-      - name: Create coverage directory
-        run: mkdir coverage
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
-          file: ./build/jacocoCoverage/test/jacocoTestReport.xml
           name: codecov-line-smoothing
           fail_ci_if_error: true
-          path_to_write_report: ./coverage/codecov_report.gz
           verbose: true
