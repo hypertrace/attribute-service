@@ -1,0 +1,74 @@
+
+name: Continuous Build Docker
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**/*.md'
+  pull_request:
+
+jobs:
+  build-on-linux:
+    strategy:
+      matrix:
+        docker-version: [19.03]
+    runs-on: ubuntu-latest
+    name: Build and run Docker images
+    steps:
+      - name: Update Packages
+        run: sudo apt-get update -yqq --fix-missing
+      - name: Install Docker
+        uses: docker-practice/actions-setup-docker@master
+        with:
+          docker_version: ${{ matrix.docker-version }}
+          docker_buildx: false
+      - name: Cache docker
+        uses: actions/cache@v1
+        with:
+          path: ~/.docker
+          key: ${{ runner.os }}-docker-${{ hashFiles('**/Dockerfile') }}
+          restore-keys: ${{ runner.os }}-docker
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 10
+      - name: Install JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: 14
+      - name: Cache Gradle
+        uses: actions/cache@v1
+        with:
+          path: ~/.gradle
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/build.gradle.kts') }}
+          restore-keys: ${{ runner.os }}-gradle
+      - name: Unit tests
+        run: ./gradlew test 
+      - name: Archive Unit Test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: unit-test-report
+          path: ./build/reports/tests/test
+      - name: Integration tests
+        run: ./gradlew integrationTest 
+      - name: Archive Integration Test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: integration-test-report
+          path: ./build/reports/tests/integrationTest
+      - name: Build
+        run: ./gradlew build -xtest 
+      - name: Report Code Coverage
+        run: ./gradlew reportScoverage
+      - name: Archive Code Coverage results
+        uses: actions/upload-artifact@v2
+        with:
+          name: code-coverage-report
+          path: ./build/reports/scoverage
+      - name: Upload Code Coverage Report
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./build/reports/scoverage/cobertura.xml
+          name: codecov-spark-filetransfer
