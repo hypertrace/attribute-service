@@ -39,7 +39,9 @@ jobs:
           key: gradle-${{ runner.os }}-${{ hashFiles('**/build.gradle.kts') }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: gradle-${{ runner.os }}
       - name: Unit tests
-        run: ./gradlew test -PallScalaVersions
+        uses: eskatos/gradle-command-action@v1
+        with:
+          arguments: test
       - name: Archive Unit Test results
         uses: actions/upload-artifact@v2
         with:
