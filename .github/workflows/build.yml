@@ -14,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Build and run Docker images
     steps:
+      - uses: actions/checkout@master
       - name: Update Packages
         run: sudo apt-get update -yqq --fix-missing
       - name: Install Docker
@@ -27,8 +28,6 @@ jobs:
           path: ~/.docker
           key: ${{ runner.os }}-docker-${{ hashFiles('**/Dockerfile') }}
           restore-keys: ${{ runner.os }}-docker
-      - name: Checkout Repository
-        uses: actions/checkout@v2
       - name: Install JDK
         uses: actions/setup-java@v1
         with:
@@ -39,13 +38,6 @@ jobs:
           path: ~/.gradle/caches
           key: gradle-${{ runner.os }}-${{ hashFiles('**/build.gradle.kts') }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: gradle-${{ runner.os }}
-      - name: Unit tests
-        run: ./gradlew test
-      - name: Archive Unit Test results
-        uses: actions/upload-artifact@v2
-        with:
-          name: unit-test-report
-          path: ./build/reports/tests/test
       - name: Integration tests
         run: ./gradlew integrationTest 
       - name: Archive Integration Test results
