@@ -1,0 +1,77 @@
+name: build and test
+on:
+  push:
+    branches:
+      - main
+      - gh-action-ci
+  pull_request:
+  # workflow_dispatch will let us manually trigger the workflow from GitHub actions dashboard.
+  # See https://docs.github.com/en/free-pro-team@latest/actions/managing-workflow-runs/manually-running-a-workflow
+  workflow_dispatch:
+
+jobs:
+  build_and_test:
+    strategy:
+      matrix:
+        docker-version: [19.03]
+    runs-on: ubuntu-latest
+    name: Build and run Docker images
+    steps:
+      - name: Update Packages
+        run: sudo apt-get update -yqq --fix-missing
+      - name: Install Docker
+        uses: docker-practice/actions-setup-docker@master
+        with:
+          docker_version: ${{ matrix.docker-version }}
+          docker_buildx: false
+      - name: Cache docker
+        uses: actions/cache@v1
+        with:
+          path: ~/.docker
+          key: ${{ runner.os }}-docker-${{ hashFiles('**/Dockerfile') }}
+          restore-keys: ${{ runner.os }}-docker
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        with:
+          ref: ${{github.event.pull_request.head.ref}}
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+      - name: Install JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: 14
+      - name: Cache Gradle packages
+        uses: actions/cache@v1
+        with:
+          path: ~/.gradle/caches
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/build.gradle.kts') }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}
+      - name: Unit tests
+        run: ./gradlew test
+      - name: Archive Unit Test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: unit-test-report
+          path: ./build/reports/tests/test
+      - name: Integration tests
+        run: ./gradlew integrationTest 
+      - name: Archive Integration Test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: integration-test-report
+          path: ./build/reports/tests/integrationTest
+      - name: Build
+        run: ./gradlew build -xtest 
+      - name: Report Code Coverage
+        run: ./gradlew reportScoverage
+      - name: Archive Code Coverage results
+        uses: actions/upload-artifact@v2
+        with:
+          name: code-coverage-report
+          path: ./build/reports/scoverage
+      - name: Upload Code Coverage Report
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./build/reports/scoverage/cobertura.xml
+          name: codecov-spark-filetransfer
+       
