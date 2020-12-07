@@ -1,0 +1,4 @@
+name: Publish helm charts
+on:
+  release:
+    types: [published]
