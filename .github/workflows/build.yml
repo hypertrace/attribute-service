@@ -52,8 +52,6 @@ jobs:
       - name: push docker image
         if: github.event.pull_request.merged == true
         run: ./gradlew dockerPushImages
-      - name: snyk test
-        run: snyk test --all-sub-projects --policy-path=.snyk --configuration-matching='^runtimeClasspath$'
 
 
 
