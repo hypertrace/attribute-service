@@ -40,7 +40,7 @@ jobs:
           restore-keys: ${{ runner.os }}-gradle
       - name: Build with Gradle
         run: ./gradlew clean build jacocoTestReport
-      - name: IntegrationTes
+      - name: Integration test
         run: ./gradlew clean build jacocoIntegrationTestReport
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
@@ -49,3 +49,12 @@ jobs:
           fail_ci_if_error: true
           verbose: true
           flags: integration
+      - name: push docker image
+        if: github.event.pull_request.merged == true
+        run: ./gradlew dockerPushImages
+      - name: snyk test
+        run: snyk test --all-sub-projects --policy-path=.snyk --configuration-matching='^runtimeClasspath$'
+
+
+
+          
