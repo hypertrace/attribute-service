@@ -1,11 +1,10 @@
-
-name: Continuous Build Docker
+name: Build and test
 on:
   push: 
   pull_request:
 
 jobs:
-  build-on-linux:
+  build-and-test:
     strategy:
       matrix:
         docker-version: [19.03]
@@ -39,25 +38,14 @@ jobs:
           path: ~/.gradle
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/build.gradle.kts') }}
           restore-keys: ${{ runner.os }}-gradle
-      - name: Unit tests
-        run: ./gradlew test 
-      - name: Archive Unit Test results
-        uses: actions/upload-artifact@v2
-        with:
-          name: unit-test-report
-          path: ./build/reports/tests/test
-      - name: Integration tests
-        run: ./gradlew integrationTest 
-      - name: Archive Integration Test results
-        uses: actions/upload-artifact@v2
-        with:
-          name: integration-test-report
-          path: ./build/reports/tests/integrationTest
       - name: Build with Gradle
         run: ./gradlew clean build jacocoTestReport
+      - name: IntegrationTes
+        run: ./gradlew clean build jacocoIntegrationTestReport
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
           name: codecov-line-smoothing
           fail_ci_if_error: true
           verbose: true
+          flags: integration
