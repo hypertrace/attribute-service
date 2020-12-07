@@ -38,6 +38,13 @@ jobs:
           path: ~/.gradle/caches
           key: gradle-${{ runner.os }}-${{ hashFiles('**/build.gradle.kts') }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: gradle-${{ runner.os }}
+      - name: Unit tests
+        run: ./gradlew test -PallScalaVersions
+      - name: Archive Unit Test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: unit-test-report
+          path: ./build/reports/tests/test
       - name: Integration tests
         run: ./gradlew integrationTest 
       - name: Archive Integration Test results
