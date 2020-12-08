@@ -6,6 +6,7 @@ on:
 jobs:
   publish-helm-charts:
     runs-on: ubuntu-latest
+    container: hypertrace/helm-gcs-packager:0.3.0
     name: Build and run Docker images
     steps:
       - uses: actions-ecosystem/action-get-latest-tag@v1
@@ -14,7 +15,6 @@ jobs:
         with:
           semver_only: true
       - name: package and release charts
-        uses: WyriHaximus/github-action-helm3@v2
         run: |
             CHART_VERSION=${{ steps.get-latest-tag.outputs.tag }}
             CHART_NAME=$(awk '/^name:/ {print $2}' ./helm/Chart.yaml)
