@@ -10,13 +10,14 @@ jobs:
     runs-on: ubuntu-latest
     container: hypertrace/helm-gcs-packager:0.3.0
     name: Build and run Docker images
+    # GITHUB_REF will be refs/tags/docker-MAJOR.MINOR.PATCH
     steps:
       - name: package and release charts
         env:
-          CHART_VERSION=$(echo ${GITHUB_REF} | cut -d/ -f 3) # GITHUB_REF will be refs/tags/docker-MAJOR.MINOR.PATCH
-          CHART_NAME=$(awk '/^name:/ {print $2}' ./helm/Chart.yaml)
           HELM_GCS_REPOSITORY=${{ secrets.HELM_GCS_REPOSITORY }}
         run: |
+            CHART_VERSION=$(echo ${GITHUB_REF} | cut -d/ -f 3)
+            CHART_NAME=$(awk '/^name:/ {print $2}' ./helm/Chart.yaml)
             export GOOGLE_APPLICATION_CREDENTIALS=${HOME}/helm-gcs-key.json
             echo ${HELM_GCS_CREDENTIALS} > ${GOOGLE_APPLICATION_CREDENTIALS}
             helm dependency update ./helm/
