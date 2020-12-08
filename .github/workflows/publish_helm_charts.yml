@@ -9,20 +9,18 @@ jobs:
     container: hypertrace/helm-gcs-packager:0.3.0
     name: Build and run Docker images
     steps:
-      - uses: actions-ecosystem/action-get-latest-tag@v1
-        id: get-latest-tag
-        if: ${{ steps.release-label.outputs.level != null }}
-        with:
-          semver_only: true
       - name: package and release charts
+        env:
+          CHART_VERSION=$(echo ${GITHUB_REF} | cut -d/ -f 3)
+          CHART_NAME=$(awk '/^name:/ {print $2}' ./helm/Chart.yaml)
+          HELM_GCS_REPOSITORY=${{ secrets.HELM_GCS_REPOSITORY }}
         run: |
-            CHART_VERSION=${{ steps.get-latest-tag.outputs.tag }}
-            CHART_NAME=$(awk '/^name:/ {print $2}' ./helm/Chart.yaml)
             export GOOGLE_APPLICATION_CREDENTIALS=${HOME}/helm-gcs-key.json
             echo ${HELM_GCS_CREDENTIALS} > ${GOOGLE_APPLICATION_CREDENTIALS}
             helm dependency update ./helm/
-            helm repo add helm-gcs ${HELM_GCS_REPOSITORY}
+            helm repo add helm-gcs "$HELM_GCS_REPOSITORY"
             helm package --version ${CHART_VERSION} --app-version ${CHART_VERSION} ./helm/
             helm gcs push ${CHART_NAME}-${CHART_VERSION}.tgz helm-gcs --public --retry
-          
+
+
 
