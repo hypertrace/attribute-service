@@ -52,7 +52,4 @@ jobs:
       - name: push docker image
         if: github.event.pull_request.merged == true
         run: ./gradlew dockerPushImages
-
-
-
-          
+        
