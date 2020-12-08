@@ -1,5 +1,7 @@
+# this is WIP and needs a revision and testing before merging. Also we need to add this secrets in GH secrets
 name: Publish helm charts
 on:
+# Will only run when release is published. 
   release:
     types: [published]
 
@@ -11,7 +13,7 @@ jobs:
     steps:
       - name: package and release charts
         env:
-          CHART_VERSION=$(echo ${GITHUB_REF} | cut -d/ -f 3)
+          CHART_VERSION=$(echo ${GITHUB_REF} | cut -d/ -f 3) # GITHUB_REF will be refs/tags/docker-MAJOR.MINOR.PATCH
           CHART_NAME=$(awk '/^name:/ {print $2}' ./helm/Chart.yaml)
           HELM_GCS_REPOSITORY=${{ secrets.HELM_GCS_REPOSITORY }}
         run: |

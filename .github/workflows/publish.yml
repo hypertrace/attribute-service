@@ -1,5 +1,6 @@
 name: Publish Docker image
 on:
+# Will only run when release is published. 
   release:
     types: [published]
 jobs:
@@ -17,6 +18,13 @@ jobs:
         with:
           docker_version: ${{ matrix.docker-version }}
           docker_buildx: false
+      # A workflow can access and restore a cache created in the current branch,
+      # the base branch (including base branches of forked repositories), or the default branch (usually main). 
+      # For example, a cache created on the default branch would be accessible from any pull request.
+      # for more information: https://docs.github.com/en/free-pro-team@latest/actions/guides/caching-dependencies-to-speed-up-workflows
+      # GitHub will remove any cache entries that have not been accessed in over 7 days. 
+      # There is no limit on the number of caches you can store, but the total size of all caches in a repository is limited to 5 GB.
+      # Note: GitHub Actions does not have an equivalent of CircleCI’s Docker Layer Caching (or DLC).
       - name: Cache docker
         uses: actions/cache@v2
         with:
@@ -40,5 +48,9 @@ jobs:
       - name: Publish docker image
         run: ./gradlew publish dockerPushImages
         env:
+          # DOCKERHUB_USER=<typically hypertrace>
+          #   - login like this: echo "$DOCKERHUB_TOKEN"| docker login -u "$DOCKERHUB_USER" --password-stdin
           DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USER }}
+          # DOCKERHUB_TOKEN=<access token for DOCKERHUB_USER>
+          #   -  Access Token from here https://hub.docker.com/settings/security
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
