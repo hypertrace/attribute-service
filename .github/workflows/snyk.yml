@@ -1,8 +1,12 @@
 name: snyk for gradle
-on: 
+on:
   push:
+    branches:
+      - main
+  release:
+    types: # This configuration does not affect the page_build event above
+      - created
   pull_request_target:
-
 jobs:
   security:
     runs-on: ubuntu-latest
