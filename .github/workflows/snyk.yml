@@ -2,8 +2,6 @@
 name: snyk for gradle
 on:
   push:
-    branches:
-      - main
   release:
     types: 
       - created
