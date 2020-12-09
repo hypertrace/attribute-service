@@ -23,6 +23,13 @@ jobs:
     steps:
       - name: Update Packages
         run: sudo apt-get update -yqq --fix-missing
+      # Difference here is remote-docker-setup in CircleCI vs Docker install in GH action
+      # In CircleCI, When setup_remote_docker executes, a remote environment will be created, 
+      # and your current primary container will be configured to use it. 
+      # Then, any docker-related commands you use will be safely executed in this new environment.
+
+      # In GH action, we can setup remote docker but then we have to host our own docker setup somewhere and SSH into that. 
+      # Installing docker every time eats a bit of a time at the moment but 
       - name: Install Docker
         uses: docker-practice/actions-setup-docker@master
         with:
