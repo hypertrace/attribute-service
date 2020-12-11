@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         docker-version: [19.03]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     name: Build and run Docker images
     steps:
       - name: Update Packages
@@ -42,10 +42,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 1.8
+      - name: Setup Java
         uses: actions/setup-java@v1
         with:
-          java-version: 1.8
+          java-version: 14
 
       - name: Cache Gradle wrapper
         uses: actions/cache@v2
@@ -86,7 +86,7 @@ jobs:
           fail_ci_if_error: true
           verbose: true
           flags: integration
-          
+
       - name: push docker image
         if: github.event.pull_request.merged == true
         run: ./gradlew dockerPushImages
