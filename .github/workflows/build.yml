@@ -49,13 +49,11 @@ jobs:
 
       - name: Cache packages
         id: cache-packages
+        run: ./gradlew downloadDependencies
         uses: actions/cache@v2
         with:
-          run: |
-            find . -type f -name "*.gradle*" -o -name "gradle-wrapper*" | xargs shasum | sort > /tmp/checksum.txt && cat /tmp/checksum.txt 
-            ./gradlew downloadDependecies
           path: ~/.gradle
-          key: gradle-packages-${{ runner.os }}-${{ hashFiles('/tmp/checksum.txt') }}
+          key: gradle-packages-${{ runner.os }}-${{ hashFiles('*.gradle*') }}
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Build with Gradle
