@@ -10,9 +10,7 @@ on:
       - main
     paths-ignore:
       - '**/*.md'
-  release:
-    types: 
-      - created
+  create:
 jobs:
   build-and-test:
     runs-on: ubuntu-20.04
