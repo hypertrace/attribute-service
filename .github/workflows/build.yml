@@ -63,10 +63,11 @@ jobs:
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Build with Gradle
-<<<<<<< HEAD
         run: ./gradlew build dockerBuildImages
+
       - name: Unit test
         run: ./gradlew jacocoTestReport
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
@@ -74,13 +75,10 @@ jobs:
           fail_ci_if_error: true
           verbose: true
           flags: unit
+
       - name: Integration test
         run: ./gradlew jacocoIntegrationTestReport
-=======
-        run: ./gradlew clean jacocoTestReport
-      - name: Integration test
-        run: ./gradlew clean jacocoIntegrationTestReport
->>>>>>> 0d99156d986e66537548020288979b28fdfd9f7b
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
@@ -88,6 +86,7 @@ jobs:
           fail_ci_if_error: true
           verbose: true
           flags: integration
+          
       - name: push docker image
         if: github.event.pull_request.merged == true
         run: ./gradlew dockerPushImages
