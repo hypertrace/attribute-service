@@ -49,7 +49,6 @@ jobs:
 
       - name: Cache packages
         id: cache-packages
-        run: ./gradlew downloadDependencies
         uses: actions/cache@v2
         with:
           path: ~/.gradle
