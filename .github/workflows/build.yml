@@ -55,7 +55,7 @@ jobs:
             find . -type f -name "*.gradle*" -o -name "gradle-wrapper*" | xargs shasum | sort > /tmp/checksum.txt && cat /tmp/checksum.txt 
             ./gradlew downloadDependecies
           path: ~/.gradle
-          key: gradle-packages-${{ runner.os }}-${{ hashFiles("/tmp/checksum.txt") }}
+          key: gradle-packages-${{ runner.os }}-${{ hashFiles('/tmp/checksum.txt') }}
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Build with Gradle
