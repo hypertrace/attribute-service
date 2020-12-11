@@ -47,19 +47,15 @@ jobs:
         with:
           java-version: 14
 
-      - name: Cache Gradle wrapper
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/wrapper
-          key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/**/*') }}
-          restore-keys: gradle-wrapper-${{ runner.os }}
-
       - name: Cache packages
         id: cache-packages
         uses: actions/cache@v2
         with:
-          path: ~/.gradle/caches
-          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}
+          run: |
+            find . -type f -name "*.gradle*" -o -name "gradle-wrapper*" | xargs shasum | sort > /tmp/checksum.txt && cat /tmp/checksum.txt 
+            ./gradlew downloadDependecies
+          path: ~/.gradle
+          key: gradle-packages-${{ runner.os }}-${{ checksum "/tmp/checksum.txt" }}
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Build with Gradle
