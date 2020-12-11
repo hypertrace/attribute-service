@@ -52,7 +52,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.gradle
-          key: gradle-packages-${{ runner.os }}-${{ hashFiles('*.gradle*') }}
+          key: gradle-packages-${{ runner.os }}-${{ hashFiles('*.gradle*') }}-abc
 
       - name: download dependencies
         run: ./gradlew downloadDependencies
