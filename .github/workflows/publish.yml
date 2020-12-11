@@ -5,26 +5,13 @@ on:
     types: [published]
 jobs:
   build-and-test:
-    strategy:
-      matrix:
-        docker-version: [19.03]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     name: Build and run Docker images
     steps:
       - name: Update Packages
         run: sudo apt-get update -yqq --fix-missing
-      # Difference here is remote-docker-setup in CircleCI vs Docker install in GH action
-      # In CircleCI, When setup_remote_docker executes, a remote environment will be created, 
-      # and your current primary container will be configured to use it. 
-      # Then, any docker-related commands you use will be safely executed in this new environment.
-
       # In GH action, we can setup remote docker but then we have to host our own docker setup somewhere and SSH into that. 
       # Installing docker every time eats a bit of a time at the moment but 
-      - name: Install Docker
-        uses: docker-practice/actions-setup-docker@master
-        with:
-          docker_version: ${{ matrix.docker-version }}
-          docker_buildx: false
       # A workflow can access and restore a cache created in the current branch,
       # the base branch (including base branches of forked repositories), or the default branch (usually main). 
       # For example, a cache created on the default branch would be accessible from any pull request.
@@ -32,26 +19,25 @@ jobs:
       # GitHub will remove any cache entries that have not been accessed in over 7 days. 
       # There is no limit on the number of caches you can store, but the total size of all caches in a repository is limited to 5 GB.
       # Note: GitHub Actions does not have an equivalent of CircleCI’s Docker Layer Caching (or DLC).
-      - name: Cache docker
-        uses: actions/cache@v2
-        with:
-          path: ~/.docker
-          key: ${{ runner.os }}-docker-${{ hashFiles('**/Dockerfile') }}
-          restore-keys: ${{ runner.os }}-docker
-      - name: Checkout Repository
-        uses: actions/checkout@v2
+      - name: Check out code
+        uses: actions/checkout@v2.3.4
         with:
           fetch-depth: 0
-      - name: Install JDK
+
+      - name: Setup Java
         uses: actions/setup-java@v1
         with:
           java-version: 14
-      - name: Cache Gradle
+
+      - name: Cache packages
+        id: cache-packages
         uses: actions/cache@v2
         with:
           path: ~/.gradle
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/build.gradle.kts') }}
-          restore-keys: ${{ runner.os }}-gradle
+          key: gradle-packages-${{ runner.os }}-${{ hashFiles('*.gradle*') }}-abc
+
+      - name: download dependencies
+        run: ./gradlew downloadDependencies
       - name: Publish docker image
         run: ./gradlew publish dockerPushImages
         env:
