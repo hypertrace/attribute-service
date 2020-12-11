@@ -30,11 +30,6 @@ jobs:
 
       # In GH action, we can setup remote docker but then we have to host our own docker setup somewhere and SSH into that. 
       # Installing docker every time eats a bit of a time at the moment but 
-      - name: Install Docker
-        uses: docker-practice/actions-setup-docker@master
-        with:
-          docker_version: ${{ matrix.docker-version }}
-          docker_buildx: false
       # A workflow can access and restore a cache created in the current branch,
       # the base branch (including base branches of forked repositories), or the default branch (usually main). 
       # For example, a cache created on the default branch would be accessible from any pull request.
@@ -42,30 +37,44 @@ jobs:
       # GitHub will remove any cache entries that have not been accessed in over 7 days. 
       # There is no limit on the number of caches you can store, but the total size of all caches in a repository is limited to 5 GB.
       # Note: GitHub Actions does not have an equivalent of CircleCI’s Docker Layer Caching (or DLC).
-      - name: Cache docker
-        uses: actions/cache@v2
-        with:
-          path: ~/.docker
-          key: ${{ runner.os }}-docker-${{ hashFiles('**/Dockerfile') }}
-          restore-keys: ${{ runner.os }}-docker
-      - name: Checkout Repository
-        uses: actions/checkout@v2
+      - name: Check out code
+        uses: actions/checkout@v2.3.4
         with:
           fetch-depth: 0
-      - name: Install JDK
+
+      - name: Set up JDK 1.8
         uses: actions/setup-java@v1
         with:
-          java-version: 14
-      - name: Cache Gradle
+          java-version: 1.8
+
+      - name: Cache Gradle wrapper
         uses: actions/cache@v2
         with:
-          path: ~/.gradle
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/build.gradle.kts') }}
-          restore-keys: ${{ runner.os }}-gradle
+          path: ~/.gradle/wrapper
+          key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/**/*') }}
+          restore-keys: gradle-wrapper-${{ runner.os }}
+
+      - name: Cache packages
+        id: cache-packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/caches
+          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}
+          restore-keys: gradle-packages-${{ runner.os }}
+
       - name: Build with Gradle
-        run: ./gradlew clean build jacocoTestReport
+        run: ./gradlew build dockerBuildImages
+      - name: Unit test
+        run: ./gradlew jacocoTestReport
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          name: codecov-line-smoothing
+          fail_ci_if_error: true
+          verbose: true
+          flags: unit
       - name: Integration test
-        run: ./gradlew clean build jacocoIntegrationTestReport
+        run: ./gradlew jacocoIntegrationTestReport
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
