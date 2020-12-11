@@ -53,8 +53,10 @@ jobs:
         with:
           path: ~/.gradle
           key: gradle-packages-${{ runner.os }}-${{ hashFiles('*.gradle*') }}
-          restore-keys: gradle-packages-${{ runner.os }}
 
+      - name: download dependencies
+        run: ./gradlew downloadDependencies
+        
       - name: Build with Gradle
         run: ./gradlew build dockerBuildImages
 
