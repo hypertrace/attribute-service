@@ -10,9 +10,6 @@ jobs:
   publish-images:
     runs-on: ubuntu-20.04
     steps:
-      - name: Update Packages
-        run: sudo apt-get update -yqq --fix-missing
-
       - name: Check out code
         uses: actions/checkout@v2.3.4
         with:
