@@ -40,6 +40,5 @@ jobs:
           DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USER }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
-
       - name: Publish docker image
         run: ./gradlew publish dockerPushImages
