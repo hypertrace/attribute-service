@@ -12,7 +12,7 @@ on:
       - '**/*.md'
   create:
 jobs:
-  build-and-test:
+  build-and-test-code:
     runs-on: ubuntu-20.04
     steps:
       - name: Update Packages

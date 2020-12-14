@@ -4,6 +4,7 @@ on:
 # Will only run when release is published. 
   release:
     types: [published]
+  workflow_dispatch:
 
 jobs:
   publish-helm-charts:

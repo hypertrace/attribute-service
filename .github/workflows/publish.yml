@@ -3,8 +3,10 @@ on:
 # Will only run when release is published. 
   release:
     types: [published]
+  workflow_dispatch:
+  
 jobs:
-  build-and-test:
+  publish-images:
     runs-on: ubuntu-20.04
     steps:
       - name: Update Packages
