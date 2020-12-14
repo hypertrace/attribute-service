@@ -30,14 +30,14 @@ jobs:
           java-version: 14
       
       - name: create checksum file
-        run: find . -type f -name "*.gradle*" -o -name "gradle-wrapper*" | xargs shasum | sort > /tmp/checksum.txt && cat /tmp/checksum.txt
+        run: find . -type f -name "*.gradle*" -o -name "gradle-wrapper*" | xargs shasum | sort > checksum.txt && cat checksum.txt
 
       - name: Cache packages
         id: cache-packages
         uses: actions/cache@v2
         with:
           path: ~/.gradle
-          key: gradle-packages-${{ runner.os }}-${{ github.head_ref }}-${{ hashFiles('/tmp/checksum.txt') }}
+          key: gradle-packages-${{ runner.os }}-${{ github.head_ref }}-${{ hashFiles('**/checksum.txt') }}
           restore-keys: gradle-packages-${{ runner.os }}-${{ github.head_ref }}
 
       - name: download dependencies
