@@ -37,7 +37,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.gradle
-          key: gradle-packages-${{ runner.os }}-${{ github.head_ref }}-${{ hashFiles('**/tmp/checksum.txt') }}
+          key: gradle-packages-${{ runner.os }}-${{ github.head_ref }}-${{ hashFiles('/tmp/checksum.txt') }}
           restore-keys: gradle-packages-${{ runner.os }}-${{ github.head_ref }}
 
       - name: download dependencies
