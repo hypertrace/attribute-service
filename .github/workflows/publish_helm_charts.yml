@@ -13,6 +13,10 @@ jobs:
     container: hypertrace/helm-gcs-packager:0.3.0
     # GITHUB_REF will be refs/tags/docker-MAJOR.MINOR.PATCH
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: package and release charts
         env:
           HELM_GCS_CREDENTIALS: ${{ secrets.HELM_GCS_CREDENTIALS }}
