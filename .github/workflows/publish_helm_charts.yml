@@ -7,7 +7,7 @@ on:
 
 jobs:
   publish-helm-charts:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     container: hypertrace/helm-gcs-packager:0.3.0
     name: Build and run Docker images
     # GITHUB_REF will be refs/tags/docker-MAJOR.MINOR.PATCH
