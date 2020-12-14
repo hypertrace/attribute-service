@@ -2,6 +2,7 @@
 name: Publish helm charts
 on:
 # Will only run when release is published. 
+  push:
   release:
     types: [published]
   workflow_dispatch:

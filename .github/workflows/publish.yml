@@ -1,10 +1,11 @@
 name: Publish Docker image
 on:
 # Will only run when release is published. 
+  push:
   release:
     types: [published]
   workflow_dispatch:
-  
+
 jobs:
   publish-images:
     runs-on: ubuntu-20.04
