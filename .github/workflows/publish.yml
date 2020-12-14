@@ -34,8 +34,12 @@ jobs:
       - name: download dependencies
         run: ./gradlew downloadDependencies
 
-      - name: Publish docker image
-        run: ./gradlew publish dockerPushImages
+      - name: docker login
+        run: echo $DOCKERHUB_PASSWORD | docker login --username $DOCKERHUB_USERNAME --password-stdin
         env:
           DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USER }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+
+      - name: Publish docker image
+        run: ./gradlew publish dockerPushImages
