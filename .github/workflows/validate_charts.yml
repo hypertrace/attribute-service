@@ -1,0 +1,32 @@
+name: Publish helm charts
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**/*.md'
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - '**/*.md'
+  create:
+
+jobs:
+  publish-helm-charts:
+    runs-on: ubuntu-20.04
+    container: hypertrace/helm-gcs-packager:0.3.0
+    name: Build and run Docker images
+    # GITHUB_REF will be refs/tags/docker-MAJOR.MINOR.PATCH
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+
+      - name: validate charts
+        run: |
+          helm dependency update ./helm/
+          helm lint --strict ./helm/
+          helm template ./helm/
+        

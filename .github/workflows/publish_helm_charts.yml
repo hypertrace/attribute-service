@@ -11,13 +11,6 @@ jobs:
     container: hypertrace/helm-gcs-packager:0.3.0
     name: Build and run Docker images
     # GITHUB_REF will be refs/tags/docker-MAJOR.MINOR.PATCH
-    steps:
-      - name: validate charts
-      - run: |
-          helm dependency update ./helm/
-          helm lint --strict ./helm/
-          helm template ./helm/
-        
       - name: package and release charts
         env:
           HELM_GCS_REPOSITORY=${{ secrets.HELM_GCS_REPOSITORY }}
