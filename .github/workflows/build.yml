@@ -67,11 +67,10 @@ jobs:
           flags: integration
       
       - name: docker login
-        if: github.event.pull_request.merged == true
-        run: echo $DOCKERHUB_PASSWORD | docker login --username $DOCKERHUB_USERNAME --password-stdin
         env:
           DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USER }}
-          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_PASSWORD }}
+        run: echo $DOCKERHUB_PASSWORD| docker login --username $DOCKERHUB_USERNAME --password-stdin
 
       - name: push docker image
         if: github.event.pull_request.merged == true
