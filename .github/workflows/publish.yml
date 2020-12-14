@@ -6,7 +6,6 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-20.04
-    name: Build and run Docker images
     steps:
       - name: Update Packages
         run: sudo apt-get update -yqq --fix-missing
