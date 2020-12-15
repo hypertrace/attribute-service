@@ -31,6 +31,7 @@ jobs:
         with:
           path: ~/.gradle
           key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/checksum.txt') }}
+          restore-keys: gradle-packages-${{ runner.os }}
         
       - name: download dependencies
         run: ./gradlew downloadDependencies
