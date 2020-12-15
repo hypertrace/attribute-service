@@ -21,5 +21,4 @@ jobs:
       uses: snyk/actions/gradle-jdk11@0.3.0
       with:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      with:
         args: --all-sub-projects --policy-path=.snyk --configuration-matching='^runtimeClasspath$'
