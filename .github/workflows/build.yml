@@ -16,18 +16,17 @@ jobs:
   build-and-test-code:
     runs-on: ubuntu-20.04
     steps:
+      # Set fetch-depth: 0 to fetch all history for all branches and tags.
       - name: Check out code
         uses: actions/checkout@v2.3.4
         with:
           fetch-depth: 0
-
-      - name: Setup Java
-        uses: actions/setup-java@v1
-        with:
-          java-version: 14
       
       - name: create checksum file
         run: find . -type f -name "*.gradle*" -o -name "gradle-wrapper*" | xargs shasum | sort > checksum.txt && cat checksum.txt
+
+      - name: download dependencies
+        run: ./gradlew downloadDependencies
 
       - name: Cache packages
         id: cache-packages
@@ -35,9 +34,6 @@ jobs:
         with:
           path: ~/.gradle
           key: gradle-packages-${{ runner.os }}-${{ github.head_ref }}-${{ hashFiles('**/checksum.txt') }}
-
-      - name: download dependencies
-        run: ./gradlew downloadDependencies
         
       - name: Build with Gradle
         run: ./gradlew build dockerBuildImages

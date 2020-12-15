@@ -10,10 +10,12 @@ jobs:
   security:
     runs-on: ubuntu-20.04
     steps:
+    # Set fetch-depth: 0 to fetch all history for all branches and tags.
     - name: Checkout Repository
       uses: actions/checkout@v2
       with:
         fetch-depth: 0
+        
     - name: Run Snyk to check for vulnerabilities
       uses: snyk/actions/gradle-jdk11@0.3.0
       env:

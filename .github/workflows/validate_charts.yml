@@ -16,7 +16,7 @@ jobs:
   validate-helm-charts:
     runs-on: ubuntu-20.04
     container: hypertrace/helm-gcs-packager:0.3.0
-    # GITHUB_REF will be refs/tags/docker-MAJOR.MINOR.PATCH
+    # Set fetch-depth: 0 to fetch all history for all branches and tags.
     steps:
       - name: Check out code
         uses: actions/checkout@v2.3.4
