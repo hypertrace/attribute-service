@@ -19,7 +19,7 @@ jobs:
 
     - name: Run Snyk to check for vulnerabilities
       uses: snyk/actions/gradle-jdk11@0.3.0
-      env:
+      with:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       with:
         args: --all-sub-projects --policy-path=.snyk --configuration-matching='^runtimeClasspath$'
