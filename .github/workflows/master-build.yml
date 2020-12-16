@@ -3,16 +3,7 @@ on:
   push:
     branches:
       - main
-    paths-ignore:
-      - '**/*.md'
-  pull_request:
-    branches:
-      - main
-    paths-ignore:
-      - '**/*.md'
-  create:
-  pull_request_target:
-
+      
 jobs:
   build-and-test-code:
     runs-on: ubuntu-20.04
@@ -47,5 +38,4 @@ jobs:
         run: ./gradlew build dockerBuildImages
 
       - name: push docker image
-        if: github.event.pull_request.merged == true
         run: ./gradlew dockerPushImages
