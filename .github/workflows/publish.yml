@@ -80,7 +80,7 @@ jobs:
           CHART_NAME: $(awk '/^name:/ {print $2}' ./helm/Chart.yaml)
         run: |
             export GOOGLE_APPLICATION_CREDENTIALS=${HOME}/helm-gcs-key.json
-            echo ${{ secrets.HELM_GCS_CREDENTIALS }} > ${GOOGLE_APPLICATION_CREDENTIALS}
+            echo $HELM_GCS_CREDENTIALS > ${GOOGLE_APPLICATION_CREDENTIALS}
             helm dependency update ./helm/
             helm repo add helm-gcs $HELM_GCS_REPOSITORY
             helm package --version ${CHART_VERSION} --app-version ${CHART_VERSION} ./helm/
