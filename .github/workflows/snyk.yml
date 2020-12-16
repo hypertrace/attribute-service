@@ -2,9 +2,15 @@
 name: snyk for gradle
 on:
   push:
-  release:
-    types: 
-      - created
+    branches:
+      - main
+    paths-ignore:
+      - '**/*.md'
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - '**/*.md'
   pull_request_target:
   
 jobs:
