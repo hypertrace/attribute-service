@@ -16,7 +16,6 @@ on:
 jobs:
   build-and-test-code:
     runs-on: ubuntu-20.04
-    needs: unit-test, integration-test
     steps:
       # Set fetch-depth: 0 to fetch all history for all branches and tags.
       - name: Check out code
