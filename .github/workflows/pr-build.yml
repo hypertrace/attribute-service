@@ -1,4 +1,4 @@
-name: run tests on PR
+name: build and test
 on:
   push:
     branches:
@@ -17,7 +17,7 @@ jobs:
   build-and-test:
     runs-on: ubuntu-20.04
     steps:
-      # Set fetch-depth: 0 to fetch all history for all branches and tags.
+      # Set fetch-depth: 2 to fetch history.
       - name: Check out code
         uses: actions/checkout@v2.3.4
         with:
@@ -67,6 +67,10 @@ jobs:
           fail_ci_if_error: true
           verbose: true
           flags: integration
+
+      - name: push docker image
+        if: github.event.pull_request.merged == true
+        run: ./gradlew dockerPushImages
 
 
       

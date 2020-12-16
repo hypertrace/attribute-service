@@ -57,7 +57,7 @@ jobs:
   publish-helm-charts:
     runs-on: ubuntu-20.04
     container: hypertrace/helm-gcs-packager:0.3.0
-    needs: publish-images
+    needs: publish-images, validate-helm-charts
     steps:
       # Set fetch-depth: 0 to fetch all history for all branches and tags.
       - name: Checkout Repository

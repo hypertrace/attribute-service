@@ -15,7 +15,7 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v2
       with:
-        fetch-depth: 0
+        fetch-depth: 2
 
     - name: Run Snyk to check for vulnerabilities
       uses: snyk/actions/gradle-jdk11@0.3.0
