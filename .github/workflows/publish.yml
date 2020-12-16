@@ -1,9 +1,8 @@
 name: Publish Docker image
 on:
 # Will only run when release is published. 
-  push:
   release:
-    types: [published]
+    types: created
   workflow_dispatch:
 
 jobs:
@@ -37,3 +36,51 @@ jobs:
 
       - name: Publish docker image
         run: ./gradlew publish dockerPushImages
+
+  validate-helm-charts:
+    runs-on: ubuntu-20.04
+    container: hypertrace/helm-gcs-packager:0.3.0
+    # Set fetch-depth: 0 to fetch all history for all branches and tags.
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+
+      - name: validate charts
+        run: |
+          helm dependency update ./helm/
+          helm lint --strict ./helm/
+          helm template ./helm/
+
+  publish-helm-charts:
+    runs-on: ubuntu-20.04
+    container: hypertrace/helm-gcs-packager:0.3.0
+    needs: publish-images
+    steps:
+      # Set fetch-depth: 0 to fetch all history for all branches and tags.
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}       
+   
+      - name: package and release charts
+        env:
+          HELM_GCS_CREDENTIALS: ${{ secrets.HELM_GCS_CREDENTIALS }}
+          HELM_GCS_REPOSITORY: ${{ secrets.HELM_GCS_REPOSITORY }}
+            # GITHUB_REF will be refs/tags/docker-MAJOR.MINOR.PATCH
+          CHART_VERSION: $(echo ${GITHUB_REF} | cut -d/ -f 3)
+          CHART_NAME: $(awk '/^name:/ {print $2}' ./helm/Chart.yaml)
+        run: |
+            export GOOGLE_APPLICATION_CREDENTIALS=${HOME}/helm-gcs-key.json
+            echo ${{ secrets.HELM_GCS_CREDENTIALS }} > ${GOOGLE_APPLICATION_CREDENTIALS}
+            helm dependency update ./helm/
+            helm repo add helm-gcs $HELM_GCS_REPOSITORY
+            helm package --version ${CHART_VERSION} --app-version ${CHART_VERSION} ./helm/
+            helm gcs push ${CHART_NAME}-${CHART_VERSION}.tgz helm-gcs --public --retry
