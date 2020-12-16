@@ -14,75 +14,7 @@ on:
   pull_request_target:
 
 jobs:
-  unit-test:
-    runs-on: ubuntu-20.04
-    steps:
-      # Set fetch-depth: 0 to fetch all history for all branches and tags.
-      - name: Check out code
-        uses: actions/checkout@v2.3.4
-        with:
-          fetch-depth: 2
-      
-      - name: create checksum file
-        run: find . -type f -name "*.gradle*" -o -name "gradle-wrapper*" | xargs shasum | sort > checksum.txt && cat checksum.txt
-
-      - name: Cache packages
-        id: cache-packages
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle
-          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/checksum.txt') }}
-          restore-keys: gradle-packages-${{ runner.os }}
-        
-      - name: download dependencies
-        run: ./gradlew downloadDependencies
-
-      - name: Unit test
-        run: ./gradlew jacocoTestReport
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1
-        with:
-          name: codecov-line-smoothing
-          fail_ci_if_error: true
-          verbose: true
-          flags: unit
-
-  integration-test:
-    runs-on: ubuntu-20.04
-    steps:
-      # Set fetch-depth: 0 to fetch all history for all branches and tags.
-      - name: Check out code
-        uses: actions/checkout@v2.3.4
-        with:
-          fetch-depth: 2
-      
-      - name: create checksum file
-        run: find . -type f -name "*.gradle*" -o -name "gradle-wrapper*" | xargs shasum | sort > checksum.txt && cat checksum.txt
-
-      - name: Cache packages
-        id: cache-packages
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle
-          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/checksum.txt') }}
-          restore-keys: gradle-packages-${{ runner.os }}
-        
-      - name: download dependencies
-        run: ./gradlew downloadDependencies
-
-      - name: Integration test
-        run: ./gradlew jacocoIntegrationTestReport
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1
-        with:
-          name: codecov-line-smoothing
-          fail_ci_if_error: true
-          verbose: true
-          flags: integration
-
-  build:
+  build-and-test:
     runs-on: ubuntu-20.04
     steps:
       # Set fetch-depth: 0 to fetch all history for all branches and tags.
@@ -113,4 +45,28 @@ jobs:
       
       - name: Build with Gradle
         run: ./gradlew build dockerBuildImages
+
+      - name: Unit test
+        run: ./gradlew jacocoTestReport
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          name: codecov-line-smoothing
+          fail_ci_if_error: true
+          verbose: true
+          flags: unit
+
+      - name: Integration test
+        run: ./gradlew jacocoIntegrationTestReport
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          name: codecov-line-smoothing
+          fail_ci_if_error: true
+          verbose: true
+          flags: integration
+
+
       
