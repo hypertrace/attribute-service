@@ -11,6 +11,7 @@ on:
     paths-ignore:
       - '**/*.md'
   create:
+  pull_request_target:
 
 jobs:
   unit-test:
