@@ -40,8 +40,11 @@ jobs:
 
   publish-helm-charts:
     runs-on: ubuntu-20.04
-    container: hypertrace/helm-gcs-packager:0.3.0
-    needs: publish-images, validate-helm-charts
+    container: 
+      image: hypertrace/helm-gcs-packager:0.3.0
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
     steps:
        # Set fetch-depth: 0 to fetch commit history and tags for use in version calculation
       - name: Checkout Repository

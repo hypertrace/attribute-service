@@ -61,7 +61,7 @@ jobs:
           flags: integration
 
       - name: push docker image
-        if: github.event.pull_request.merged == true
+        if: github.event.pull_request.merged
         run: ./gradlew dockerPushImages
 
 
