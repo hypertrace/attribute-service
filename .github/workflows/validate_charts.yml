@@ -8,7 +8,6 @@ on:
 
 jobs:
   validate-helm-charts:
-    runs-on: ubuntu-20.04
     container: 
     image: hypertrace/helm-gcs-packager:0.3.0
     credentials:
