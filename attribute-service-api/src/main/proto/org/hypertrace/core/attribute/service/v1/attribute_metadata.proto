@@ -54,9 +54,10 @@ enum AttributeType {
 
 enum AttributeSource {
   UNDEFINED = 0;
-  EDS = 1; //EntityDataService
-  AS = 2; //Anomaly Service
-  QS = 3; //Query Service
+  EDS = 1;
+  AS = 2;
+  QS = 3;
+  ES = 4;
 }
 
 enum AggregateFunction {
