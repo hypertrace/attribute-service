@@ -3,18 +3,17 @@ on:
   push:
     branches:
       - main
-    paths-ignore:
-      - '**/*.md'
   pull_request:
-    branches:
-      - main
-    paths-ignore:
-      - '**/*.md'
+
 
 jobs:
   validate-helm-charts:
     runs-on: ubuntu-20.04
-    container: hypertrace/helm-gcs-packager:0.3.0
+    container: 
+    image: hypertrace/helm-gcs-packager:0.3.0
+    credentials:
+      username: ${{ secrets.DOCKERHUB_USERNAME }}
+      password: ${{ secrets.DOCKERHUB_TOKEN }}
      # Set fetch-depth: 0 to fetch commit history and tags for use in version calculation
     steps:
       - name: Check out code
