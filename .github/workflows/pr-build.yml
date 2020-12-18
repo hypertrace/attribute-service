@@ -3,7 +3,9 @@ on:
   push:
     branches:
       - main
+    # adding PR closed event to PR to facilitate merge-publish. [https://docs.github.com/en/free-pro-team@latest/actions/reference/events-that-trigger-workflows#pull_request]
   pull_request:
+    types: [assigned, opened, synchronize, reopened, closed]
   pull_request_target:
 
 jobs:
