@@ -3,6 +3,7 @@ package org.hypertrace.core.attribute.service.model;
 import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import org.hypertrace.core.attribute.service.v1.AttributeDefinition;
 import org.hypertrace.core.attribute.service.v1.AttributeKind;
@@ -50,6 +51,57 @@ public class AttributeMetadataModelTest {
             + "\"supportedAggregations\":[],"
             + "\"onlyAggregationsAllowed\":false,"
             + "\"sources\":[],"
+            + "\"definition\":{\"projection\":{\"attributeId\":\"test\"}},"
+            + "\"id\":\"EVENT.key\","
+            + "\"value_kind\":\"TYPE_STRING\","
+            + "\"display_name\":\"Some Name\","
+            + "\"scope_string\":\"EVENT\","
+            + "\"tenant_id\":\"tenantId\""
+            + "}";
+    Assertions.assertEquals(expectedJson, json);
+    AttributeMetadataModel deserializedModel = AttributeMetadataModel.fromJson(json);
+    Assertions.assertEquals(attributeMetadataModel, deserializedModel);
+  }
+
+  @Test
+  public void testAttributeMetadataModelJsonSerDes_multipleSources() throws IOException {
+    AttributeMetadataModel attributeMetadataModel = new AttributeMetadataModel();
+    attributeMetadataModel.setLabels(Lists.newArrayList("item1"));
+    attributeMetadataModel.setFqn("fqn");
+    attributeMetadataModel.setKey("key");
+    attributeMetadataModel.setDisplayName("Some Name");
+    attributeMetadataModel.setMaterialized(true);
+    attributeMetadataModel.setGroupable(true);
+    attributeMetadataModel.setScopeString(AttributeScope.EVENT.name());
+    attributeMetadataModel.setType(AttributeType.ATTRIBUTE);
+    attributeMetadataModel.setUnit("ms");
+    attributeMetadataModel.setValueKind(AttributeKind.TYPE_STRING);
+    attributeMetadataModel.setTenantId("tenantId");
+    attributeMetadataModel.setSources(
+        List.of(
+            AttributeSource.QS,
+            AttributeSource.AS,
+            AttributeSource.ES,
+            AttributeSource.EDS)
+    );
+    attributeMetadataModel.setDefinition(
+        AttributeDefinition.newBuilder()
+            .setProjection(Projection.newBuilder().setAttributeId("test"))
+            .build());
+
+    String json = attributeMetadataModel.toJson();
+    String expectedJson =
+        "{"
+            + "\"fqn\":\"fqn\","
+            + "\"key\":\"key\","
+            + "\"materialized\":true,"
+            + "\"unit\":\"ms\","
+            + "\"type\":\"ATTRIBUTE\","
+            + "\"labels\":[\"item1\"],"
+            + "\"groupable\":true,"
+            + "\"supportedAggregations\":[],"
+            + "\"onlyAggregationsAllowed\":false,"
+            + "\"sources\":[\"QS\",\"AS\",\"ES\",\"EDS\"],"
             + "\"definition\":{\"projection\":{\"attributeId\":\"test\"}},"
             + "\"id\":\"EVENT.key\","
             + "\"value_kind\":\"TYPE_STRING\","
@@ -255,6 +307,34 @@ public class AttributeMetadataModelTest {
   }
 
   @Test
+  public void testAttributeSourcesFromJson() throws IOException {
+    String json =
+        "{"
+            + "\"fqn\":\"fqn\","
+            + "\"key\":\"key\","
+            + "\"scope\":\"EVENT\","
+            + "\"materialized\":true,"
+            + "\"unit\":\"ms\","
+            + "\"type\":\"ATTRIBUTE\","
+            + "\"labels\":[\"item1\"],"
+            + "\"supportedAggregations\":[],"
+            + "\"onlyAggregationsAllowed\":false,"
+            + "\"sources\":[\"ES\",\"EDS\"],"
+            + "\"id\":\"EVENT.key\","
+            + "\"value_kind\":\"TYPE_BOOL\","
+            + "\"display_name\":\"Some Name\","
+            + "\"tenant_id\":\"tenantId\""
+            + "}";
+
+    // backward compatibility test, no groupable field, BOOL type
+    AttributeMetadataModel deserializedModel = AttributeMetadataModel.fromJson(json);;
+    AttributeMetadata metadata = deserializedModel.toDTO();
+    Assertions.assertEquals(
+        List.of(AttributeSource.ES, AttributeSource.EDS),
+        metadata.getSourcesList());
+  }
+
+    @Test
   void testScopeStringCompatibility() throws IOException {
     final AttributeMetadata template =
         AttributeMetadata.newBuilder()
