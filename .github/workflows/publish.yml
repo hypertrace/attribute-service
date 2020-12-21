@@ -58,7 +58,7 @@ jobs:
           HELM_GCS_REPOSITORY: ${{ secrets.HELM_GCS_REPOSITORY }}
             # GITHUB_REF will be refs/tags/docker-MAJOR.MINOR.PATCH
         run: |
-            CHART_VERSION=$(git describe --abbrev=0)
+            CHART_VERSION=$(echo ${GITHUB_REF} | cut -d/ -f 3)
             CHART_NAME=$(awk '/^name:/ {print $2}' ./helm/Chart.yaml)
             export GOOGLE_APPLICATION_CREDENTIALS=${HOME}/helm-gcs-key.json
             echo $HELM_GCS_CREDENTIALS > ${GOOGLE_APPLICATION_CREDENTIALS}

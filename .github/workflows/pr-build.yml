@@ -1,21 +1,21 @@
-name: build and test
+name: build
 on:
   push:
     branches:
       - main
-    # adding PR closed event to PR to facilitate merge-publish. [https://docs.github.com/en/free-pro-team@latest/actions/reference/events-that-trigger-workflows#pull_request]
-  pull_request:
-    types: [assigned, opened, synchronize, reopened, closed]
   pull_request_target:
 
+
 jobs:
-  build-and-test:
+  build:
     runs-on: ubuntu-20.04
     steps:
        # Set fetch-depth: 0 to fetch commit history and tags for use in version calculation
       - name: Check out code
         uses: actions/checkout@v2.3.4
         with:
+          ref: ${{github.event.pull_request.head.ref}}
+          repository: ${{github.event.pull_request.head.repo.full_name}}
           fetch-depth: 0
       
       - name: create checksum file
@@ -40,33 +40,6 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build dockerBuildImages
 
-      - name: Unit test
-        run: ./gradlew jacocoTestReport
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1
-        with:
-          name: codecov-line-smoothing
-          fail_ci_if_error: true
-          verbose: true
-          flags: unit
-
-      - name: Integration test
-        run: ./gradlew jacocoIntegrationTestReport
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1
-        with:
-          name: codecov-line-smoothing
-          fail_ci_if_error: true
-          verbose: true
-          flags: integration
-
-      - name: push docker image
-         # https://docs.github.com/en/free-pro-team@latest/developers/webhooks-and-events/webhook-events-and-payloads#pull_request
-        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
-        run: ./gradlew dockerPushImages
-
   validate-helm-charts:
     runs-on: ubuntu-20.04
     container: 
@@ -79,6 +52,8 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2.3.4
         with:
+          ref: ${{github.event.pull_request.head.ref}}
+          repository: ${{github.event.pull_request.head.repo.full_name}}
           fetch-depth: 0
 
       - name: validate charts
@@ -91,14 +66,16 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     # Set fetch-depth: 0 to fetch commit history and tags for use in version calculation
-    - name: Checkout Repository
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
+      - name: Check out code
+        uses: actions/checkout@v2.3.4
+        with:
+          ref: ${{github.event.pull_request.head.ref}}
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          fetch-depth: 0
 
-    - name: Run Snyk to check for vulnerabilities
-      uses: snyk/actions/gradle-jdk11@0.3.0
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      with:
-        args: --all-sub-projects --policy-path=.snyk --configuration-matching='^runtimeClasspath$'
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/gradle-jdk11@0.3.0
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --all-sub-projects --policy-path=.snyk --configuration-matching='^runtimeClasspath$'
