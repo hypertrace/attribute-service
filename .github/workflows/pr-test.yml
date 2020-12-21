@@ -33,7 +33,7 @@ jobs:
         run: ./gradlew jacocoTestReport 
         
       - name: Copy unit test reports
-      - run: ./gradlew copyAllReports --output-dir=/tmp/unit-test-reports
+        run: ./gradlew copyAllReports --output-dir=/tmp/unit-test-reports
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
@@ -54,7 +54,7 @@ jobs:
         run: ./gradlew jacocoIntegrationTestReport copyAllReports --output-dir=/tmp/integration-test-reports
 
       - name: Copy integration test reports
-      - run: ./gradlew copyAllReports --output-dir=/tmp/integration-test-reports
+        run: ./gradlew copyAllReports --output-dir=/tmp/integration-test-reports
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
