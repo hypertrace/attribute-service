@@ -1,4 +1,4 @@
-name: build
+name: merge-publish
 on:
   push:
     branches:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  merge-publish:
     runs-on: ubuntu-20.04
     steps:
        # Set fetch-depth: 0 to fetch commit history and tags for use in version calculation
