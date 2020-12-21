@@ -30,7 +30,10 @@ jobs:
             gradle-packages-${{ runner.os }}
 
       - name: Unit test
-        run: ./gradlew jacocoTestReport
+        run: ./gradlew jacocoTestReport 
+        
+      - name: Copy unit test reports
+      - run: ./gradlew copyAllReports --output-dir=/tmp/unit-test-reports
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
@@ -39,9 +42,19 @@ jobs:
           fail_ci_if_error: true
           verbose: true
           flags: unit
+      
+      - name: Archive unit test report
+        uses: actions/upload-artifact@v1
+        with:
+          name: unit-test
+          path: ./tmp/unit-test-reports
+        if: ${{ always() }}
 
       - name: Integration test
-        run: ./gradlew jacocoIntegrationTestReport
+        run: ./gradlew jacocoIntegrationTestReport copyAllReports --output-dir=/tmp/integration-test-reports
+
+      - name: Copy integration test reports
+      - run: ./gradlew copyAllReports --output-dir=/tmp/integration-test-reports
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
@@ -50,3 +63,10 @@ jobs:
           fail_ci_if_error: true
           verbose: true
           flags: integration
+
+      - name: Archive integration test report
+        uses: actions/upload-artifact@v1
+        with:
+          name: integration-test
+          path: ./tmp/integration-test-reports
+        if: ${{ always() }}
