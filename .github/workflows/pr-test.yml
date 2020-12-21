@@ -33,7 +33,7 @@ jobs:
         run: ./gradlew jacocoTestReport 
         
       - name: Copy unit test reports
-        run: ./gradlew copyAllReports --output-dir=/unit-test-reports
+        run: ./gradlew copyAllReports --output-dir=/tmp/unit-test-reports
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
@@ -47,11 +47,11 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
           name: unit-test
-          path: /unit-test-reports
+          path: /tmp/unit-test-reports
         if: ${{ always() }}
 
       - name: Integration test
-        run: ./gradlew jacocoIntegrationTestReport copyAllReports --output-dir=/integration-test-reports
+        run: ./gradlew jacocoIntegrationTestReport 
 
       - name: Copy integration test reports
         run: ./gradlew copyAllReports --output-dir=/tmp/integration-test-reports
@@ -68,5 +68,5 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
           name: integration-test
-          path: /integration-test-reports
+          path: /tmp/integration-test-reports
         if: ${{ always() }}
