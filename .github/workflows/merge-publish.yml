@@ -38,8 +38,8 @@ jobs:
         
       - name: branch name tag
         run: | 
-	        GHA_BRANCH="${GITHUB_REF#refs/heads/}"
-	        echo "GHA_BRANCH=${BRANCH}" >> $GITHUB_ENV
+          BRANCH="${GITHUB_REF#refs/heads/}"
+          echo "BRANCH=${BRANCH}" >> $GITHUB_ENV
 
       - name: push docker image
         run: ./gradlew dockerPushImages
