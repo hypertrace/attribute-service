@@ -66,9 +66,6 @@ jobs:
     runs-on: ubuntu-20.04
     container:
       image: hypertrace/helm-gcs-packager:0.3.0
-      credentials:
-        username: ${{ secrets.DOCKERHUB_READ_USER }}
-        password: ${{ secrets.DOCKERHUB_READ_TOKEN }}
     steps:
       # Set fetch-depth: 0 to fetch commit history and tags for use in version calculation
       - name: Checkout Repository
@@ -76,11 +73,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: test
-        env:
-          HELM_GCS_CREDENTIALS: ${{ secrets.HELM_GCS_CREDENTIALS }}
-          HELM_GCS_REPOSITORY: ${{ secrets.HELM_GCS_REPOSITORY }}
-          # GITHUB_REF will be refs/tags/docker-MAJOR.MINOR.PATCH
         run: |
-          helm plugin list
-          helm version
+          helm plugin list --debug
+          helm version --debug
           pwd
