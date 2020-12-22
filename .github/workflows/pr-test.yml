@@ -74,6 +74,7 @@ jobs:
           fetch-depth: 0
       - name: test
         run: |
+          helm env
           helm plugin list --debug
           helm version --debug
           pwd
