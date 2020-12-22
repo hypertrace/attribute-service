@@ -62,3 +62,28 @@ jobs:
           name: test-reports
           path: /tmp/test-reports
         if: ${{ always() }}
+  test-helm-charts:
+    runs-on: ubuntu-20.04
+    container:
+      image: hypertrace/helm-gcs-packager:0.3.0
+      credentials:
+        username: ${{ secrets.DOCKERHUB_READ_USER }}
+        password: ${{ secrets.DOCKERHUB_READ_TOKEN }}
+    steps:
+      # Set fetch-depth: 0 to fetch commit history and tags for use in version calculation
+      - name: Checkout Repository
+        uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+      - name: test
+        env:
+          HELM_GCS_CREDENTIALS: ${{ secrets.HELM_GCS_CREDENTIALS }}
+          HELM_GCS_REPOSITORY: ${{ secrets.HELM_GCS_REPOSITORY }}
+          # GITHUB_REF will be refs/tags/docker-MAJOR.MINOR.PATCH
+        run: |
+          CHART_VERSION=$(git describe --abbrev=0)
+          CHART_NAME=$(awk '/^name:/ {print $2}' ./helm/Chart.yaml)
+          export GOOGLE_APPLICATION_CREDENTIALS=${HOME}/helm-gcs-key.json
+          echo $HELM_GCS_CREDENTIALS > ${GOOGLE_APPLICATION_CREDENTIALS}
+          helm dependency update ./helm/
+          helm repo add helm-gcs $HELM_GCS_REPOSITORY
