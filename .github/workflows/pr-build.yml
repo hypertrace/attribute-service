@@ -39,9 +39,6 @@ jobs:
       
       - name: Build with Gradle
         run: ./gradlew build dockerBuildImages
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
 
   validate-helm-charts:
     runs-on: ubuntu-20.04
