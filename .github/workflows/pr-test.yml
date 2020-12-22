@@ -78,6 +78,7 @@ jobs:
           HELM_GCS_REPOSITORY: ${{ secrets.HELM_GCS_REPOSITORY }}
           HOME: /root
         run: |
+          helm env
           CHART_VERSION=$(git describe --abbrev=0)
           CHART_NAME=$(awk '/^name:/ {print $2}' ./helm/Chart.yaml)
           export GOOGLE_APPLICATION_CREDENTIALS=${HOME}/helm-gcs-key.json
