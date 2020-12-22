@@ -38,8 +38,10 @@ jobs:
       - name: publish docker image
         run: ./gradlew publish dockerPushImages
         env:
-          username: ${{ secrets.DOCKERHUB_PUBLISH_USER }}
-          password: ${{ secrets.DOCKERHUB_PUBLISH_TOKEN }}
+          DOCKER_USERNAME: ${{ secrets.DOCKERHUB_PUBLISH_USER }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_PUBLISH_TOKEN }}
+          ORG_GRADLE_PROJECT_publishUser: ${{ secrets.BINTRAY_USER }}
+          ORG_GRADLE_PROJECT_publishApiKey: ${{ secrets.BINTRAY_API_KEY }}
 
   publish-helm-charts:
     needs: publish-images
