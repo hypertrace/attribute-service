@@ -39,5 +39,5 @@ jobs:
       - name: push docker image
         run: ./gradlew dockerPushImages
         env:
-          username: ${{ secrets.DOCKERHUB_PUBLISH_USER }}
-          password: ${{ secrets.DOCKERHUB_PUBLISH_TOKEN }}
+          DOCKER_USERNAME: ${{ secrets.DOCKERHUB_PUBLISH_USER }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_PUBLISH_TOKEN }}
