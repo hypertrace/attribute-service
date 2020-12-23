@@ -41,7 +41,6 @@ jobs:
           fail_ci_if_error: true
           verbose: true
           flags: unit
-          verbose: true
 
       - name: Integration test
         run: ./gradlew jacocoIntegrationTestReport 
@@ -56,7 +55,6 @@ jobs:
           fail_ci_if_error: true
           verbose: true
           flags: integration
-          verbose: true
 
       - name: Archive integration test report
         uses: actions/upload-artifact@v1
