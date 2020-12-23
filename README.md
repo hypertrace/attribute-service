@@ -49,6 +49,10 @@ The Attribute service uses gradlew to compile/install/distribute. Gradle wrapper
 ### Running unit tests
 Run `./gradlew test` to execute unit tests. 
 
+### Runnin integration tests
+
+Run `./gradlew integrationTest` to execute integration tests. 
+
 
 ### Testing image
 
