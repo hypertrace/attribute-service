@@ -41,7 +41,6 @@ jobs:
           fail_ci_if_error: true
           verbose: true
           flags: unit
-          name: codecov-1
           verbose: true
 
       - name: Integration test
@@ -57,7 +56,6 @@ jobs:
           fail_ci_if_error: true
           verbose: true
           flags: integration
-          name: codecov-1
           verbose: true
 
       - name: Archive integration test report
