@@ -29,7 +29,7 @@ jobs:
             gradle-packages-${{ runner.os }}
 
       - name: Unit test
-        run: ./gradlew clean jacocoTestReport --stacktrace
+        run: ./gradlew -no-build-cache cleanTest jacocoTestReport
         
       - name: Copy unit test reports
         run: ./gradlew copyAllReports --output-dir=/tmp/test-reports
@@ -42,7 +42,7 @@ jobs:
           flags: unit
 
       - name: Integration test
-        run: ./gradlew clean jacocoIntegrationTestReport --stacktrace
+        run: ./gradlew -no-build-cache cleanTest jacocoIntegrationTestReport
 
       - name: Copy integration test reports
         run: ./gradlew copyAllReports --output-dir=/tmp/test-reports
