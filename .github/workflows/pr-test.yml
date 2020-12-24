@@ -29,32 +29,27 @@ jobs:
             gradle-packages-${{ runner.os }}
 
       - name: Unit test
-        run: ./gradlew jacocoTestReport 
-        
-      - name: Copy unit test reports
-        run: ./gradlew copyAllReports --output-dir=/tmp/test-reports
+        run: ./gradlew -no-build-cache cleanTest jacocoTestReport
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
-          name: codecov-line-smoothing
+          name: unit test reports
           fail_ci_if_error: true
-          verbose: true
           flags: unit
 
       - name: Integration test
-        run: ./gradlew jacocoIntegrationTestReport 
-
-      - name: Copy integration test reports
-        run: ./gradlew copyAllReports --output-dir=/tmp/test-reports
+        run: ./gradlew -no-build-cache cleanTest jacocoIntegrationTestReport
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
-          name: codecov-line-smoothing
+          name: integration test reports
           fail_ci_if_error: true
-          verbose: true
           flags: integration
+
+      - name: Copy test reports
+        run: ./gradlew copyAllReports --output-dir=/tmp/test-reports
 
       - name: Archive integration test report
         uses: actions/upload-artifact@v1
