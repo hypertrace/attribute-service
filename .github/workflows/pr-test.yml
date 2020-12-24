@@ -1,4 +1,4 @@
-nname: test
+name: test
 on:
   push:
     branches:
