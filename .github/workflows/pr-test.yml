@@ -16,7 +16,7 @@ jobs:
           fetch-depth: 0
       
       - name: create checksum file
-        uses: ./.github/workflows/actions/checksum/
+        uses: hypertrace/actions/checksum@0.0.1
 
       - name: Cache packages
         id: cache-packages
