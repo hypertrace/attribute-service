@@ -45,10 +45,3 @@ jobs:
         with:
           fail_ci_if_error: true
           flags: integration
-
-      - name: Archive integration test report
-        uses: actions/upload-artifact@v1
-        with:
-          name: test-reports
-          path: /tmp/test-reports
-        if: ${{ always() }}
