@@ -37,7 +37,7 @@ jobs:
       - name: Copy integration test reports
         run: ./gradlew copyAllReports --output-dir=/tmp/test-reports
 
-      - name: Archive integration test report
+      - name: Archive test report
         uses: actions/upload-artifact@v1
         with:
           name: test-reports
