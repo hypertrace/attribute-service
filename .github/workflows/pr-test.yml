@@ -1,37 +1,47 @@
-name: "test"
-
+nname: test
 on:
-  pull_request:
+  push:
     branches:
       - main
+  pull_request:
 
 jobs:
   test:
-    name: test
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+       # Set fetch-depth: 0 to fetch commit history and tags for use in version calculation
+      - name: Check out code
+        uses: actions/checkout@v2
         with:
           fetch-depth: 0
+      
+      - name: create checksum file
+        run: find . -type f -name "*.gradle*" -o -name "gradle-wrapper*" | xargs shasum | sort > checksum.txt && cat checksum.txt
 
-      - uses: burrunan/gradle-cache-action@v1.6
+      - name: Cache packages
+        id: cache-packages
+        uses: actions/cache@v2
         with:
-          remote-build-cache-proxy-enabled: false
-          arguments: --stacktrace 'jacocoTestReport'
+          path: ~/.gradle
+          key: gradle-packages-${{ runner.os }}-${{ github.job }}-${{ hashFiles('**/checksum.txt') }}
+          restore-keys: |
+            gradle-packages-${{ runner.os }}-${{ github.job }}
+            gradle-packages-${{ runner.os }}
+      - name: Unit test
+        run: ./gradlew jacocoTestReport 
 
       - uses: codecov/codecov-action@v1
         with:
-          name: unit-test-report
+          name: codecov-line-smoothing
           fail_ci_if_error: true
           flags: unit
 
-      - uses: burrunan/gradle-cache-action@v1.6
-        with:
-          remote-build-cache-proxy-enabled: false
-          arguments: --stacktrace 'jacocoIntegrationTestReport'
+      - name: Integration test
+        run: ./gradlew jacocoIntegrationTestReport 
+
       - uses: codecov/codecov-action@v1
         with:
-          name: integration-test-report
+          name: codecov-line-smoothing
           fail_ci_if_error: true
           flags: integration
 
