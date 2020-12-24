@@ -13,15 +13,16 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+
       - uses: burrunan/gradle-cache-action@v1.6
         with:
           remote-build-cache-proxy-enabled: false
           arguments: --stacktrace 'jacocoTestReport'
+
       - uses: codecov/codecov-action@v1
         with:
           name: unit-test-report
           fail_ci_if_error: true
-          verbose: true
           flags: unit
 
       - uses: burrunan/gradle-cache-action@v1.6
@@ -32,10 +33,9 @@ jobs:
         with:
           name: integration-test-report
           fail_ci_if_error: true
-          verbose: true
           flags: integration
 
-      - name: Copy integration test reports
+      - name: Copy test reports
         run: ./gradlew copyAllReports --output-dir=/tmp/test-reports
 
       - name: Archive test report
