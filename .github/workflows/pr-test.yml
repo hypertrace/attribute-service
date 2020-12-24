@@ -16,7 +16,7 @@ jobs:
           fetch-depth: 0
       
       - name: create checksum file
-        uses: hypertrace/actions/checksum@0.0.1
+        uses: hypertrace/actions/checksum@main
 
       - name: Cache packages
         id: cache-packages
@@ -59,4 +59,4 @@ jobs:
         if: ${{ always() }}
 
       - name: validate charts
-        uses: ./.github/workflows/actions/validate-charts/
+        uses: hypertrace/actions/validate-charts@main
