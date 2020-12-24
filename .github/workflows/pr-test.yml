@@ -58,5 +58,5 @@ jobs:
           path: /tmp/test-reports
         if: ${{ always() }}
 
-     - name: validate charts
-       uses: ./.github/workflows/actions/validate-charts/
+      - name: validate charts
+        uses: ./.github/workflows/actions/validate-charts/
