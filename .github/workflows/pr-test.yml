@@ -16,7 +16,7 @@ jobs:
           ref: test-actions
       
       - name: create checksum file
-        uses: ./.github/actions/checksum/
+        uses: ./.github/workflows/actions/checksum
 
       - name: Cache packages
         id: cache-packages
