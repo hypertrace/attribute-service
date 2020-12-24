@@ -20,10 +20,5 @@ jobs:
       - uses: burrunan/gradle-cache-action@v1.6
         with:
           remote-build-cache-proxy-enabled: false
-          arguments: build --stacktrace ${{ 'jacocoIntegrationTestReport' || '' }}
+          arguments: --stacktrace ${{ 'jacocoIntegrationTestReport' || '' }}
       - uses: codecov/codecov-action@v1
-      - uses: actions/upload-artifact@v2
-        if: ${{ matrix.coverage }}
-        with:
-          name: coverage-report
-          path: all/build/reports/jacoco/test/html
