@@ -1,4 +1,4 @@
-name: "PR Build"
+name: "test"
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build:
+  test:
     name: Build
     runs-on: ${{ matrix.os }}
     strategy:
