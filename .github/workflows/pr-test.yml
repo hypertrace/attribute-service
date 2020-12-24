@@ -33,3 +33,13 @@ jobs:
           fail_ci_if_error: true
           verbose: true
           flags: integration
+
+      - name: Copy integration test reports
+        run: ./gradlew copyAllReports --output-dir=/tmp/test-reports
+
+      - name: Archive integration test report
+        uses: actions/upload-artifact@v1
+        with:
+          name: test-reports
+          path: /tmp/test-reports
+        if: ${{ always() }}
