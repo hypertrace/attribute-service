@@ -47,6 +47,7 @@ jobs:
       - name: Copy integration test reports
         run: ./gradlew copyAllReports --output-dir=/tmp/test-reports
 
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
