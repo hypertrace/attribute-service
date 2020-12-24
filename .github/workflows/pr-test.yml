@@ -39,7 +39,6 @@ jobs:
         with:
           name: codecov-line-smoothing
           fail_ci_if_error: true
-          verbose: true
           flags: unit
 
       - name: Integration test
@@ -53,7 +52,6 @@ jobs:
         with:
           name: codecov-line-smoothing
           fail_ci_if_error: true
-          verbose: true
           flags: integration
 
       - name: Archive integration test report
