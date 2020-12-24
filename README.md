@@ -14,7 +14,7 @@ groupable : true,
 display_name: Endpoint Name,
 scope: API_TRACE,
 sources: [QS],
-type: ATTRIBUTE
+type: ATTRIBUTE 
 ```
 While hypertrace offers a simple service model, it also permits storing certain fields in different backends. Attributes include tags to help locate the service hosting their corresponding data.
 
