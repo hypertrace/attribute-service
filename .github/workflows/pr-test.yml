@@ -18,6 +18,16 @@ jobs:
       - name: create checksum file
         run: find . -type f -name "*.gradle*" -o -name "gradle-wrapper*" | xargs shasum | sort > checksum.txt && cat checksum.txt
 
+      - name: Cache packages
+        id: cache-packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle
+          key: gradle-packages-${{ runner.os }}-${{ github.job }}-${{ hashFiles('**/checksum.txt') }}
+          restore-keys: |
+            gradle-packages-${{ runner.os }}-${{ github.job }}
+            gradle-packages-${{ runner.os }}
+
       - name: Unit test
         run: ./gradlew clean jacocoTestReport --stacktrace
         
