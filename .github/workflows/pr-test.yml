@@ -57,6 +57,3 @@ jobs:
           name: test-reports
           path: /tmp/test-reports
         if: ${{ always() }}
-
-      - name: validate charts
-        uses: hypertrace/actions/validate-charts@main

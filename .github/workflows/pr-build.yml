@@ -58,10 +58,7 @@ jobs:
           fetch-depth: 0
 
       - name: validate charts
-        run: |
-          helm dependency update ./helm/
-          helm lint --strict ./helm/
-          helm template ./helm/
+        uses: hypertrace/actions/validate-charts@main
 
   snyk-scan:
     runs-on: ubuntu-20.04
