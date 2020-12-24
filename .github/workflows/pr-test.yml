@@ -10,13 +10,13 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
        # Set fetch-depth: 0 to fetch commit history and tags for use in version calculation
-      - name: Checkout
+      - name: Check out code
         uses: actions/checkout@v2.3.4
         with:
-          ref: test-actions
+          fetch-depth: 0
       
       - name: create checksum file
-        uses: ./.github/workflows/actions/checksum
+        uses: ./.github/workflows/actions/checksum/
 
       - name: Cache packages
         id: cache-packages
@@ -57,3 +57,6 @@ jobs:
           name: test-reports
           path: /tmp/test-reports
         if: ${{ always() }}
+
+     - name: validate charts
+       uses: ./.github/workflows/actions/validate-charts/
