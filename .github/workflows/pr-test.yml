@@ -7,10 +7,8 @@ on:
 
 jobs:
   test:
+    name: test
     runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        coverage: true
     steps:
       - uses: actions/checkout@v2
         with:
@@ -18,11 +16,11 @@ jobs:
       - uses: burrunan/gradle-cache-action@v1.6
         with:
           remote-build-cache-proxy-enabled: false
-          arguments: build --stacktrace ${{ matrix.coverage && 'jacocoTestReport' || '' }}
+          arguments: build --stacktrace ${{ 'jacocoTestReport' || '' }}
       - uses: burrunan/gradle-cache-action@v1.6
         with:
           remote-build-cache-proxy-enabled: false
-          arguments: build --stacktrace ${{ matrix.coverage && 'jacocoIntegrationTestReport' || '' }}
+          arguments: build --stacktrace ${{ 'jacocoIntegrationTestReport' || '' }}
       - uses: codecov/codecov-action@v1
       - uses: actions/upload-artifact@v2
         if: ${{ matrix.coverage }}
