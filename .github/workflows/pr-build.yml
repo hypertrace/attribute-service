@@ -1,23 +1,26 @@
-name: build and test
+name: build and validate
 on:
   push:
     branches:
       - main
-  pull_request:
   pull_request_target:
+    branches: 
+      - main
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ubuntu-20.04
     steps:
        # Set fetch-depth: 0 to fetch commit history and tags for use in version calculation
       - name: Check out code
         uses: actions/checkout@v2.3.4
         with:
+          ref: ${{github.event.pull_request.head.ref}}
+          repository: ${{github.event.pull_request.head.repo.full_name}}
           fetch-depth: 0
       
       - name: create checksum file
-        run: find . -type f -name "*.gradle*" -o -name "gradle-wrapper*" | xargs shasum | sort > checksum.txt && cat checksum.txt
+        uses: hypertrace/actions/checksum@main
 
       - name: Cache packages
         id: cache-packages
@@ -32,37 +35,44 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_READ_USER }}
+          password: ${{ secrets.DOCKERHUB_READ_TOKEN }}
       
       - name: Build with Gradle
         run: ./gradlew build dockerBuildImages
 
-      - name: Unit test
-        run: ./gradlew jacocoTestReport
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1
+  validate-helm-charts:
+    runs-on: ubuntu-20.04
+    container: 
+      image: hypertrace/helm-gcs-packager:0.3.1
+      credentials:
+        username: ${{ secrets.DOCKERHUB_READ_USER }}
+        password: ${{ secrets.DOCKERHUB_READ_TOKEN }}
+     # Set fetch-depth: 0 to fetch commit history and tags for use in version calculation
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2.3.4
         with:
-          name: codecov-line-smoothing
-          fail_ci_if_error: true
-          verbose: true
-          flags: unit
+          ref: ${{github.event.pull_request.head.ref}}
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          fetch-depth: 0
 
-      - name: Integration test
-        run: ./gradlew jacocoIntegrationTestReport
+      - name: validate charts
+        uses: hypertrace/actions/validate-charts@main
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1
+  snyk-scan:
+    runs-on: ubuntu-20.04
+    steps:
+    # Set fetch-depth: 0 to fetch commit history and tags for use in version calculation
+      - name: Check out code
+        uses: actions/checkout@v2.3.4
         with:
-          name: codecov-line-smoothing
-          fail_ci_if_error: true
-          verbose: true
-          flags: integration
-
-      - name: push docker image
-        if: github.event.pull_request.merged
-        run: ./gradlew dockerPushImages
-
-
-      
+          ref: ${{github.event.pull_request.head.ref}}
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          fetch-depth: 0
+      - name: Setup snyk
+        uses: snyk/actions/setup@0.3.0
+      - name: Snyk test
+        run: snyk test --all-sub-projects --org=hypertrace --severity-threshold=low --policy-path=.snyk --configuration-matching='^runtimeClasspath$'
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
