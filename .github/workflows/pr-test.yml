@@ -30,30 +30,20 @@ jobs:
 
       - name: Unit test
         run: ./gradlew jacocoTestReport 
-        
-      - name: Copy unit test reports
-        run: ./gradlew copyAllReports --output-dir=/tmp/test-reports
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v1.1.1
         with:
-          name: codecov-line-smoothing
           fail_ci_if_error: true
-          verbose: true
           flags: unit
 
       - name: Integration test
         run: ./gradlew jacocoIntegrationTestReport 
 
-      - name: Copy integration test reports
-        run: ./gradlew copyAllReports --output-dir=/tmp/test-reports
-
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v1.1.1
         with:
-          name: codecov-line-smoothing
           fail_ci_if_error: true
-          verbose: true
           flags: integration
 
       - name: Archive integration test report
