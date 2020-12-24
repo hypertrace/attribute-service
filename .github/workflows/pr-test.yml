@@ -19,17 +19,18 @@ jobs:
           arguments: --stacktrace 'jacocoTestReport'
       - uses: codecov/codecov-action@v1
         with:
-          name: codecov-line-smoothing
+          name: unit-test-report
           fail_ci_if_error: true
           verbose: true
           flags: unit
+
       - uses: burrunan/gradle-cache-action@v1.6
         with:
           remote-build-cache-proxy-enabled: false
           arguments: --stacktrace 'jacocoIntegrationTestReport'
       - uses: codecov/codecov-action@v1
         with:
-          name: codecov-line-smoothing
+          name: integration-test-report
           fail_ci_if_error: true
           verbose: true
           flags: integration
