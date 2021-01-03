@@ -91,5 +91,3 @@ jobs:
         with:
           helm-gcs-repository: gs://dummy_repo_input
           helm-gcs-credentials: DUMMY_CREDS_INPUT
-
-      -
