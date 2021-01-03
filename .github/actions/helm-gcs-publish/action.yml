@@ -24,7 +24,7 @@ runs:
           echo ${INPUT_CREDENTIALS:-$HELM_GCS_CREDENTIALS} > ${GOOGLE_APPLICATION_CREDENTIALS}
 
           helm dependency update ${{ inputs.chart-path }}
-          helm repo add helm-gcs ${INPUT_REPOSITORY:-$HELM_GCS_REPOSITORY}
-          helm package --version ${CHART_VERSION} --app-version ${CHART_VERSION} ${{ inputs.chart-path }}
+          echo helm repo add helm-gcs ${INPUT_REPOSITORY:-$HELM_GCS_REPOSITORY}
+          echo helm package --version ${CHART_VERSION} --app-version ${CHART_VERSION} ${{ inputs.chart-path }}
           cat ${GOOGLE_APPLICATION_CREDENTIALS}
       shell: sh
