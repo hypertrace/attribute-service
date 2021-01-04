@@ -57,7 +57,7 @@ jobs:
         if: always()
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          files: ./**/*.xml
+          files: ./**/jacoco/**/*.xml
      
       - name: Copy test reports
         run: ./gradlew copyAllReports --output-dir=/tmp/test-reports
