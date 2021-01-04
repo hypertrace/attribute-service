@@ -41,7 +41,9 @@ jobs:
           flags: unit
 
       - name: Integration test
-        run: ./gradlew jacocoIntegrationTestReport
+        uses: ./.github/actions/gradle/
+        with: 
+          args: jacocoIntegrationTestReport
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
