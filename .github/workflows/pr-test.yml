@@ -28,8 +28,9 @@ jobs:
             gradle-packages-${{ runner.os }}-${{ github.job }}
             gradle-packages-${{ runner.os }}
 
-      - name: Unit test
-        run: ./gradlew jacocoTestReport
+        uses: ./.github/actions/gradle/
+        with: 
+          arg: jacocoTestReport
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
