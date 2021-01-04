@@ -37,6 +37,23 @@ jobs:
         uses: ./.github/actions/gradle/
         with: 
           args: jacocoIntegrationTestReport
-
+     
       - name: validate charts
         uses: ./.github/actions/validate-charts/
+
+      - name: Copy test reports
+        run: ./gradlew copyAllReports --output-dir=/tmp/test-reports
+
+      - name: Archive test reports
+        uses: actions/upload-artifact@v1
+        with:
+          name: test-reports
+          path: /tmp/test-reports
+        if: always()
+
+      - name: Publish Unit Test Results
+        uses: docker://ghcr.io/enricomi/publish-unit-test-result-action:v1.6
+        if: always()
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          files: /tmp/test-reports/**/*.xml
