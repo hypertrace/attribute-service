@@ -67,7 +67,6 @@ jobs:
         if: always()
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          files: /attribute-service-tenant-api/build/reports/jacoco/test/jacocoTestReport.xml , /attribute-service-impl/build/reports/jacoco/test/jacocoTestReport.xml , /attribute-projection-functions/build/reports/jacoco/test/jacocoTestReport.xml , /caching-attribute-service-client/build/reports/jacoco/test/jacocoTestReport.xml , /attribute-projection-registry/build/reports/jacoco/test/jacocoTestReport.xml
      
       - name: validate charts
         uses: ./.github/actions/validate-charts/
