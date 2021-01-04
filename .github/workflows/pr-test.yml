@@ -59,8 +59,10 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           files: ./**/jacoco/test/*.xml
      
-      - name: Copy test reports
-        run: ./gradlew copyAllReports --output-dir=/tmp/test-reports
+      - name: copy test reports
+        uses: ./.github/actions/gradle/
+        with: 
+          args: copyAllReports --output-dir=/tmp/test-reports
 
       - name: Archive test reports
         uses: actions/upload-artifact@v1
