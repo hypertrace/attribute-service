@@ -51,13 +51,6 @@ jobs:
           name: integration test reports
           fail_ci_if_error: true
           flags: integration
-      
-      - name: Publish Unit Test Results
-        uses: docker://ghcr.io/enricomi/publish-unit-test-result-action:v1.6
-        if: always()
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          files: ./**/jacoco/test/*.xml
      
       - name: copy test reports
         uses: ./.github/actions/gradle/
@@ -71,6 +64,13 @@ jobs:
           path: /tmp/test-reports
         if: always()
 
+      - name: Publish Unit Test Results
+        uses: docker://ghcr.io/enricomi/publish-unit-test-result-action:v1.6
+        if: always()
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          files: ./**/jacoco/test/*.xml
+          
       - name: validate charts
         uses: ./.github/actions/validate-charts/
 
