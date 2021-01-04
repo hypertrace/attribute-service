@@ -1,8 +1,6 @@
 #!/bin/sh -l
 
-echo "Hello world"
+echo "validating helm charts"
 helm dependency update ./helm/
 helm lint --strict ./helm/
 helm template ./helm/
-
-echo "done"
