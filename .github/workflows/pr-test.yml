@@ -69,8 +69,8 @@ jobs:
         if: always()
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          files: ./**/jacoco/test/*.xml
-          
+          files: ./**/build/test-results/**/*.xml
+
       - name: validate charts
         uses: ./.github/actions/validate-charts/
 
