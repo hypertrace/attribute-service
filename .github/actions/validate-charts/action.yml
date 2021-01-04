@@ -4,9 +4,9 @@ inputs:
   script:
     description: 'Customizable script run to install the opam package(s).'
     default: |
-      helm dependency update ./github/workspace/helm/
-      helm lint --strict ./github/workspace/helm/
-      helm template ./github/workspace/helm/
+      helm dependency update ./helm/
+      helm lint --strict ./helm/
+      helm template ./helm/
 runs:
   using: 'docker'
   image: 'hypertrace/helm-gcs-packager:0.3.1'
