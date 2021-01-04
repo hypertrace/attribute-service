@@ -53,13 +53,13 @@ jobs:
           flags: integration
 
       - name: Copy test reports
-        run: ./gradlew copyAllReports --output-dir=test-reports
+        run: ./gradlew copyAllReports --output-dir=/tmp/test-reports
 
       - name: Archive test reports
         uses: actions/upload-artifact@v1
         with:
           name: test-reports
-          path: test-reports
+          path: /tmp/test-reports
         if: always()
 
       - name: Publish Unit Test Results
@@ -67,7 +67,7 @@ jobs:
         if: always()
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          files: test-reports/**/*.xml
+          files: /tmp/test-reports/**/*.xml
      
       - name: validate charts
         uses: ./.github/actions/validate-charts/
