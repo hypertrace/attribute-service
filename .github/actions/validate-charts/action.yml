@@ -1,14 +1,13 @@
 name: 'Validate helm charts'
 description: 'prevalidate helm chart template before its deployment; executes helm lint and helm template commands'
+inputs:
+  script:
+    description: 'Customizable script run to install the opam package(s).'
+    default: |
+      helm dependency update ./helm/
+      helm lint --strict ./helm/
+      helm template ./helm/
+
 runs:
   using: 'docker'
-  image: hypertrace/helm-gcs-packager:0.3.1
-  credentials:
-    username: ${{ secrets.DOCKERHUB_READ_USER }}
-    password: ${{ secrets.DOCKERHUB_READ_TOKEN }}
-  steps: 
-    - run: |
-          helm dependency update ./helm/
-          helm lint --strict ./helm/
-          helm template ./helm/
-      shell: sh
+  image: 'hypertrace/helm-gcs-packager:0.3.1'
