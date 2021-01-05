@@ -28,10 +28,6 @@ jobs:
             gradle-packages-${{ runner.os }}-${{ github.job }}
             gradle-packages-${{ runner.os }}
 
-      - uses: axel-op/googlejavaformat-action@v3
-        with:
-          args: "--set-exit-if-changed"
-          
       - name: Unit test
         uses: ./.github/actions/gradle/
         with: 
@@ -75,8 +71,18 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           files: ./**/build/test-results/**/*.xml
 
+  validate-helm-charts:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2.3.4
+        with:
+          ref: ${{github.event.pull_request.head.ref}}
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          fetch-depth: 0
+
       - name: validate charts
-        uses: ./.github/actions/validate-charts/
+        uses: hypertrace/actions/validate-charts@adds-motr-actions
         with: 
           role-name: validate
 
