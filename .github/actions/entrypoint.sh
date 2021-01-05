@@ -1,6 +1,6 @@
 #!/bin/sh -l
 
 echo "validating helm charts"
-helm dependency update ./helm/
-helm lint --strict ./helm/
-helm template ./helm/
+helm dependency update $1
+helm lint --strict $1
+helm template $1
