@@ -7,7 +7,7 @@ inputs:
     default: './helm'
 runs:
   using: 'docker'
-  image: '../dockerfile'
+  image: '../helm.dockerfile'
   args: 
     - validate
     - ${{ inputs.chart-path }}
