@@ -73,5 +73,7 @@ jobs:
 
       - name: validate charts
         uses: ./.github/actions/validate-charts/
+        with: 
+          role-name: validate
 
  
