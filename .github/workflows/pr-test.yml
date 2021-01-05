@@ -28,6 +28,10 @@ jobs:
             gradle-packages-${{ runner.os }}-${{ github.job }}
             gradle-packages-${{ runner.os }}
 
+      - uses: axel-op/googlejavaformat-action@v3
+        with:
+          args: "--set-exit-if-changed"
+          
       - name: Unit test
         uses: ./.github/actions/gradle/
         with: 
