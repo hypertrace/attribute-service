@@ -2,4 +2,4 @@ name: 'Validate helm charts'
 description: 'prevalidate helm chart template before its deployment; executes helm lint and helm template commands'
 runs:
   using: 'docker'
-  image: 'dockerfile'
+  image: 'https://raw.githubusercontent.com/hypertrace/actions/adds-motr-actions/validate-charts/dockerfile'
