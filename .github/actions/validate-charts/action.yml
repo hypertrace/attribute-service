@@ -7,6 +7,6 @@ inputs:
     default: './helm'
 runs:
   using: 'docker'
-  image: 'dockerfile'
+  image: '../dockerfile'
   args: 
     - ${{ inputs.chart-path }}
