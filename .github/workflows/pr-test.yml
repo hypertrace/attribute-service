@@ -82,8 +82,6 @@ jobs:
           fetch-depth: 0
 
       - name: validate charts
-        uses: hypertrace/actions/validate-charts@adds-motr-actions
-        with: 
-          role-name: validate
+        uses: ./.github/actions/validate-charts/
 
  
