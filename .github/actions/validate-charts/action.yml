@@ -1,5 +1,12 @@
 name: 'Validate helm charts'
 description: 'prevalidate helm chart template before its deployment; executes helm lint and helm template commands'
+inputs:
+  chart-path:
+    description: 'Path to helm chart directory'
+    required: true
+    default: './helm'
 runs:
   using: 'docker'
-  image: '../dockerfile'
+  image: 'dockerfile'
+  args: 
+    - ${{ inputs.chart-path }}
