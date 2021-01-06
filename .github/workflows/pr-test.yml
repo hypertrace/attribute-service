@@ -29,7 +29,7 @@ jobs:
             gradle-packages-${{ runner.os }}
 
       - name: Unit test
-        uses: hypertrace/actions/gradle@adds-motr-actions
+        uses: hypertrace/github-actions/gradle@main
         with: 
           args: jacocoTestReport
 
@@ -42,7 +42,7 @@ jobs:
           flags: unit
 
       - name: Integration test
-        uses: hypertrace/actions/gradle@adds-motr-actions
+        uses: hypertrace/github-actions/gradle@main
         with: 
           args: jacocoIntegrationTestReport
       - name: Upload coverage to Codecov
