@@ -72,6 +72,10 @@ logConfig:
       enabled: false
 
 config-bootstrapper:
-  job:
-    prefix: attribute
-  configurationCommands: {}
+  jobs:
+    default:
+      enabled: false
+    attribute:
+      prefix: attribute
+      enabled: true
+      configurationCommands: {}
