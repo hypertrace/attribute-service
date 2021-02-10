@@ -29,7 +29,7 @@ An initial list of attributes needed by Hypertrace are seeded from `helm/configs
 
 Attribute service is a part of query architecture in Hypertrace and here is the use of it in context of its callers: [hypertrace-graphql](https://github.com/hypertrace/hypertrace-graphql) and [gateway-service](https://github.com/hypertrace/gateway-service). 
 
-| ![space-1.jpg](https://hypertrace-docs.s3.amazonaws.com/hypertrace-query-arch.png) | 
+| ![space-1.jpg](https://hypertrace-docs.s3.amazonaws.com/arch/ht-query.png) | 
 |:--:| 
 | *Hypertrace Query Architecture* |
 
@@ -56,6 +56,7 @@ Run `./gradlew integrationTest` to execute integration tests.
 
 ### Testing image
 
+#### With docker-compose
 To test your image using the docker-compose setup follow the steps:
 
 - Commit you changes to a branch say `attribute-service-test`.
@@ -72,6 +73,16 @@ cd attribute-service && git checkout attribute-service-test && cd ..
     ...
 ```
 - and then run `docker-compose up` to test the setup.
+
+#### With Helm setup
+Add image repository and tag in values.yaml file [here](https://github.com/hypertrace/hypertrace/blob/main/kubernetes/platform-services/values.yaml) like below and then run `./hypertrace.sh install` again and you can test your image!
+
+```yaml
+attribute-service:
+  image:
+    repository: "hypertrace/attribute-service"
+    tagOverride: "test"
+ ```
 
 ## Docker Image Source:
 - [DockerHub > Attribute service](https://hub.docker.com/r/hypertrace/attribute-service)
