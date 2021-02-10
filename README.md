@@ -56,6 +56,7 @@ Run `./gradlew integrationTest` to execute integration tests.
 
 ### Testing image
 
+#### With docker-compose
 To test your image using the docker-compose setup follow the steps:
 
 - Commit you changes to a branch say `attribute-service-test`.
@@ -73,7 +74,7 @@ cd attribute-service && git checkout attribute-service-test && cd ..
 ```
 - and then run `docker-compose up` to test the setup.
 
-### Helm setup
+#### With Helm setup
 Add image repository and tag in values.yaml file [here](https://github.com/hypertrace/hypertrace/blob/main/kubernetes/platform-services/values.yaml) like below and then run `./hypertrace.sh install` again and you can test your image!
 
 ```yaml
