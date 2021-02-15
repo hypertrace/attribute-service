@@ -69,7 +69,7 @@ dependencies {
 
   runtimeOnly("io.netty:netty-codec-http2:4.1.59.Final")
   runtimeOnly("io.netty:netty-handler-proxy:4.1.59.Final")
-  
+
   // Config
   implementation("com.typesafe:config:1.3.2")
 
