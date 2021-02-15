@@ -66,9 +66,14 @@ dependencies {
 
   // GRPC
   runtimeOnly("io.grpc:grpc-netty:1.33.0")
-
-  runtimeOnly("io.netty:netty-codec-http2:4.1.59.Final")
-  runtimeOnly("io.netty:netty-handler-proxy:4.1.59.Final")
+  constraints {
+    runtimeOnly("io.netty:netty-codec-http2:4.1.59.Final") {
+      because("https://snyk.io/vuln/SNYK-JAVA-IONETTY-1070799")
+    }
+    runtimeOnly("io.netty:netty-handler-proxy:4.1.59.Final") {
+      because("https://snyk.io/vuln/SNYK-JAVA-IONETTY-1070799")
+    }
+  }
 
   // Config
   implementation("com.typesafe:config:1.3.2")
