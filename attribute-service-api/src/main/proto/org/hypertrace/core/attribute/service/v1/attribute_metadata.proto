@@ -144,6 +144,13 @@ message AttributeDefinition {
   oneof value {
     Projection projection = 1;
     string source_path = 2;
+    SourceField source_field = 3;
+  }
+
+  enum SourceField {
+    SOURCE_FIELD_UNSET = 0;
+    SOURCE_FIELD_START_TIME = 1;
+    SOURCE_FIELD_END_TIME = 2;
   }
 }
 
