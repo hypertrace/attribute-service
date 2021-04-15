@@ -28,6 +28,7 @@ enum AttributeScope {
   CLUSTERS_SNAPSHOT = 17;
   DOMAIN = 18;
   ACTOR = 19;
+  LOG_EVENT = 20;
 }
 
 enum AttributeKind {
