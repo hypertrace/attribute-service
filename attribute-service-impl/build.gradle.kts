@@ -9,16 +9,16 @@ dependencies {
   implementation(project(":attribute-service-tenant-api"))
 
   implementation("org.hypertrace.core.documentstore:document-store:0.5.4")
-  implementation("org.hypertrace.core.grpcutils:grpc-context-utils:0.2.0")
+  implementation("org.hypertrace.core.grpcutils:grpc-context-utils:0.4.0")
 
-  implementation("com.fasterxml.jackson.core:jackson-databind:2.9.5")
-  implementation("com.typesafe:config:1.3.2")
-  implementation("org.slf4j:slf4j-api:1.7.25")
-  implementation("com.google.protobuf:protobuf-java-util:3.13.0")
+  implementation("com.fasterxml.jackson.core:jackson-databind:2.12.2")
+  implementation("com.typesafe:config:1.4.1")
+  implementation("org.slf4j:slf4j-api:1.7.30")
+  implementation("com.google.protobuf:protobuf-java-util:3.15.6")
 
-  testImplementation("org.mockito:mockito-core:3.3.3")
-  testImplementation("org.junit.jupiter:junit-jupiter:5.6.2")
-  testImplementation("org.apache.logging.log4j:log4j-slf4j-impl:2.13.3")
+  testImplementation("org.mockito:mockito-core:3.8.0")
+  testImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
+  testImplementation("org.apache.logging.log4j:log4j-slf4j-impl:2.14.1")
 }
 
 tasks.test {
