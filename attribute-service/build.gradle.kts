@@ -9,8 +9,8 @@ plugins {
   java
   application
   jacoco
-  id("org.hypertrace.docker-java-application-plugin") version "0.8.1"
-  id("org.hypertrace.docker-publish-plugin") version "0.8.1"
+  id("org.hypertrace.docker-java-application-plugin") version "0.9.0"
+  id("org.hypertrace.docker-publish-plugin") version "0.9.0"
   id("org.hypertrace.integration-test-plugin")
   id("org.hypertrace.jacoco-report-plugin")
 }
@@ -56,33 +56,33 @@ tasks.integrationTest {
 dependencies {
   implementation(project(":attribute-service-impl"))
 
-  implementation("org.hypertrace.core.serviceframework:platform-service-framework:0.1.18")
-  implementation("org.hypertrace.core.grpcutils:grpc-server-utils:0.2.0")
-  implementation("org.hypertrace.core.documentstore:document-store:0.4.4")
+  implementation("org.hypertrace.core.serviceframework:platform-service-framework:0.1.23")
+  implementation("org.hypertrace.core.grpcutils:grpc-server-utils:0.4.0")
+  implementation("org.hypertrace.core.documentstore:document-store:0.5.4")
 
   // Logging
-  implementation("org.slf4j:slf4j-api:1.7.25")
-  runtimeOnly("org.apache.logging.log4j:log4j-slf4j-impl:2.13.3")
+  implementation("org.slf4j:slf4j-api:1.7.30")
+  runtimeOnly("org.apache.logging.log4j:log4j-slf4j-impl:2.14.1")
 
   // GRPC
-  runtimeOnly("io.grpc:grpc-netty:1.33.0")
+  runtimeOnly("io.grpc:grpc-netty:1.36.1")
   constraints {
-    runtimeOnly("io.netty:netty-codec-http2:4.1.54.Final") {
-      because("https://snyk.io/vuln/SNYK-JAVA-IONETTY-1020439")
+    runtimeOnly("io.netty:netty-codec-http2:4.1.61.Final") {
+      because("https://snyk.io/vuln/SNYK-JAVA-IONETTY-1089809")
     }
-    runtimeOnly("io.netty:netty-handler-proxy:4.1.54.Final") {
-      because("https://snyk.io/vuln/SNYK-JAVA-IONETTY-1020439s")
+    runtimeOnly("io.netty:netty-handler-proxy:4.1.61.Final") {
+      because("https://snyk.io/vuln/SNYK-JAVA-IONETTY-1089809")
     }
   }
 
   // Config
-  implementation("com.typesafe:config:1.3.2")
+  implementation("com.typesafe:config:1.4.1")
 
   //Integration test dependencies
-  integrationTestImplementation("org.junit.jupiter:junit-jupiter:5.6.2")
-  integrationTestImplementation("com.google.guava:guava:30.0-jre")
+  integrationTestImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
+  integrationTestImplementation("com.google.guava:guava:30.1.1-jre")
   integrationTestImplementation(project(":attribute-service-client"))
-  integrationTestImplementation("org.hypertrace.core.serviceframework:integrationtest-service-framework:0.1.18")
+  integrationTestImplementation("org.hypertrace.core.serviceframework:integrationtest-service-framework:0.1.23")
 }
 
 application {

@@ -82,7 +82,7 @@ message AttributeMetadata {
   // can't be the same for different attribute within the same scope
   string key = 3;
   string display_name = 4;
-  AttributeScope scope = 5 [deprecated=true]; // Use scope_string instead
+  AttributeScope scope = 5 [deprecated = true]; // Use scope_string instead
   bool materialized = 6;
   // 1) Attributes can have units (cores / seconds) for presentation
   // 2) Metrics are temporarily combined, and need it for presentation
@@ -133,7 +133,7 @@ message AttributeSourceMetadataDeleteRequest {
 // in the future, we would need to support partial matching for auto-complete
 message AttributeMetadataFilter {
   repeated string fqn = 1;
-  repeated AttributeScope scope = 2 [deprecated=true]; // Use scope_string instead
+  repeated AttributeScope scope = 2 [deprecated = true]; // Use scope_string instead
   repeated string key = 4;
   repeated string scope_string = 5;
 }
@@ -145,6 +145,18 @@ message AttributeDefinition {
   oneof value {
     Projection projection = 1;
     string source_path = 2;
+    SourceField source_field = 3;
+    AttributeDefinitions first_value_present = 4;
+  }
+
+  enum SourceField {
+    SOURCE_FIELD_UNSET = 0;
+    SOURCE_FIELD_START_TIME = 1;
+    SOURCE_FIELD_END_TIME = 2;
+  }
+
+  message AttributeDefinitions {
+    repeated AttributeDefinition definitions = 1;
   }
 }
 
@@ -176,4 +188,5 @@ enum ProjectionOperator {
   PROJECTION_OPERATOR_HASH = 2;
   PROJECTION_OPERATOR_STRING_EQUALS = 3;
   PROJECTION_OPERATOR_CONDITIONAL = 4;
+  PROJECTION_OPERATOR_CONCAT_OR_NULL = 5;
 }
