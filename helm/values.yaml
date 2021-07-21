@@ -75,3 +75,9 @@ config-bootstrapper:
   job:
     prefix: attribute
   configurationCommands: {}
+
+hpa:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
