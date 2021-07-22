@@ -6,22 +6,27 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableTable;
 import com.google.common.collect.Table;
+import com.google.common.util.concurrent.RateLimiter;
 import io.grpc.CallCredentials;
 import io.grpc.Channel;
 import io.reactivex.rxjava3.core.Single;
-import java.time.Duration;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.function.Function;
-import javax.annotation.Nonnull;
+import lombok.extern.slf4j.Slf4j;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadata;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadataFilter;
 import org.hypertrace.core.attribute.service.v1.AttributeServiceGrpc;
 import org.hypertrace.core.attribute.service.v1.AttributeServiceGrpc.AttributeServiceStub;
 
-class DefaultCachingAttributeClient implements CachingAttributeClient {
+import javax.annotation.Nonnull;
+import java.time.Duration;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.function.Function;
 
+@Slf4j
+class DefaultCachingAttributeClient implements CachingAttributeClient {
+  // One log a minute
+  private static final RateLimiter LOGGING_LIMITER = RateLimiter.create(1 / 60d);
   private final AttributeServiceStub attributeServiceClient;
   private final LoadingCache<
           AttributeCacheContextKey, Single<Table<String, String, AttributeMetadata>>>
@@ -51,7 +56,7 @@ class DefaultCachingAttributeClient implements CachingAttributeClient {
   public Single<AttributeMetadata> get(String scope, String key) {
     return this.getOrInvalidate(AttributeCacheContextKey.forCurrentContext())
         .mapOptional(table -> Optional.ofNullable(table.get(scope, key)))
-        .switchIfEmpty(Single.error(this.buildErrorForMissingAttribute(scope, key)));
+        .switchIfEmpty(buildAndLogErrorLazily("No attribute available for scope '%s' and key '%s'", scope, key));
   }
 
   @Override
@@ -61,7 +66,7 @@ class DefaultCachingAttributeClient implements CachingAttributeClient {
             table ->
                 Optional.ofNullable(this.scopeAndKeyLookup.getIfPresent(attributeId))
                     .map(scopeAndKey -> table.get(scopeAndKey.scope, scopeAndKey.key)))
-        .switchIfEmpty(Single.error(this.buildErrorForMissingAttribute(attributeId)));
+        .switchIfEmpty(buildAndLogErrorLazily("No attribute available for id '%s'", attributeId));
   }
 
   @Override
@@ -100,20 +105,20 @@ class DefaultCachingAttributeClient implements CachingAttributeClient {
     return this.cache.getUnchecked(key).doOnError(x -> this.cache.invalidate(key));
   }
 
-  private NoSuchElementException buildErrorForMissingAttribute(String scope, String key) {
-    return new NoSuchElementException(
-        String.format("No attribute available for scope '%s' and key '%s'", scope, key));
-  }
-
-  private NoSuchElementException buildErrorForMissingAttribute(String attributeId) {
-    return new NoSuchElementException(
-        String.format("No attribute available for id '%s'", attributeId));
-  }
-
   private void loadScopeAndKeyCache(AttributeMetadata attributeMetadata) {
     this.scopeAndKeyLookup.put(
         attributeMetadata.getId(),
         new AttributeScopeAndKey(attributeMetadata.getScopeString(), attributeMetadata.getKey()));
+  }
+
+  private <T> Single<T> buildAndLogErrorLazily(String message, Object... args) {
+    return Single.error(
+        () -> {
+          if (LOGGING_LIMITER.tryAcquire()) {
+            log.error(String.format(message, args));
+          }
+          return new NoSuchElementException(String.format(message, args));
+        });
   }
 
   private static final class AttributeScopeAndKey {
