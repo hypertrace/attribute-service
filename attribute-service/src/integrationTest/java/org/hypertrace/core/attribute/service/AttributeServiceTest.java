@@ -161,7 +161,9 @@ public class AttributeServiceTest {
 
   @Test
   public void testUpdateAndDeleteSourceMetadataForAttributeUseHeaders() {
-    testUpdateAndDeleteSourceMetadataForAttribute(true);
+    for (int i = 0; i < 10000; i++) {
+      testUpdateAndDeleteSourceMetadataForAttribute(true);
+    }
   }
 
   @Test
