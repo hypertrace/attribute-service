@@ -65,7 +65,7 @@ dependencies {
   runtimeOnly("org.apache.logging.log4j:log4j-slf4j-impl:2.14.1")
 
   // GRPC
-  runtimeOnly("io.grpc:grpc-netty-shaded:1.36.1")
+  runtimeOnly("io.grpc:grpc-netty:1.36.1")
   constraints {
     runtimeOnly("io.netty:netty-codec-http2:4.1.63.Final") {
       because("https://snyk.io/vuln/SNYK-JAVA-IONETTY-1089809")
