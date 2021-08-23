@@ -14,4 +14,13 @@ service AttributeService {
   rpc deleteSourceMetadata (AttributeSourceMetadataDeleteRequest) returns (Empty);
   rpc findAttributes (AttributeMetadataFilter) returns (stream AttributeMetadata);
   rpc findAll (Empty) returns (stream AttributeMetadata);
+  rpc GetAttributes (GetAttributesRequest) returns (GetAttributesResponse);
+}
+
+message GetAttributesRequest {
+  AttributeMetadataFilter filter = 1;
+}
+
+message GetAttributesResponse {
+  repeated AttributeMetadata attributes = 1;
 }

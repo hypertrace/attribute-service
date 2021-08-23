@@ -11,7 +11,6 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
@@ -22,7 +21,6 @@ import io.grpc.StatusRuntimeException;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
-import io.reactivex.rxjava3.core.Single;
 import java.io.IOException;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -31,6 +29,8 @@ import org.hypertrace.core.attribute.service.v1.AttributeMetadata;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadataFilter;
 import org.hypertrace.core.attribute.service.v1.AttributeScope;
 import org.hypertrace.core.attribute.service.v1.AttributeServiceGrpc.AttributeServiceImplBase;
+import org.hypertrace.core.attribute.service.v1.GetAttributesRequest;
+import org.hypertrace.core.attribute.service.v1.GetAttributesResponse;
 import org.hypertrace.core.grpcutils.context.RequestContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -84,18 +84,21 @@ class CachingAttributeClientTest {
     this.responseError = Optional.empty();
     doAnswer(
             invocation -> {
-              StreamObserver<AttributeMetadata> observer =
+              StreamObserver<GetAttributesResponse> observer =
                   invocation.getArgument(1, StreamObserver.class);
               responseError.ifPresentOrElse(
                   observer::onError,
                   () -> {
-                    this.responseMetadata.forEach(observer::onNext);
+                    observer.onNext(
+                        GetAttributesResponse.newBuilder()
+                            .addAllAttributes(responseMetadata)
+                            .build());
                     observer.onCompleted();
                   });
               return null;
             })
         .when(this.mockAttributeService)
-        .findAttributes(any(), any());
+        .getAttributes(any(), any());
   }
 
   @AfterEach
@@ -109,7 +112,7 @@ class CachingAttributeClientTest {
     assertSame(
         this.metadata1,
         this.grpcTestContext.call(() -> this.attributeClient.get("EVENT", "first").blockingGet()));
-    verify(this.mockAttributeService, times(1)).findAttributes(any(), any());
+    verify(this.mockAttributeService, times(1)).getAttributes(any(), any());
     verifyNoMoreInteractions(this.mockAttributeService);
     assertSame(
         this.metadata2,
@@ -126,20 +129,11 @@ class CachingAttributeClientTest {
   }
 
   @Test
-  void lazilyFetchesOnSubscribe() throws Exception {
-    Single<AttributeMetadata> attribute =
-        this.grpcTestContext.call(() -> this.attributeClient.get("EVENT", "first"));
-    verifyNoInteractions(this.mockAttributeService);
-    attribute.subscribe();
-    verify(this.mockAttributeService, times(1)).findAttributes(any(), any());
-  }
-
-  @Test
   void supportsMultipleConcurrentCacheKeys() throws Exception {
     AttributeMetadata defaultRetrieved =
         this.grpcTestContext.call(() -> this.attributeClient.get("EVENT", "first").blockingGet());
     assertSame(this.metadata1, defaultRetrieved);
-    verify(this.mockAttributeService, times(1)).findAttributes(any(), any());
+    verify(this.mockAttributeService, times(1)).getAttributes(any(), any());
 
     RequestContext otherMockContext = mock(RequestContext.class);
     when(otherMockContext.getTenantId()).thenReturn(Optional.of("other tenant"));
@@ -153,7 +147,7 @@ class CachingAttributeClientTest {
         otherGrpcContext.call(() -> this.attributeClient.get("EVENT", "first").blockingGet());
     assertSame(otherContextMetadata, otherRetrieved);
     assertNotSame(defaultRetrieved, otherRetrieved);
-    verify(this.mockAttributeService, times(2)).findAttributes(any(), any());
+    verify(this.mockAttributeService, times(2)).getAttributes(any(), any());
     verifyNoMoreInteractions(this.mockAttributeService);
 
     assertSame(
@@ -174,13 +168,13 @@ class CachingAttributeClientTest {
         () ->
             this.grpcTestContext.call(
                 () -> this.attributeClient.get("EVENT", "first").blockingGet()));
-    verify(this.mockAttributeService, times(1)).findAttributes(any(), any());
+    verify(this.mockAttributeService, times(1)).getAttributes(any(), any());
 
     this.responseError = Optional.empty();
     assertSame(
         this.metadata1,
         this.grpcTestContext.call(() -> this.attributeClient.get("EVENT", "first").blockingGet()));
-    verify(this.mockAttributeService, times(2)).findAttributes(any(), any());
+    verify(this.mockAttributeService, times(2)).getAttributes(any(), any());
   }
 
   @Test
@@ -199,19 +193,22 @@ class CachingAttributeClientTest {
 
     // Rerunning this call now fire again, a third server call
     this.grpcTestContext.call(() -> this.attributeClient.get("EVENT", "first").blockingGet());
-    verify(this.mockAttributeService, times(3)).findAttributes(any(), any());
+    verify(this.mockAttributeService, times(3)).getAttributes(any(), any());
   }
 
   @Test
   void supportsAppliedFilter() throws Exception {
     AttributeMetadataFilter attributeMetadataFilter =
-        AttributeMetadataFilter.newBuilder().addScope(AttributeScope.EVENT).build();
+        AttributeMetadataFilter.newBuilder().addScopeString("EVENT").build();
     this.attributeClient =
         CachingAttributeClient.builder(this.grpcChannel)
             .withAttributeFilter(attributeMetadataFilter)
             .build();
     this.grpcTestContext.call(() -> this.attributeClient.get("EVENT", "first").blockingGet());
-    verify(this.mockAttributeService, times(1)).findAttributes(eq(attributeMetadataFilter), any());
+    verify(this.mockAttributeService, times(1))
+        .getAttributes(
+            eq(GetAttributesRequest.newBuilder().setFilter(attributeMetadataFilter).build()),
+            any());
   }
 
   @Test
@@ -219,7 +216,7 @@ class CachingAttributeClientTest {
     assertSame(
         this.metadata1,
         this.grpcTestContext.call(() -> this.attributeClient.get("first-id").blockingGet()));
-    verify(this.mockAttributeService, times(1)).findAttributes(any(), any());
+    verify(this.mockAttributeService, times(1)).getAttributes(any(), any());
     verifyNoMoreInteractions(this.mockAttributeService);
     assertSame(
         this.metadata2,
@@ -231,7 +228,7 @@ class CachingAttributeClientTest {
     assertSame(
         this.metadata1,
         this.grpcTestContext.call(() -> this.attributeClient.get("first-id").blockingGet()));
-    verify(this.mockAttributeService, times(1)).findAttributes(any(), any());
+    verify(this.mockAttributeService, times(1)).getAttributes(any(), any());
     verifyNoMoreInteractions(this.mockAttributeService);
     assertSame(
         this.metadata1,

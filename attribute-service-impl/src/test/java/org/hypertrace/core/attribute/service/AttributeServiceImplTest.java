@@ -12,7 +12,6 @@ import io.grpc.Context;
 import io.grpc.stub.StreamObserver;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.hypertrace.core.attribute.service.v1.AggregateFunction;
 import org.hypertrace.core.attribute.service.v1.AttributeDefinition;
 import org.hypertrace.core.attribute.service.v1.AttributeKind;
@@ -21,6 +20,8 @@ import org.hypertrace.core.attribute.service.v1.AttributeMetadataFilter;
 import org.hypertrace.core.attribute.service.v1.AttributeScope;
 import org.hypertrace.core.attribute.service.v1.AttributeType;
 import org.hypertrace.core.attribute.service.v1.Empty;
+import org.hypertrace.core.attribute.service.v1.GetAttributesRequest;
+import org.hypertrace.core.attribute.service.v1.GetAttributesResponse;
 import org.hypertrace.core.documentstore.Collection;
 import org.hypertrace.core.documentstore.Document;
 import org.hypertrace.core.documentstore.Filter;
@@ -293,6 +294,97 @@ public class AttributeServiceImplTest {
     } finally {
       ctx.detach(previous);
     }
+  }
+
+  @Test
+  public void testGetAttributes() {
+    RequestContext requestContext = mock(RequestContext.class);
+    when(requestContext.getTenantId()).thenReturn(Optional.of("test-tenant-id"));
+    Context.current()
+        .withValue(RequestContext.CURRENT, requestContext)
+        .run(
+            () -> {
+              Collection collection = mock(Collection.class);
+              StreamObserver<GetAttributesResponse> responseObserver = mock(StreamObserver.class);
+
+              Document document1 =
+                  createMockDocument(
+                      "__root",
+                      "name",
+                      AttributeScope.EVENT,
+                      AttributeType.ATTRIBUTE,
+                      AttributeKind.TYPE_STRING);
+              Document document2 =
+                  createMockDocument(
+                      "__root",
+                      "duration",
+                      AttributeScope.EVENT,
+                      AttributeType.METRIC,
+                      AttributeKind.TYPE_INT64);
+              List<Document> documents = List.of(document1, document2);
+              when(collection.search(any(Query.class))).thenReturn(documents.iterator());
+
+              AttributeServiceImpl attributeService = new AttributeServiceImpl(collection);
+
+              List<String> keyList = List.of("name", "startTime", "duration");
+
+              AttributeMetadataFilter attributeMetadataFilter =
+                  AttributeMetadataFilter.newBuilder()
+                      .addAllKey(keyList)
+                      .addScopeString("OTHER")
+                      .build();
+
+              attributeService.getAttributes(
+                  GetAttributesRequest.newBuilder().setFilter(attributeMetadataFilter).build(),
+                  responseObserver);
+              AttributeMetadata expectedFirstAttribute =
+                  AttributeMetadata.newBuilder()
+                      .setFqn("EVENT.name")
+                      .setId("EVENT.name")
+                      .setKey("name")
+                      .setScope(AttributeScope.EVENT)
+                      .setScopeString(AttributeScope.EVENT.name())
+                      .setDisplayName("EVENT name")
+                      .setValueKind(AttributeKind.TYPE_STRING)
+                      .setDefinition(AttributeDefinition.getDefaultInstance())
+                      .setGroupable(true)
+                      .setType(AttributeType.ATTRIBUTE)
+                      // Add default aggregations. See SupportedAggregationsDecorator
+                      .addAllSupportedAggregations(List.of(AggregateFunction.DISTINCT_COUNT))
+                      .build();
+              AttributeMetadata expectedSecondAttribute =
+                  AttributeMetadata.newBuilder()
+                      .setFqn("EVENT.duration")
+                      .setId("EVENT.duration")
+                      .setKey("duration")
+                      .setScope(AttributeScope.EVENT)
+                      .setScopeString(AttributeScope.EVENT.name())
+                      .setDisplayName("EVENT duration")
+                      .setGroupable(false)
+                      .setValueKind(AttributeKind.TYPE_INT64)
+                      .setDefinition(AttributeDefinition.getDefaultInstance())
+                      .setType(AttributeType.METRIC)
+                      // Add default aggregations. See SupportedAggregationsDecorator
+                      .addAllSupportedAggregations(
+                          List.of(
+                              AggregateFunction.SUM,
+                              AggregateFunction.MIN,
+                              AggregateFunction.MAX,
+                              AggregateFunction.AVG,
+                              AggregateFunction.AVGRATE,
+                              AggregateFunction.PERCENTILE))
+                      .build();
+
+              verify(responseObserver, times(1))
+                  .onNext(
+                      GetAttributesResponse.newBuilder()
+                          .addAttributes(expectedFirstAttribute)
+                          .addAttributes(expectedSecondAttribute)
+                          .build());
+
+              verify(responseObserver, times(1)).onCompleted();
+              verify(responseObserver, never()).onError(any(Throwable.class));
+            });
   }
 
   @Test
