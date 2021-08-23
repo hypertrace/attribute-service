@@ -12,8 +12,12 @@ service AttributeService {
   rpc delete (AttributeMetadataFilter) returns (Empty);
   rpc updateSourceMetadata (AttributeSourceMetadataUpdateRequest) returns (Empty);
   rpc deleteSourceMetadata (AttributeSourceMetadataDeleteRequest) returns (Empty);
-  rpc findAttributes (AttributeMetadataFilter) returns (stream AttributeMetadata);
-  rpc findAll (Empty) returns (stream AttributeMetadata);
+  rpc findAttributes (AttributeMetadataFilter) returns (stream AttributeMetadata) {
+    option deprecated = true;
+  };
+  rpc findAll (Empty) returns (stream AttributeMetadata) {
+    option deprecated = true;
+  };
   rpc GetAttributes (GetAttributesRequest) returns (GetAttributesResponse);
 }
 
