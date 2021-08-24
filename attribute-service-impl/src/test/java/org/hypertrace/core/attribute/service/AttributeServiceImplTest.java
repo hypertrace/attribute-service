@@ -7,12 +7,12 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.Iterators;
 import com.google.protobuf.ServiceException;
 import io.grpc.Context;
 import io.grpc.stub.StreamObserver;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.hypertrace.core.attribute.service.v1.AggregateFunction;
 import org.hypertrace.core.attribute.service.v1.AttributeDefinition;
 import org.hypertrace.core.attribute.service.v1.AttributeKind;
@@ -21,6 +21,8 @@ import org.hypertrace.core.attribute.service.v1.AttributeMetadataFilter;
 import org.hypertrace.core.attribute.service.v1.AttributeScope;
 import org.hypertrace.core.attribute.service.v1.AttributeType;
 import org.hypertrace.core.attribute.service.v1.Empty;
+import org.hypertrace.core.attribute.service.v1.GetAttributesRequest;
+import org.hypertrace.core.attribute.service.v1.GetAttributesResponse;
 import org.hypertrace.core.documentstore.Collection;
 import org.hypertrace.core.documentstore.Document;
 import org.hypertrace.core.documentstore.Filter;
@@ -31,6 +33,45 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 public class AttributeServiceImplTest {
+
+  private static final AttributeMetadata MOCK_EVENT_NAME_ATTRIBUTE =
+      AttributeMetadata.newBuilder()
+          .setFqn("EVENT.name")
+          .setId("EVENT.name")
+          .setKey("name")
+          .setScope(AttributeScope.EVENT)
+          .setScopeString(AttributeScope.EVENT.name())
+          .setDisplayName("EVENT name")
+          .setValueKind(AttributeKind.TYPE_STRING)
+          .setDefinition(AttributeDefinition.getDefaultInstance())
+          .setGroupable(true)
+          .setType(AttributeType.ATTRIBUTE)
+          // Add default aggregations. See SupportedAggregationsDecorator
+          .addAllSupportedAggregations(List.of(AggregateFunction.DISTINCT_COUNT))
+          .build();
+  private static final AttributeMetadata MOCK_EVENT_DURATION_ATTRIBUTE =
+      AttributeMetadata.newBuilder()
+          .setFqn("EVENT.duration")
+          .setId("EVENT.duration")
+          .setKey("duration")
+          .setScope(AttributeScope.EVENT)
+          .setScopeString(AttributeScope.EVENT.name())
+          .setDisplayName("EVENT duration")
+          .setGroupable(false)
+          .setValueKind(AttributeKind.TYPE_INT64)
+          .setDefinition(AttributeDefinition.getDefaultInstance())
+          .setType(AttributeType.METRIC)
+          // Add default aggregations. See SupportedAggregationsDecorator
+          .addAllSupportedAggregations(
+              List.of(
+                  AggregateFunction.SUM,
+                  AggregateFunction.MIN,
+                  AggregateFunction.MAX,
+                  AggregateFunction.AVG,
+                  AggregateFunction.AVGRATE,
+                  AggregateFunction.PERCENTILE))
+          .build();
+
   @Test
   public void testFindAll() {
     RequestContext requestContext = mock(RequestContext.class);
@@ -39,25 +80,21 @@ public class AttributeServiceImplTest {
 
     Context previous = ctx.attach();
     try {
-      Collection collection = mock(Collection.class);
+      Collection collection =
+          mockCollectionReturningDocuments(
+              createMockDocument(
+                  "__root",
+                  "name",
+                  AttributeScope.EVENT,
+                  AttributeType.ATTRIBUTE,
+                  AttributeKind.TYPE_STRING),
+              createMockDocument(
+                  "__root",
+                  "duration",
+                  AttributeScope.EVENT,
+                  AttributeType.METRIC,
+                  AttributeKind.TYPE_INT64));
       StreamObserver<AttributeMetadata> responseObserver = mock(StreamObserver.class);
-
-      Document document1 =
-          createMockDocument(
-              "__root",
-              "name",
-              AttributeScope.EVENT,
-              AttributeType.ATTRIBUTE,
-              AttributeKind.TYPE_STRING);
-      Document document2 =
-          createMockDocument(
-              "__root",
-              "duration",
-              AttributeScope.EVENT,
-              AttributeType.METRIC,
-              AttributeKind.TYPE_INT64);
-      List<Document> documents = List.of(document1, document2);
-      when(collection.search(any(Query.class))).thenReturn(documents.iterator());
 
       AttributeServiceImpl attributeService = new AttributeServiceImpl(collection);
 
@@ -77,45 +114,9 @@ public class AttributeServiceImplTest {
       List<AttributeMetadata> attributeMetadataList =
           attributeMetadataArgumentCaptor.getAllValues();
       Assertions.assertEquals(2, attributeMetadataList.size());
-      AttributeMetadata attributeMetadata1 =
-          AttributeMetadata.newBuilder()
-              .setFqn("EVENT.name")
-              .setId("EVENT.name")
-              .setKey("name")
-              .setScope(AttributeScope.EVENT)
-              .setScopeString(AttributeScope.EVENT.name())
-              .setDisplayName("EVENT name")
-              .setValueKind(AttributeKind.TYPE_STRING)
-              .setDefinition(AttributeDefinition.getDefaultInstance())
-              .setGroupable(true)
-              .setType(AttributeType.ATTRIBUTE)
-              // Add default aggregations. See SupportedAggregationsDecorator
-              .addAllSupportedAggregations(List.of(AggregateFunction.DISTINCT_COUNT))
-              .build();
-      AttributeMetadata attributeMetadata2 =
-          AttributeMetadata.newBuilder()
-              .setFqn("EVENT.duration")
-              .setId("EVENT.duration")
-              .setKey("duration")
-              .setScope(AttributeScope.EVENT)
-              .setScopeString(AttributeScope.EVENT.name())
-              .setDisplayName("EVENT duration")
-              .setGroupable(false)
-              .setDefinition(AttributeDefinition.getDefaultInstance())
-              .setValueKind(AttributeKind.TYPE_INT64)
-              .setType(AttributeType.METRIC)
-              // Add default aggregations. See SupportedAggregationsDecorator
-              .addAllSupportedAggregations(
-                  List.of(
-                      AggregateFunction.SUM,
-                      AggregateFunction.MIN,
-                      AggregateFunction.MAX,
-                      AggregateFunction.AVG,
-                      AggregateFunction.AVGRATE,
-                      AggregateFunction.PERCENTILE))
-              .build();
-      Assertions.assertEquals(attributeMetadata1, attributeMetadataList.get(0));
-      Assertions.assertEquals(attributeMetadata2, attributeMetadataList.get(1));
+
+      Assertions.assertEquals(MOCK_EVENT_NAME_ATTRIBUTE, attributeMetadataList.get(0));
+      Assertions.assertEquals(MOCK_EVENT_DURATION_ATTRIBUTE, attributeMetadataList.get(1));
 
       verify(responseObserver, times(1)).onCompleted();
       verify(responseObserver, never()).onError(any(Throwable.class));
@@ -156,26 +157,21 @@ public class AttributeServiceImplTest {
 
     Context previous = ctx.attach();
     try {
-      Collection collection = mock(Collection.class);
+      Collection collection =
+          mockCollectionReturningDocuments(
+              createMockDocument(
+                  "__root",
+                  "name",
+                  AttributeScope.EVENT,
+                  AttributeType.ATTRIBUTE,
+                  AttributeKind.TYPE_STRING),
+              createMockDocument(
+                  "__root",
+                  "duration",
+                  AttributeScope.EVENT,
+                  AttributeType.METRIC,
+                  AttributeKind.TYPE_INT64));
       StreamObserver<AttributeMetadata> responseObserver = mock(StreamObserver.class);
-
-      Document document1 =
-          createMockDocument(
-              "__root",
-              "name",
-              AttributeScope.EVENT,
-              AttributeType.ATTRIBUTE,
-              AttributeKind.TYPE_STRING);
-      Document document2 =
-          createMockDocument(
-              "__root",
-              "duration",
-              AttributeScope.EVENT,
-              AttributeType.METRIC,
-              AttributeKind.TYPE_INT64);
-      List<Document> documents = List.of(document1, document2);
-      when(collection.search(any(Query.class))).thenReturn(documents.iterator());
-
       AttributeServiceImpl attributeService = new AttributeServiceImpl(collection);
 
       List<String> fqnList = List.of("EVENT.name", "EVENT.id");
@@ -248,51 +244,61 @@ public class AttributeServiceImplTest {
       List<AttributeMetadata> attributeMetadataList =
           attributeMetadataArgumentCaptor.getAllValues();
       Assertions.assertEquals(2, attributeMetadataList.size());
-      AttributeMetadata attributeMetadata1 =
-          AttributeMetadata.newBuilder()
-              .setFqn("EVENT.name")
-              .setId("EVENT.name")
-              .setKey("name")
-              .setScope(AttributeScope.EVENT)
-              .setScopeString(AttributeScope.EVENT.name())
-              .setDisplayName("EVENT name")
-              .setValueKind(AttributeKind.TYPE_STRING)
-              .setDefinition(AttributeDefinition.getDefaultInstance())
-              .setGroupable(true)
-              .setType(AttributeType.ATTRIBUTE)
-              // Add default aggregations. See SupportedAggregationsDecorator
-              .addAllSupportedAggregations(List.of(AggregateFunction.DISTINCT_COUNT))
-              .build();
-      AttributeMetadata attributeMetadata2 =
-          AttributeMetadata.newBuilder()
-              .setFqn("EVENT.duration")
-              .setId("EVENT.duration")
-              .setKey("duration")
-              .setScope(AttributeScope.EVENT)
-              .setScopeString(AttributeScope.EVENT.name())
-              .setDisplayName("EVENT duration")
-              .setGroupable(false)
-              .setValueKind(AttributeKind.TYPE_INT64)
-              .setDefinition(AttributeDefinition.getDefaultInstance())
-              .setType(AttributeType.METRIC)
-              // Add default aggregations. See SupportedAggregationsDecorator
-              .addAllSupportedAggregations(
-                  List.of(
-                      AggregateFunction.SUM,
-                      AggregateFunction.MIN,
-                      AggregateFunction.MAX,
-                      AggregateFunction.AVG,
-                      AggregateFunction.AVGRATE,
-                      AggregateFunction.PERCENTILE))
-              .build();
-      Assertions.assertEquals(attributeMetadata1, attributeMetadataList.get(0));
-      Assertions.assertEquals(attributeMetadata2, attributeMetadataList.get(1));
+
+      Assertions.assertEquals(MOCK_EVENT_NAME_ATTRIBUTE, attributeMetadataList.get(0));
+      Assertions.assertEquals(MOCK_EVENT_DURATION_ATTRIBUTE, attributeMetadataList.get(1));
 
       verify(responseObserver, times(1)).onCompleted();
       verify(responseObserver, never()).onError(any(Throwable.class));
     } finally {
       ctx.detach(previous);
     }
+  }
+
+  @Test
+  public void testGetAttributes() {
+    RequestContext requestContext = mock(RequestContext.class);
+    when(requestContext.getTenantId()).thenReturn(Optional.of("test-tenant-id"));
+    Context.current()
+        .withValue(RequestContext.CURRENT, requestContext)
+        .run(
+            () -> {
+              AttributeServiceImpl attributeService =
+                  new AttributeServiceImpl(
+                      mockCollectionReturningDocuments(
+                          createMockDocument(
+                              "__root",
+                              "name",
+                              AttributeScope.EVENT,
+                              AttributeType.ATTRIBUTE,
+                              AttributeKind.TYPE_STRING),
+                          createMockDocument(
+                              "__root",
+                              "duration",
+                              AttributeScope.EVENT,
+                              AttributeType.METRIC,
+                              AttributeKind.TYPE_INT64)));
+
+              StreamObserver<GetAttributesResponse> mockObserver = mock(StreamObserver.class);
+              attributeService.getAttributes(
+                  GetAttributesRequest.newBuilder()
+                      .setFilter(
+                          AttributeMetadataFilter.newBuilder()
+                              .addKey(MOCK_EVENT_NAME_ATTRIBUTE.getKey())
+                              .addKey(MOCK_EVENT_DURATION_ATTRIBUTE.getKey()))
+                      .build(),
+                  mockObserver);
+
+              verify(mockObserver, times(1))
+                  .onNext(
+                      GetAttributesResponse.newBuilder()
+                          .addAttributes(MOCK_EVENT_NAME_ATTRIBUTE)
+                          .addAttributes(MOCK_EVENT_DURATION_ATTRIBUTE)
+                          .build());
+
+              verify(mockObserver, times(1)).onCompleted();
+              verify(mockObserver, never()).onError(any());
+            });
   }
 
   @Test
@@ -318,6 +324,12 @@ public class AttributeServiceImplTest {
     } finally {
       ctx.detach(previous);
     }
+  }
+
+  private Collection mockCollectionReturningDocuments(Document... documents) {
+    Collection collection = mock(Collection.class);
+    when(collection.search(any(Query.class))).thenReturn(Iterators.forArray(documents));
+    return collection;
   }
 
   private Document createMockDocument(

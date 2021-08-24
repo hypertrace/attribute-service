@@ -10,18 +10,19 @@ import com.google.common.util.concurrent.RateLimiter;
 import io.grpc.CallCredentials;
 import io.grpc.Channel;
 import io.reactivex.rxjava3.core.Single;
-import lombok.extern.slf4j.Slf4j;
-import org.hypertrace.core.attribute.service.v1.AttributeMetadata;
-import org.hypertrace.core.attribute.service.v1.AttributeMetadataFilter;
-import org.hypertrace.core.attribute.service.v1.AttributeServiceGrpc;
-import org.hypertrace.core.attribute.service.v1.AttributeServiceGrpc.AttributeServiceStub;
-
-import javax.annotation.Nonnull;
 import java.time.Duration;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.function.Function;
+import javax.annotation.Nonnull;
+import lombok.extern.slf4j.Slf4j;
+import org.hypertrace.core.attribute.service.v1.AttributeMetadata;
+import org.hypertrace.core.attribute.service.v1.AttributeMetadataFilter;
+import org.hypertrace.core.attribute.service.v1.AttributeServiceGrpc;
+import org.hypertrace.core.attribute.service.v1.AttributeServiceGrpc.AttributeServiceStub;
+import org.hypertrace.core.attribute.service.v1.GetAttributesRequest;
+import org.hypertrace.core.attribute.service.v1.GetAttributesResponse;
 
 @Slf4j
 class DefaultCachingAttributeClient implements CachingAttributeClient {
@@ -56,7 +57,9 @@ class DefaultCachingAttributeClient implements CachingAttributeClient {
   public Single<AttributeMetadata> get(String scope, String key) {
     return this.getOrInvalidate(AttributeCacheContextKey.forCurrentContext())
         .mapOptional(table -> Optional.ofNullable(table.get(scope, key)))
-        .switchIfEmpty(buildAndLogErrorLazily("No attribute available for scope '%s' and key '%s'", scope, key));
+        .switchIfEmpty(
+            buildAndLogErrorLazily(
+                "No attribute available for scope '%s' and key '%s'", scope, key));
   }
 
   @Override
@@ -82,9 +85,12 @@ class DefaultCachingAttributeClient implements CachingAttributeClient {
   }
 
   private Single<Table<String, String, AttributeMetadata>> loadTable(AttributeCacheContextKey key) {
-    return key.getExecutionContext().<AttributeMetadata>stream(
+    return key.getExecutionContext().<GetAttributesResponse>stream(
             streamObserver ->
-                this.attributeServiceClient.findAttributes(this.attributeFilter, streamObserver))
+                this.attributeServiceClient.getAttributes(
+                    GetAttributesRequest.newBuilder().setFilter(this.attributeFilter).build(),
+                    streamObserver))
+        .flatMapIterable(GetAttributesResponse::getAttributesList)
         .doOnNext(this::loadScopeAndKeyCache)
         .toList()
         .map(this::buildTable)
@@ -95,9 +101,7 @@ class DefaultCachingAttributeClient implements CachingAttributeClient {
     return attributes.stream()
         .collect(
             ImmutableTable.toImmutableTable(
-                AttributeMetadata::getScopeString,
-                AttributeMetadata::getKey,
-                Function.identity()));
+                AttributeMetadata::getScopeString, AttributeMetadata::getKey, Function.identity()));
   }
 
   private Single<Table<String, String, AttributeMetadata>> getOrInvalidate(

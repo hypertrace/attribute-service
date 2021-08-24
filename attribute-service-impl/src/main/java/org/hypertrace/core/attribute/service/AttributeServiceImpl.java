@@ -1,5 +1,8 @@
 package org.hypertrace.core.attribute.service;
 
+import static java.util.Objects.isNull;
+
+import com.google.common.collect.Streams;
 import com.google.protobuf.ServiceException;
 import com.typesafe.config.Config;
 import io.grpc.stub.StreamObserver;
@@ -27,6 +30,8 @@ import org.hypertrace.core.attribute.service.v1.AttributeSource;
 import org.hypertrace.core.attribute.service.v1.AttributeSourceMetadataDeleteRequest;
 import org.hypertrace.core.attribute.service.v1.AttributeSourceMetadataUpdateRequest;
 import org.hypertrace.core.attribute.service.v1.Empty;
+import org.hypertrace.core.attribute.service.v1.GetAttributesRequest;
+import org.hypertrace.core.attribute.service.v1.GetAttributesResponse;
 import org.hypertrace.core.documentstore.Collection;
 import org.hypertrace.core.documentstore.Datastore;
 import org.hypertrace.core.documentstore.DatastoreProvider;
@@ -310,24 +315,47 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
     }
   }
 
+  @Override
+  public void getAttributes(
+      GetAttributesRequest request, StreamObserver<GetAttributesResponse> responseObserver) {
+    String tenantId = RequestContext.CURRENT.get().getTenantId().orElse(null);
+    if (isNull(tenantId)) {
+      responseObserver.onError(new ServiceException("Tenant id is missing in the request."));
+      return;
+    }
+
+    List<AttributeMetadata> attributes =
+        Streams.stream(collection.search(this.getQueryForFilter(tenantId, request.getFilter())))
+            .map(this::buildAttributeMetadata)
+            .flatMap(Optional::stream)
+            .collect(Collectors.toUnmodifiableList());
+
+    responseObserver.onNext(
+        GetAttributesResponse.newBuilder().addAllAttributes(attributes).build());
+    responseObserver.onCompleted();
+  }
+
   private void sendResult(
       Iterator<Document> documents, StreamObserver<AttributeMetadata> responseObserver) {
     while (documents.hasNext()) {
-      Document attrMetadataDoc = documents.next();
-      String attrTypeJsonString = attrMetadataDoc.toJson();
-      try {
-        AttributeMetadata metadata =
-            new SupportedAggregationsDecorator(
-                    AttributeMetadataModel.fromJson(attrTypeJsonString).toDTOBuilder())
-                .decorate()
-                .build();
-        responseObserver.onNext(metadata);
-      } catch (IOException ex) {
-        LOGGER.error(
-            "Unable to convert this Json String to AttributeMetadata : {}", attrTypeJsonString, ex);
-      }
+      this.buildAttributeMetadata(documents.next()).ifPresent(responseObserver::onNext);
     }
     responseObserver.onCompleted();
+  }
+
+  private Optional<AttributeMetadata> buildAttributeMetadata(Document document) {
+    String documentJson = document.toJson();
+    try {
+      return Optional.of(
+          new SupportedAggregationsDecorator(
+                  AttributeMetadataModel.fromJson(documentJson).toDTOBuilder())
+              .decorate()
+              .build());
+    } catch (IOException exception) {
+      LOGGER.error(
+          "Unable to convert this Json String to AttributeMetadata : {}", documentJson, exception);
+      return Optional.empty();
+    }
   }
 
   private Query getQueryForFilter(
