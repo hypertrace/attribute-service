@@ -12,7 +12,7 @@ image:
 imagePullSecrets: {}
 
 containerPort: 9012
-containerHealthProbePort: 9012
+containerHealthProbePort: 9013
 
 service:
   type: ClusterIP
