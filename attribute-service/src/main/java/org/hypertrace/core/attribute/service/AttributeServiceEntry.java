@@ -75,6 +75,7 @@ public class AttributeServiceEntry extends PlatformService {
   @Override
   public boolean healthCheck() {
     return healthClient
+        .withDeadlineAfter(1, SECONDS)
         .check(HealthCheckRequest.getDefaultInstance())
         .getStatus()
         .equals(ServingStatus.SERVING);
