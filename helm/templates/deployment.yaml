@@ -75,8 +75,9 @@ spec:
           livenessProbe:
             initialDelaySeconds: {{ int .Values.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ int .Values.livenessProbe.periodSeconds }}
-            tcpSocket:
-              port: grpc-port
+            httpGet:
+              path: /health
+              port: {{ .Values.containerHealthProbePort }}
           readinessProbe:
             initialDelaySeconds: {{ int .Values.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ int .Values.readinessProbe.periodSeconds }}
