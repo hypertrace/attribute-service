@@ -12,7 +12,6 @@ import io.grpc.health.v1.HealthGrpc;
 import io.grpc.health.v1.HealthGrpc.HealthBlockingStub;
 import io.grpc.protobuf.services.HealthStatusManager;
 import java.io.IOException;
-import java.time.Clock;
 import org.hypertrace.core.grpcutils.client.GrpcChannelRegistry;
 import org.hypertrace.core.grpcutils.server.InterceptorUtil;
 import org.hypertrace.core.grpcutils.server.ServerManagementUtil;
@@ -29,7 +28,6 @@ public class AttributeServiceEntry extends PlatformService {
   private String serviceName;
   private Server server;
   private HealthBlockingStub healthClient;
-  private final Clock clock = Clock.systemUTC();
   private final HealthStatusManager healthStatusManager = new HealthStatusManager();
   private final GrpcChannelRegistry grpcChannelRegistry = new GrpcChannelRegistry();
 
