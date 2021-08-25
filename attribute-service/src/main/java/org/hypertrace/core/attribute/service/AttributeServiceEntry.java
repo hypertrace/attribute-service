@@ -1,5 +1,9 @@
 package org.hypertrace.core.attribute.service;
 
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
+import io.grpc.Deadline;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.health.v1.HealthCheckRequest;
@@ -9,8 +13,6 @@ import io.grpc.health.v1.HealthGrpc.HealthBlockingStub;
 import io.grpc.protobuf.services.HealthStatusManager;
 import java.io.IOException;
 import java.time.Clock;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import org.hypertrace.core.grpcutils.client.GrpcChannelRegistry;
 import org.hypertrace.core.grpcutils.server.InterceptorUtil;
 import org.hypertrace.core.grpcutils.server.ServerManagementUtil;
@@ -29,7 +31,7 @@ public class AttributeServiceEntry extends PlatformService {
   private HealthBlockingStub healthClient;
   private final Clock clock = Clock.systemUTC();
   private final HealthStatusManager healthStatusManager = new HealthStatusManager();
-  private final GrpcChannelRegistry grpcChannelRegistry = new GrpcChannelRegistry(this.clock);
+  private final GrpcChannelRegistry grpcChannelRegistry = new GrpcChannelRegistry();
 
   public AttributeServiceEntry(ConfigClient configClient) {
     super(configClient);
@@ -67,8 +69,9 @@ public class AttributeServiceEntry extends PlatformService {
   @Override
   protected void doStop() {
     healthStatusManager.enterTerminalState();
-    grpcChannelRegistry.shutdown(this.clock.instant().plus(10L, ChronoUnit.SECONDS));
-    ServerManagementUtil.shutdownServer(this.server, this.getServiceName(), Duration.ofMinutes(1));
+    grpcChannelRegistry.shutdown(Deadline.after(10, SECONDS));
+    ServerManagementUtil.shutdownServer(
+        this.server, this.getServiceName(), Deadline.after(1, MINUTES));
   }
 
   @Override
