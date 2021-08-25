@@ -2,8 +2,11 @@ package org.hypertrace.core.attribute.service;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.protobuf.services.HealthStatusManager;
 import java.io.IOException;
+import java.time.Duration;
 import org.hypertrace.core.grpcutils.server.InterceptorUtil;
+import org.hypertrace.core.grpcutils.server.ServerManagementUtil;
 import org.hypertrace.core.serviceframework.PlatformService;
 import org.hypertrace.core.serviceframework.config.ConfigClient;
 import org.slf4j.Logger;
@@ -16,6 +19,7 @@ public class AttributeServiceEntry extends PlatformService {
 
   private String serviceName;
   private Server server;
+  private final HealthStatusManager healthStatusManager = new HealthStatusManager();
 
   public AttributeServiceEntry(ConfigClient configClient) {
     super(configClient);
@@ -28,6 +32,7 @@ public class AttributeServiceEntry extends PlatformService {
     server =
         ServerBuilder.forPort(port)
             .addService(InterceptorUtil.wrapInterceptors(new AttributeServiceImpl(getAppConfig())))
+            .addService(healthStatusManager.getHealthService())
             .build();
   }
 
@@ -48,11 +53,14 @@ public class AttributeServiceEntry extends PlatformService {
   }
 
   @Override
-  protected void doStop() {}
+  protected void doStop() {
+    healthStatusManager.enterTerminalState();
+    ServerManagementUtil.shutdownServer(this.server, this.getServiceName(), Duration.ofMinutes(1));
+  }
 
   @Override
   public boolean healthCheck() {
-    return true;
+    throw new UnsupportedOperationException("Please use grpc health check");
   }
 
   @Override

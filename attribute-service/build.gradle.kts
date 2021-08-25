@@ -57,8 +57,9 @@ dependencies {
   implementation(project(":attribute-service-impl"))
 
   implementation("org.hypertrace.core.serviceframework:platform-service-framework:0.1.28")
-  implementation("org.hypertrace.core.grpcutils:grpc-server-utils:0.5.2")
+  implementation("org.hypertrace.core.grpcutils:grpc-server-utils:0.6.0")
   implementation("org.hypertrace.core.documentstore:document-store:0.5.4")
+  implementation("io.grpc:grpc-services:1.40.0")
 
   // Logging
   implementation("org.slf4j:slf4j-api:1.7.30")
@@ -102,7 +103,9 @@ tasks.jacocoIntegrationTestReport {
 hypertraceDocker {
   defaultImage {
     javaApplication {
-      port.set(9012)
+      ports.add(9012)
+      adminPort.set(9013)
+      healthCheck.set("HEALTHCHECK --interval=2s --start-period=15s --timeout=2s CMD /bin/grpc_health_probe -addr=:9012 -connect-timeout=100ms -rpc-timeout=150ms")
     }
   }
 }
