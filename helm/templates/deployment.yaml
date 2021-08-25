@@ -74,6 +74,7 @@ spec:
               mountPath: /var/{{ .Chart.Name }}/log
           livenessProbe:
             periodSeconds: {{ int .Values.livenessProbe.periodSeconds }}
+            failureThreshold: {{ int .Values.livenessProbe.failureThreshold }}
             httpGet:
               path: /health
               port: {{ .Values.containerHealthProbePort }}
