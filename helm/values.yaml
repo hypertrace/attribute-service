@@ -25,9 +25,11 @@ javaOpts: "-XX:InitialRAMPercentage=50.0 -XX:MaxRAMPercentage=75.0 -XX:MaxDirect
 livenessProbe:
   periodSeconds: 5
   failureThreshold: 3
+  timeoutSeconds: 2
 startupProbe:
   periodSeconds: 5
   failureThreshold: 24
+  timeoutSeconds: 2
 
 resources:
   limits:
