@@ -33,7 +33,7 @@ startupProbe:
 
 resources:
   limits:
-    cpu: 400m
+    cpu: 2
     memory: 512Mi
   requests:
     cpu: 200m
