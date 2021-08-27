@@ -1,4 +1,4 @@
-rootProject.name = "attribute-service"
+rootProject.name = "attribute-service-root"
 
 pluginManagement {
   repositories {
