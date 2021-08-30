@@ -32,7 +32,8 @@ class ValueCoercer {
     }
   }
 
-  public static Optional<LiteralValue> toLiteral(Object value, AttributeKind attributeKind, boolean nullable) {
+  public static Optional<LiteralValue> toLiteral(
+      Object value, AttributeKind attributeKind, boolean nullable) {
     if (isNull(value)) {
       return nullable ? Optional.of(nullLiteral()) : Optional.empty();
     }

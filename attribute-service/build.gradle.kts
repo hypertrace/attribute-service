@@ -80,7 +80,7 @@ dependencies {
   // Config
   implementation("com.typesafe:config:1.4.1")
 
-  //Integration test dependencies
+  // Integration test dependencies
   integrationTestImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
   integrationTestImplementation("com.google.guava:guava:30.1.1-jre")
   integrationTestImplementation(project(":attribute-service-client"))
@@ -93,7 +93,7 @@ application {
 
 // Config for gw run to be able to run this locally. Just execute gw run here on Intellij or on the console.
 tasks.run<JavaExec> {
-  jvmArgs = listOf("-Dbootstrap.config.uri=file:${projectDir}/src/main/resources/configs", "-Dservice.name=${project.name}")
+  jvmArgs = listOf("-Dbootstrap.config.uri=file:$projectDir/src/main/resources/configs", "-Dservice.name=${project.name}")
 }
 
 tasks.jacocoIntegrationTestReport {

@@ -4,9 +4,8 @@ import javax.annotation.Nullable;
 
 public class Conditional {
   @Nullable
-  public static String getValue(@Nullable Boolean condition,
-                                @Nullable String first,
-                                @Nullable String second) {
+  public static String getValue(
+      @Nullable Boolean condition, @Nullable String first, @Nullable String second) {
     if (condition == null) {
       return null;
     }

@@ -34,7 +34,8 @@ class ValueCoercerTest {
 
   @Test
   void coercesFromString() {
-    assertEquals(Optional.of(stringLiteral("test")), toLiteral("test", AttributeKind.TYPE_STRING, false));
+    assertEquals(
+        Optional.of(stringLiteral("test")), toLiteral("test", AttributeKind.TYPE_STRING, false));
     assertEquals(Optional.of(stringLiteral("")), toLiteral("", AttributeKind.TYPE_STRING, false));
 
     assertEquals(empty(), toLiteral("test", AttributeKind.TYPE_INT64, false));
@@ -44,20 +45,30 @@ class ValueCoercerTest {
 
     assertEquals(empty(), toLiteral("test", AttributeKind.TYPE_DOUBLE, false));
     assertEquals(Optional.of(doubleLiteral(10)), toLiteral("10", AttributeKind.TYPE_DOUBLE, false));
-    assertEquals(Optional.of(doubleLiteral(-10)), toLiteral("-10", AttributeKind.TYPE_DOUBLE, false));
-    assertEquals(Optional.of(doubleLiteral(10.5)), toLiteral("10.5", AttributeKind.TYPE_DOUBLE, false));
+    assertEquals(
+        Optional.of(doubleLiteral(-10)), toLiteral("-10", AttributeKind.TYPE_DOUBLE, false));
+    assertEquals(
+        Optional.of(doubleLiteral(10.5)), toLiteral("10.5", AttributeKind.TYPE_DOUBLE, false));
 
     assertEquals(empty(), toLiteral("test", AttributeKind.TYPE_BOOL, false));
-    assertEquals(Optional.of(booleanLiteral(true)), toLiteral("true", AttributeKind.TYPE_BOOL, false));
-    assertEquals(Optional.of(booleanLiteral(true)), toLiteral("TRUE", AttributeKind.TYPE_BOOL, false));
-    assertEquals(Optional.of(booleanLiteral(false)), toLiteral("fALse", AttributeKind.TYPE_BOOL, false));
-    assertEquals(Optional.of(booleanLiteral(false)), toLiteral("false", AttributeKind.TYPE_BOOL, false));
+    assertEquals(
+        Optional.of(booleanLiteral(true)), toLiteral("true", AttributeKind.TYPE_BOOL, false));
+    assertEquals(
+        Optional.of(booleanLiteral(true)), toLiteral("TRUE", AttributeKind.TYPE_BOOL, false));
+    assertEquals(
+        Optional.of(booleanLiteral(false)), toLiteral("fALse", AttributeKind.TYPE_BOOL, false));
+    assertEquals(
+        Optional.of(booleanLiteral(false)), toLiteral("false", AttributeKind.TYPE_BOOL, false));
 
     assertEquals(empty(), toLiteral("test", AttributeKind.TYPE_BOOL, false));
-    assertEquals(Optional.of(booleanLiteral(true)), toLiteral("true", AttributeKind.TYPE_BOOL, false));
-    assertEquals(Optional.of(booleanLiteral(true)), toLiteral("TRUE", AttributeKind.TYPE_BOOL, false));
-    assertEquals(Optional.of(booleanLiteral(false)), toLiteral("fALse", AttributeKind.TYPE_BOOL, false));
-    assertEquals(Optional.of(booleanLiteral(false)), toLiteral("false", AttributeKind.TYPE_BOOL, false));
+    assertEquals(
+        Optional.of(booleanLiteral(true)), toLiteral("true", AttributeKind.TYPE_BOOL, false));
+    assertEquals(
+        Optional.of(booleanLiteral(true)), toLiteral("TRUE", AttributeKind.TYPE_BOOL, false));
+    assertEquals(
+        Optional.of(booleanLiteral(false)), toLiteral("fALse", AttributeKind.TYPE_BOOL, false));
+    assertEquals(
+        Optional.of(booleanLiteral(false)), toLiteral("false", AttributeKind.TYPE_BOOL, false));
 
     assertEquals(empty(), toLiteral("test", AttributeKind.TYPE_TIMESTAMP, false));
     assertEquals(
@@ -70,11 +81,15 @@ class ValueCoercerTest {
 
   @Test
   void coercesFromBoolean() {
-    assertEquals(Optional.of(booleanLiteral(true)), toLiteral(true, AttributeKind.TYPE_BOOL, false));
-    assertEquals(Optional.of(booleanLiteral(false)), toLiteral(false, AttributeKind.TYPE_BOOL, false));
+    assertEquals(
+        Optional.of(booleanLiteral(true)), toLiteral(true, AttributeKind.TYPE_BOOL, false));
+    assertEquals(
+        Optional.of(booleanLiteral(false)), toLiteral(false, AttributeKind.TYPE_BOOL, false));
 
-    assertEquals(Optional.of(stringLiteral("true")), toLiteral(true, AttributeKind.TYPE_STRING, false));
-    assertEquals(Optional.of(stringLiteral("false")), toLiteral(false, AttributeKind.TYPE_STRING, false));
+    assertEquals(
+        Optional.of(stringLiteral("true")), toLiteral(true, AttributeKind.TYPE_STRING, false));
+    assertEquals(
+        Optional.of(stringLiteral("false")), toLiteral(false, AttributeKind.TYPE_STRING, false));
 
     assertEquals(empty(), toLiteral(true, AttributeKind.TYPE_INT64, false));
     assertEquals(empty(), toLiteral(true, AttributeKind.TYPE_DOUBLE, false));
@@ -87,12 +102,16 @@ class ValueCoercerTest {
     assertEquals(Optional.of(longLiteral(-10L)), toLiteral(-10L, AttributeKind.TYPE_INT64, false));
 
     assertEquals(Optional.of(doubleLiteral(10d)), toLiteral(10L, AttributeKind.TYPE_DOUBLE, false));
-    assertEquals(Optional.of(doubleLiteral(-10d)), toLiteral(-10L, AttributeKind.TYPE_DOUBLE, false));
+    assertEquals(
+        Optional.of(doubleLiteral(-10d)), toLiteral(-10L, AttributeKind.TYPE_DOUBLE, false));
 
-    assertEquals(Optional.of(stringLiteral("10")), toLiteral(10L, AttributeKind.TYPE_STRING, false));
-    assertEquals(Optional.of(stringLiteral("-10")), toLiteral(-10L, AttributeKind.TYPE_STRING, false));
+    assertEquals(
+        Optional.of(stringLiteral("10")), toLiteral(10L, AttributeKind.TYPE_STRING, false));
+    assertEquals(
+        Optional.of(stringLiteral("-10")), toLiteral(-10L, AttributeKind.TYPE_STRING, false));
 
-    assertEquals(Optional.of(longLiteral(10L)), toLiteral(10L, AttributeKind.TYPE_TIMESTAMP, false));
+    assertEquals(
+        Optional.of(longLiteral(10L)), toLiteral(10L, AttributeKind.TYPE_TIMESTAMP, false));
     assertEquals(empty(), toLiteral(-10L, AttributeKind.TYPE_TIMESTAMP, false));
 
     assertEquals(empty(), toLiteral(10L, AttributeKind.TYPE_BOOL, false));
@@ -104,12 +123,16 @@ class ValueCoercerTest {
     assertEquals(Optional.of(longLiteral(-10L)), toLiteral(-10d, AttributeKind.TYPE_INT64, false));
 
     assertEquals(Optional.of(doubleLiteral(10d)), toLiteral(10d, AttributeKind.TYPE_DOUBLE, false));
-    assertEquals(Optional.of(doubleLiteral(-10d)), toLiteral(-10d, AttributeKind.TYPE_DOUBLE, false));
+    assertEquals(
+        Optional.of(doubleLiteral(-10d)), toLiteral(-10d, AttributeKind.TYPE_DOUBLE, false));
 
-    assertEquals(Optional.of(stringLiteral("10.0")), toLiteral(10d, AttributeKind.TYPE_STRING, false));
-    assertEquals(Optional.of(stringLiteral("-10.0")), toLiteral(-10d, AttributeKind.TYPE_STRING, false));
+    assertEquals(
+        Optional.of(stringLiteral("10.0")), toLiteral(10d, AttributeKind.TYPE_STRING, false));
+    assertEquals(
+        Optional.of(stringLiteral("-10.0")), toLiteral(-10d, AttributeKind.TYPE_STRING, false));
 
-    assertEquals(Optional.of(longLiteral(10L)), toLiteral(10d, AttributeKind.TYPE_TIMESTAMP, false));
+    assertEquals(
+        Optional.of(longLiteral(10L)), toLiteral(10d, AttributeKind.TYPE_TIMESTAMP, false));
     assertEquals(empty(), toLiteral(-10d, AttributeKind.TYPE_TIMESTAMP, false));
 
     assertEquals(empty(), toLiteral(10d, AttributeKind.TYPE_BOOL, false));
@@ -124,7 +147,8 @@ class ValueCoercerTest {
         Optional.of(longLiteral(TEST_TIMESTAMP_MS)),
         toLiteral(
             TEST_TIMESTAMP_INSTANT.atOffset(ZoneOffset.of("+07:00")),
-            AttributeKind.TYPE_TIMESTAMP, false));
+            AttributeKind.TYPE_TIMESTAMP,
+            false));
 
     assertEquals(
         Optional.of(longLiteral(TEST_TIMESTAMP_MS)),

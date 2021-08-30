@@ -294,11 +294,7 @@ public class AttributeMetadataModelTest {
 
     // If scope string not representable by enum, enum set to undefined and string used
     input = template.toBuilder().setScopeString("NEWSCOPE").build();
-    expected =
-        template.toBuilder()
-            .setScopeString("NEWSCOPE")
-            .setId("NEWSCOPE.key")
-            .build();
+    expected = template.toBuilder().setScopeString("NEWSCOPE").setId("NEWSCOPE.key").build();
     Assertions.assertEquals(expected, AttributeMetadataModel.fromDTO(input).toDTO());
     Assertions.assertEquals(
         AttributeMetadataModel.fromDTO(expected).toJson(),
@@ -334,10 +330,10 @@ public class AttributeMetadataModelTest {
             + "}";
     expected =
         template.toBuilder()
-                .setScope(AttributeScope.EVENT)
-                .setScopeString("EVENT")
-                .setId("EVENT.key")
-                .build();
+            .setScope(AttributeScope.EVENT)
+            .setScopeString("EVENT")
+            .setId("EVENT.key")
+            .build();
     Assertions.assertEquals(expected, AttributeMetadataModel.fromJson(inputJson).toDTO());
 
     // Given JSON with unknown scope string, scope string only should be set
@@ -350,11 +346,7 @@ public class AttributeMetadataModelTest {
             + "\"value_kind\":\"TYPE_BOOL\","
             + "\"display_name\":\"Some Name\""
             + "}";
-    expected =
-        template.toBuilder()
-                .setScopeString("NEWSCOPE")
-                .setId("NEWSCOPE.key")
-                .build();
+    expected = template.toBuilder().setScopeString("NEWSCOPE").setId("NEWSCOPE.key").build();
     Assertions.assertEquals(expected, AttributeMetadataModel.fromJson(inputJson).toDTO());
   }
 }
