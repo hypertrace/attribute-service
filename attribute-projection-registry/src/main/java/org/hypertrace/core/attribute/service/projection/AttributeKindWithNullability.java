@@ -30,9 +30,6 @@ class AttributeKindWithNullability {
 
   @Override
   public String toString() {
-    return "AttributeKindWithNullability{" +
-        "nullable=" + nullable +
-        ", kind=" + kind +
-        '}';
+    return "AttributeKindWithNullability{" + "nullable=" + nullable + ", kind=" + kind + '}';
   }
 }
