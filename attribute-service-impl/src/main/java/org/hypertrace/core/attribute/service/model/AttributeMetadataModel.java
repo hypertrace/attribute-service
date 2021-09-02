@@ -74,6 +74,9 @@ public class AttributeMetadataModel implements Document {
   @JsonDeserialize(using = AttributeDefinitionDeserializer.class)
   private AttributeDefinition definition = AttributeDefinition.getDefaultInstance();
 
+  @JsonProperty(value = "is_internal")
+  private boolean isInternal;
+
   protected AttributeMetadataModel() {}
 
   public static AttributeMetadataModel fromDTO(AttributeMetadata attributeMetadata) {
@@ -101,6 +104,7 @@ public class AttributeMetadataModel implements Document {
                     Map.Entry::getKey,
                     stringAttributeSourceMetadataEntry ->
                         stringAttributeSourceMetadataEntry.getValue().getSourceMetadataMap())));
+    attributeMetadataModel.setIsInternal(attributeMetadata.getIsInternal());
     return attributeMetadataModel;
   }
 
@@ -243,6 +247,14 @@ public class AttributeMetadataModel implements Document {
     this.definition = definition;
   }
 
+  public boolean getIsInternal() {
+    return isInternal;
+  }
+
+  public void setIsInternal(boolean is_internal) {
+    this.isInternal = is_internal;
+  }
+
   public AttributeMetadata toDTO() {
     return toDTOBuilder().build();
   }
@@ -273,7 +285,8 @@ public class AttributeMetadataModel implements Document {
                                 AttributeSourceMetadata.newBuilder()
                                     .putAllSourceMetadata(stringMapEntry.getValue())
                                     .build())))
-            .setDefinition(this.definition);
+            .setDefinition(this.definition)
+            .setIsInternal(isInternal);
 
     if (unit != null) {
       builder.setUnit(unit);
@@ -331,6 +344,8 @@ public class AttributeMetadataModel implements Document {
         + sources
         + ", metadata="
         + metadata
+        + ", IsInternal="
+        + isInternal
         + '}';
   }
 
@@ -358,7 +373,8 @@ public class AttributeMetadataModel implements Document {
         && Objects.equals(sources, that.sources)
         && Objects.equals(metadata, that.metadata)
         && Objects.equals(definition, that.definition)
-        && Objects.equals(scopeString, that.scopeString);
+        && Objects.equals(scopeString, that.scopeString)
+        && Objects.equals(isInternal, that.isInternal);
   }
 
   @Override
@@ -379,7 +395,8 @@ public class AttributeMetadataModel implements Document {
         sources,
         metadata,
         definition,
-        scopeString);
+        scopeString,
+        isInternal);
   }
 
   private static class ProtobufMessageSerializer extends JsonSerializer<Message> {

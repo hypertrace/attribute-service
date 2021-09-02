@@ -36,6 +36,7 @@ public class AttributeMetadataModelTest {
         AttributeDefinition.newBuilder()
             .setProjection(Projection.newBuilder().setAttributeId("test"))
             .build());
+    attributeMetadataModel.setIsInternal(true);
 
     String json = attributeMetadataModel.toJson();
     String expectedJson =
@@ -55,7 +56,8 @@ public class AttributeMetadataModelTest {
             + "\"value_kind\":\"TYPE_STRING\","
             + "\"display_name\":\"Some Name\","
             + "\"scope_string\":\"EVENT\","
-            + "\"tenant_id\":\"tenantId\""
+            + "\"tenant_id\":\"tenantId\","
+            + "\"is_internal\":true"
             + "}";
     Assertions.assertEquals(expectedJson, json);
     AttributeMetadataModel deserializedModel = AttributeMetadataModel.fromJson(json);
@@ -250,7 +252,9 @@ public class AttributeMetadataModelTest {
             + "\"value_kind\":\"TYPE_STRING\","
             + "\"display_name\":\"Display\","
             + "\"scope_string\":\"EVENT\","
-            + "\"tenant_id\":null}";
+            + "\"tenant_id\":null,"
+            + "\"is_internal\":false"
+            + "}";
     Assertions.assertEquals(expectedJson, modelFromMetadataWithoutDefinition.toJson());
   }
 

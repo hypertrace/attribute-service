@@ -100,6 +100,7 @@ message AttributeMetadata {
   bool groupable = 15;
   AttributeDefinition definition = 16;
   string scope_string = 17;
+  bool is_internal = 18;
 }
 
 message AttributeSourceMetadata {
