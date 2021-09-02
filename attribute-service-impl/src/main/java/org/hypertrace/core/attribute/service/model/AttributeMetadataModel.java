@@ -251,8 +251,8 @@ public class AttributeMetadataModel implements Document {
     return isInternal;
   }
 
-  public void setIsInternal(boolean is_internal) {
-    this.isInternal = is_internal;
+  public void setIsInternal(boolean isInternal) {
+    this.isInternal = isInternal;
   }
 
   public AttributeMetadata toDTO() {
