@@ -250,8 +250,8 @@ public class AttributeMetadataModel implements Document {
     return internal;
   }
 
-  public void setInternal(boolean isInternal) {
-    this.internal = isInternal;
+  public void setInternal(boolean internal) {
+    this.internal = internal;
   }
 
   public AttributeMetadata toDTO() {
