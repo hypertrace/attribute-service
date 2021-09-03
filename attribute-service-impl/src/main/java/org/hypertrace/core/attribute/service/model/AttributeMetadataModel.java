@@ -343,7 +343,7 @@ public class AttributeMetadataModel implements Document {
         + sources
         + ", metadata="
         + metadata
-        + ", Internal="
+        + ", internal="
         + internal
         + '}';
   }
