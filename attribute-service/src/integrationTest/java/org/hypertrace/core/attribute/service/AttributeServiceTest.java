@@ -159,7 +159,7 @@ public class AttributeServiceTest {
         Streams.stream(
                 client.findAttributes(requestHeaders, AttributeMetadataFilter.getDefaultInstance()))
             .collect(Collectors.toList());
-    assertEquals(expectedAttributeMetadata, attributeMetadataList.get(0));
+    assertEquals(List.of(expectedAttributeMetadata), attributeMetadataList);
   }
 
   @Test
