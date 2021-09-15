@@ -13,7 +13,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.hypertrace.core.attribute.service.client.AttributeServiceClient;
+import org.hypertrace.core.attribute.service.v1.AggregateFunction;
 import org.hypertrace.core.attribute.service.v1.AttributeCreateRequest;
+import org.hypertrace.core.attribute.service.v1.AttributeDefinition;
 import org.hypertrace.core.attribute.service.v1.AttributeKind;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadata;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadataFilter;
@@ -124,6 +126,40 @@ public class AttributeServiceTest {
     } else {
       client.create(TEST_TENANT_ID, attributeCreateRequest);
     }
+  }
+
+  @Test
+  public void testCheckValidAttributeMetadata() {
+    AttributeMetadata expectedAttributeMetadata =
+        AttributeMetadata.newBuilder()
+            .setFqn("name-1")
+            .setValueKind(AttributeKind.TYPE_STRING)
+            .setKey("key-1")
+            .setDisplayName("displayname-1")
+            .setScope(AttributeScope.EVENT)
+            .setMaterialized(false)
+            .setUnit("unit-1")
+            .setType(AttributeType.ATTRIBUTE)
+            .addAllLabels(List.of("label-1", "label-2"))
+            .addAllSupportedAggregations(List.of(AggregateFunction.SUM, AggregateFunction.AVG))
+            .setOnlyAggregationsAllowed(true)
+            .addSources(AttributeSource.EDS)
+            .setId("EVENT.key-1")
+            .setGroupable(true)
+            .setDefinition(AttributeDefinition.newBuilder().setSourcePath("sourcepath-1"))
+            .setScopeString(AttributeScope.EVENT.name())
+            .setInternal(true)
+            .build();
+
+    AttributeCreateRequest request =
+        AttributeCreateRequest.newBuilder().addAttributes(expectedAttributeMetadata).build();
+    client.create(requestHeaders, request);
+
+    List<AttributeMetadata> attributeMetadataList =
+        Streams.stream(
+                client.findAttributes(requestHeaders, AttributeMetadataFilter.getDefaultInstance()))
+            .collect(Collectors.toList());
+    assertEquals(List.of(expectedAttributeMetadata), attributeMetadataList);
   }
 
   @Test

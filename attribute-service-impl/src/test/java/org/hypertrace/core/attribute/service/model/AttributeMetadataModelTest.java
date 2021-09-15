@@ -36,6 +36,7 @@ public class AttributeMetadataModelTest {
         AttributeDefinition.newBuilder()
             .setProjection(Projection.newBuilder().setAttributeId("test"))
             .build());
+    attributeMetadataModel.setInternal(true);
 
     String json = attributeMetadataModel.toJson();
     String expectedJson =
@@ -51,6 +52,7 @@ public class AttributeMetadataModelTest {
             + "\"onlyAggregationsAllowed\":false,"
             + "\"sources\":[],"
             + "\"definition\":{\"projection\":{\"attributeId\":\"test\"}},"
+            + "\"internal\":true,"
             + "\"id\":\"EVENT.key\","
             + "\"value_kind\":\"TYPE_STRING\","
             + "\"display_name\":\"Some Name\","
@@ -246,11 +248,13 @@ public class AttributeMetadataModelTest {
             + "\"onlyAggregationsAllowed\":false,"
             + "\"sources\":[],"
             + "\"definition\":{},"
+            + "\"internal\":false,"
             + "\"id\":\"EVENT.key\","
             + "\"value_kind\":\"TYPE_STRING\","
             + "\"display_name\":\"Display\","
             + "\"scope_string\":\"EVENT\","
-            + "\"tenant_id\":null}";
+            + "\"tenant_id\":null"
+            + "}";
     Assertions.assertEquals(expectedJson, modelFromMetadataWithoutDefinition.toJson());
   }
 

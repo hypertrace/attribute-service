@@ -74,6 +74,8 @@ public class AttributeMetadataModel implements Document {
   @JsonDeserialize(using = AttributeDefinitionDeserializer.class)
   private AttributeDefinition definition = AttributeDefinition.getDefaultInstance();
 
+  private boolean internal;
+
   protected AttributeMetadataModel() {}
 
   public static AttributeMetadataModel fromDTO(AttributeMetadata attributeMetadata) {
@@ -101,6 +103,7 @@ public class AttributeMetadataModel implements Document {
                     Map.Entry::getKey,
                     stringAttributeSourceMetadataEntry ->
                         stringAttributeSourceMetadataEntry.getValue().getSourceMetadataMap())));
+    attributeMetadataModel.setInternal(attributeMetadata.getInternal());
     return attributeMetadataModel;
   }
 
@@ -243,6 +246,14 @@ public class AttributeMetadataModel implements Document {
     this.definition = definition;
   }
 
+  public boolean getInternal() {
+    return internal;
+  }
+
+  public void setInternal(boolean internal) {
+    this.internal = internal;
+  }
+
   public AttributeMetadata toDTO() {
     return toDTOBuilder().build();
   }
@@ -273,7 +284,8 @@ public class AttributeMetadataModel implements Document {
                                 AttributeSourceMetadata.newBuilder()
                                     .putAllSourceMetadata(stringMapEntry.getValue())
                                     .build())))
-            .setDefinition(this.definition);
+            .setDefinition(this.definition)
+            .setInternal(internal);
 
     if (unit != null) {
       builder.setUnit(unit);
@@ -331,6 +343,8 @@ public class AttributeMetadataModel implements Document {
         + sources
         + ", metadata="
         + metadata
+        + ", internal="
+        + internal
         + '}';
   }
 
@@ -358,7 +372,8 @@ public class AttributeMetadataModel implements Document {
         && Objects.equals(sources, that.sources)
         && Objects.equals(metadata, that.metadata)
         && Objects.equals(definition, that.definition)
-        && Objects.equals(scopeString, that.scopeString);
+        && Objects.equals(scopeString, that.scopeString)
+        && Objects.equals(internal, that.internal);
   }
 
   @Override
@@ -379,7 +394,8 @@ public class AttributeMetadataModel implements Document {
         sources,
         metadata,
         definition,
-        scopeString);
+        scopeString,
+        internal);
   }
 
   private static class ProtobufMessageSerializer extends JsonSerializer<Message> {
