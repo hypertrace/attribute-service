@@ -136,6 +136,7 @@ message AttributeMetadataFilter {
   repeated AttributeScope scope = 2 [deprecated = true]; // Use scope_string instead
   repeated string key = 4;
   repeated string scope_string = 5;
+  bool internal = 6;
 }
 
 message Empty {
