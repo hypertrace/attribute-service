@@ -155,9 +155,11 @@ public class AttributeServiceTest {
         AttributeCreateRequest.newBuilder().addAttributes(expectedAttributeMetadata).build();
     client.create(requestHeaders, request);
 
+    AttributeMetadataFilter amf = AttributeMetadataFilter.newBuilder().setInternal(true).build();
+
     List<AttributeMetadata> attributeMetadataList =
         Streams.stream(
-                client.findAttributes(requestHeaders, AttributeMetadataFilter.getDefaultInstance()))
+                client.findAttributes(requestHeaders, amf))
             .collect(Collectors.toList());
     assertEquals(List.of(expectedAttributeMetadata), attributeMetadataList);
   }

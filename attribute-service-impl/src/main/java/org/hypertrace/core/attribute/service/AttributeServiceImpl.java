@@ -369,7 +369,7 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
             .collect(Collectors.toUnmodifiableList());
     List<String> keyFilterRequest = attributeMetadataFilter.getKeyList();
     List<String> fqnFilterRequest = attributeMetadataFilter.getFqnList();
-    boolean internalFilter = attributeMetadataFilter.getInternal();
+    boolean isInternal = attributeMetadataFilter.getInternal();
     List<Filter> andFilters = new ArrayList<>();
 
     andFilters.add(getTenantIdInFilter(TenantUtils.getTenantHierarchy(tenantId)));
@@ -388,7 +388,7 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
       andFilters.add(new Filter(Filter.Op.IN, ATTRIBUTE_KEY_KEY, keyFilterRequest));
     }
 
-    andFilters.add(new Filter(Op.IN, ATTRIBUTE_INTERNAL_KEY, internalFilter));
+    andFilters.add(new Filter(Op.EQ, ATTRIBUTE_INTERNAL_KEY, isInternal));
 
     Filter queryFilter = new Filter();
     if (!andFilters.isEmpty()) {
