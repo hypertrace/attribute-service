@@ -203,7 +203,7 @@ public class AttributeServiceImplTest {
       // The structure of the filters is an and(^) filter chain that looks like this:
       // ((((tenant_id ^ fqn) ^ (scope_string | scope)) ^ key) ^ internal)
       Assertions.assertEquals(Filter.Op.AND, filter.getOp());
-      Assertions.assertEquals(Filter.Op.IN, filter.getChildFilters()[1].getOp());
+      Assertions.assertEquals(Filter.Op.EQ, filter.getChildFilters()[1].getOp());
       Assertions.assertEquals("internal", filter.getChildFilters()[1].getFieldName());
       Assertions.assertEquals(true, filter.getChildFilters()[1].getValue());
 
