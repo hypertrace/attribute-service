@@ -148,17 +148,16 @@ public class AttributeServiceTest {
             .setGroupable(true)
             .setDefinition(AttributeDefinition.newBuilder().setSourcePath("sourcepath-1"))
             .setScopeString(AttributeScope.EVENT.name())
-            .setInternal(true)
             .build();
 
     AttributeCreateRequest request =
         AttributeCreateRequest.newBuilder().addAttributes(expectedAttributeMetadata).build();
     client.create(requestHeaders, request);
 
-    AttributeMetadataFilter amf = AttributeMetadataFilter.newBuilder().setInternal(true).build();
-
     List<AttributeMetadata> attributeMetadataList =
-        Streams.stream(client.findAttributes(requestHeaders, amf)).collect(Collectors.toList());
+        Streams.stream(
+                client.findAttributes(requestHeaders, AttributeMetadataFilter.getDefaultInstance()))
+            .collect(Collectors.toList());
     assertEquals(List.of(expectedAttributeMetadata), attributeMetadataList);
   }
 
