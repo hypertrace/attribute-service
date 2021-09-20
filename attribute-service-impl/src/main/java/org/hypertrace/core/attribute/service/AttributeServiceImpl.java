@@ -37,6 +37,7 @@ import org.hypertrace.core.documentstore.Datastore;
 import org.hypertrace.core.documentstore.DatastoreProvider;
 import org.hypertrace.core.documentstore.Document;
 import org.hypertrace.core.documentstore.Filter;
+import org.hypertrace.core.documentstore.Filter.Op;
 import org.hypertrace.core.documentstore.JSONDocument;
 import org.hypertrace.core.documentstore.Key;
 import org.hypertrace.core.documentstore.Query;
@@ -53,6 +54,7 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
   private static final String ATTRIBUTE_SCOPE_KEY = "scope";
   private static final String ATTRIBUTE_SCOPE_STRING_KEY = "scope_string";
   private static final String ATTRIBUTE_KEY_KEY = "key";
+  private static final String ATTRIBUTE_INTERNAL_KEY = "internal";
   private static final String DOC_STORE_CONFIG_KEY = "document.store";
   private static final String DATA_STORE_TYPE = "dataStoreType";
   private static final String TENANT_ID_KEY = "tenant_id";
@@ -367,6 +369,7 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
             .collect(Collectors.toUnmodifiableList());
     List<String> keyFilterRequest = attributeMetadataFilter.getKeyList();
     List<String> fqnFilterRequest = attributeMetadataFilter.getFqnList();
+    boolean internalFilter = attributeMetadataFilter.getInternal();
     List<Filter> andFilters = new ArrayList<>();
 
     andFilters.add(getTenantIdInFilter(TenantUtils.getTenantHierarchy(tenantId)));
@@ -384,6 +387,8 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
     if (!keyFilterRequest.isEmpty()) {
       andFilters.add(new Filter(Filter.Op.IN, ATTRIBUTE_KEY_KEY, keyFilterRequest));
     }
+
+    andFilters.add(new Filter(Op.IN, ATTRIBUTE_INTERNAL_KEY, internalFilter));
 
     Filter queryFilter = new Filter();
     if (!andFilters.isEmpty()) {

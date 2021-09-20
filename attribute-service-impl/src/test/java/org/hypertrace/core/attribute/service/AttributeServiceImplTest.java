@@ -184,6 +184,7 @@ public class AttributeServiceImplTest {
               .addAllScope(
                   List.of(AttributeScope.TRACE, AttributeScope.EVENT, AttributeScope.BACKEND))
               .addScopeString("OTHER")
+              .setInternal(true)
               .build();
 
       List<String> allScopes =
@@ -200,14 +201,18 @@ public class AttributeServiceImplTest {
 
       Filter filter = queryCaptor.getValue().getFilter();
       // The structure of the filters is an and(^) filter chain that looks like this:
-      // (((tenant_id ^ fqn) ^ (scope_string | scope)) ^ key)
+      // ((((tenant_id ^ fqn) ^ (scope_string | scope)) ^ key) ^ internal)
       Assertions.assertEquals(Filter.Op.AND, filter.getOp());
       Assertions.assertEquals(Filter.Op.IN, filter.getChildFilters()[1].getOp());
-      Assertions.assertEquals("key", filter.getChildFilters()[1].getFieldName());
-      Assertions.assertEquals(keyList, filter.getChildFilters()[1].getValue());
+      Assertions.assertEquals("internal", filter.getChildFilters()[1].getFieldName());
+      Assertions.assertEquals(true, filter.getChildFilters()[1].getValue());
 
-      Assertions.assertEquals(Filter.Op.AND, filter.getChildFilters()[0].getOp());
-      Filter scopeFilter = filter.getChildFilters()[0].getChildFilters()[1];
+      Filter innerFilter = filter.getChildFilters()[0];
+      Assertions.assertEquals("key", innerFilter.getChildFilters()[1].getFieldName());
+      Assertions.assertEquals(keyList, innerFilter.getChildFilters()[1].getValue());
+
+      Assertions.assertEquals(Filter.Op.AND, innerFilter.getChildFilters()[0].getOp());
+      Filter scopeFilter = innerFilter.getChildFilters()[0].getChildFilters()[1];
       Assertions.assertEquals(Filter.Op.OR, scopeFilter.getOp());
 
       Assertions.assertEquals(Filter.Op.IN, scopeFilter.getChildFilters()[0].getOp());
@@ -219,23 +224,24 @@ public class AttributeServiceImplTest {
       Assertions.assertEquals(allScopes, scopeFilter.getChildFilters()[1].getValue());
 
       Assertions.assertEquals(
-          Filter.Op.AND, filter.getChildFilters()[0].getChildFilters()[0].getOp());
+          Filter.Op.AND, innerFilter.getChildFilters()[0].getChildFilters()[0].getOp());
       Assertions.assertEquals(
           Filter.Op.IN,
-          filter.getChildFilters()[0].getChildFilters()[0].getChildFilters()[1].getOp());
+          innerFilter.getChildFilters()[0].getChildFilters()[0].getChildFilters()[1].getOp());
       Assertions.assertEquals(
           "fqn",
-          filter.getChildFilters()[0].getChildFilters()[0].getChildFilters()[1].getFieldName());
+          innerFilter.getChildFilters()[0].getChildFilters()[0].getChildFilters()[1]
+              .getFieldName());
       Assertions.assertEquals(
           fqnList,
-          filter.getChildFilters()[0].getChildFilters()[0].getChildFilters()[1].getValue());
+          innerFilter.getChildFilters()[0].getChildFilters()[0].getChildFilters()[1].getValue());
 
       Assertions.assertEquals(
           Filter.Op.IN,
-          filter.getChildFilters()[0].getChildFilters()[0].getChildFilters()[0].getOp());
+          innerFilter.getChildFilters()[0].getChildFilters()[0].getChildFilters()[0].getOp());
       Assertions.assertEquals(
           List.of("__root", "test-tenant-id"),
-          filter.getChildFilters()[0].getChildFilters()[0].getChildFilters()[0].getValue());
+          innerFilter.getChildFilters()[0].getChildFilters()[0].getChildFilters()[0].getValue());
 
       ArgumentCaptor<AttributeMetadata> attributeMetadataArgumentCaptor =
           ArgumentCaptor.forClass(AttributeMetadata.class);
