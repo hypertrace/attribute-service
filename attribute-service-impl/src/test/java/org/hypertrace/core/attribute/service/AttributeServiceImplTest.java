@@ -150,7 +150,7 @@ public class AttributeServiceImplTest {
   }
 
   @Test
-  public void testFindAttributes() {
+  public void testFindAttributesWithInternalFlag() {
     RequestContext requestContext = mock(RequestContext.class);
     when(requestContext.getTenantId()).thenReturn(Optional.of("test-tenant-id"));
     Context ctx = Context.current().withValue(RequestContext.CURRENT, requestContext);
@@ -254,6 +254,101 @@ public class AttributeServiceImplTest {
       Assertions.assertEquals(MOCK_EVENT_NAME_ATTRIBUTE, attributeMetadataList.get(0));
       Assertions.assertEquals(MOCK_EVENT_DURATION_ATTRIBUTE, attributeMetadataList.get(1));
 
+      verify(responseObserver, times(1)).onCompleted();
+      verify(responseObserver, never()).onError(any(Throwable.class));
+    } finally {
+      ctx.detach(previous);
+    }
+  }
+
+  @Test
+  public void testFindAttributesWithNoInternalFlag() {
+    RequestContext requestContext = mock(RequestContext.class);
+    when(requestContext.getTenantId()).thenReturn(Optional.of("test-tenant-id"));
+    Context ctx = Context.current().withValue(RequestContext.CURRENT, requestContext);
+
+    Context previous = ctx.attach();
+    try {
+      Collection collection =
+          mockCollectionReturningDocuments(
+              createMockDocument(
+                  "__root",
+                  "name",
+                  AttributeScope.EVENT,
+                  AttributeType.ATTRIBUTE,
+                  AttributeKind.TYPE_STRING),
+              createMockDocument(
+                  "__root",
+                  "duration",
+                  AttributeScope.EVENT,
+                  AttributeType.METRIC,
+                  AttributeKind.TYPE_INT64));
+      StreamObserver<AttributeMetadata> responseObserver = mock(StreamObserver.class);
+      AttributeServiceImpl attributeService = new AttributeServiceImpl(collection);
+
+      List<String> fqnList = List.of("EVENT.name", "EVENT.id");
+      List<String> keyList = List.of("name", "startTime", "duration");
+
+      AttributeMetadataFilter attributeMetadataFilter =
+          AttributeMetadataFilter.newBuilder()
+              .addAllFqn(fqnList)
+              .addAllKey(keyList)
+              .addAllScope(
+                  List.of(AttributeScope.TRACE, AttributeScope.EVENT, AttributeScope.BACKEND))
+              .addScopeString("OTHER")
+              .build();
+
+      List<String> allScopes =
+          List.of(
+              "OTHER",
+              AttributeScope.TRACE.name(),
+              AttributeScope.EVENT.name(),
+              AttributeScope.BACKEND.name());
+
+      attributeService.findAttributes(attributeMetadataFilter, responseObserver);
+
+      ArgumentCaptor<Query> queryCaptor = ArgumentCaptor.forClass(Query.class);
+      verify(collection, times(1)).search(queryCaptor.capture());
+
+      Filter filter = queryCaptor.getValue().getFilter();
+      // The structure of the filters is an and(^) filter chain that looks like this:
+      // (((tenant_id ^ fqn) ^ (scope_string | scope)) ^ key)
+      Assertions.assertEquals(Filter.Op.AND, filter.getOp());
+      Assertions.assertEquals(Filter.Op.IN, filter.getChildFilters()[1].getOp());
+      Assertions.assertEquals("key", filter.getChildFilters()[1].getFieldName());
+      Assertions.assertEquals(keyList, filter.getChildFilters()[1].getValue());
+
+      Assertions.assertEquals(Filter.Op.AND, filter.getChildFilters()[0].getOp());
+      Filter scopeFilter = filter.getChildFilters()[0].getChildFilters()[1];
+      Assertions.assertEquals(Filter.Op.OR, scopeFilter.getOp());
+
+      Assertions.assertEquals(Filter.Op.IN, scopeFilter.getChildFilters()[0].getOp());
+      Assertions.assertEquals("scope_string", scopeFilter.getChildFilters()[0].getFieldName());
+      Assertions.assertEquals(allScopes, scopeFilter.getChildFilters()[0].getValue());
+      Assertions.assertEquals(Filter.Op.IN, scopeFilter.getChildFilters()[1].getOp());
+      Assertions.assertEquals("scope", scopeFilter.getChildFilters()[1].getFieldName());
+      Assertions.assertEquals(allScopes, scopeFilter.getChildFilters()[1].getValue());
+
+      Assertions.assertEquals(
+          Filter.Op.AND, filter.getChildFilters()[0].getChildFilters()[0].getOp());
+      Assertions.assertEquals(
+          Filter.Op.IN,
+          filter.getChildFilters()[0].getChildFilters()[0].getChildFilters()[1].getOp());
+      Assertions.assertEquals(
+          Filter.Op.IN,
+          filter.getChildFilters()[0].getChildFilters()[0].getChildFilters()[0].getOp());
+      Assertions.assertEquals(
+          List.of("__root", "test-tenant-id"),
+          filter.getChildFilters()[0].getChildFilters()[0].getChildFilters()[0].getValue());
+
+      ArgumentCaptor<AttributeMetadata> attributeMetadataArgumentCaptor =
+          ArgumentCaptor.forClass(AttributeMetadata.class);
+      verify(responseObserver, times(2)).onNext(attributeMetadataArgumentCaptor.capture());
+      List<AttributeMetadata> attributeMetadataList =
+          attributeMetadataArgumentCaptor.getAllValues();
+      Assertions.assertEquals(2, attributeMetadataList.size());
+      Assertions.assertEquals(MOCK_EVENT_NAME_ATTRIBUTE, attributeMetadataList.get(0));
+      Assertions.assertEquals(MOCK_EVENT_DURATION_ATTRIBUTE, attributeMetadataList.get(1));
       verify(responseObserver, times(1)).onCompleted();
       verify(responseObserver, never()).onError(any(Throwable.class));
     } finally {
