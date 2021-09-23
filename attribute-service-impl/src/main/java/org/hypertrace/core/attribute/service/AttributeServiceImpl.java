@@ -37,6 +37,7 @@ import org.hypertrace.core.documentstore.Datastore;
 import org.hypertrace.core.documentstore.DatastoreProvider;
 import org.hypertrace.core.documentstore.Document;
 import org.hypertrace.core.documentstore.Filter;
+import org.hypertrace.core.documentstore.Filter.Op;
 import org.hypertrace.core.documentstore.JSONDocument;
 import org.hypertrace.core.documentstore.Key;
 import org.hypertrace.core.documentstore.Query;
@@ -53,6 +54,7 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
   private static final String ATTRIBUTE_SCOPE_KEY = "scope";
   private static final String ATTRIBUTE_SCOPE_STRING_KEY = "scope_string";
   private static final String ATTRIBUTE_KEY_KEY = "key";
+  private static final String ATTRIBUTE_INTERNAL_KEY = "internal";
   private static final String DOC_STORE_CONFIG_KEY = "document.store";
   private static final String DATA_STORE_TYPE = "dataStoreType";
   private static final String TENANT_ID_KEY = "tenant_id";
@@ -383,6 +385,11 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
 
     if (!keyFilterRequest.isEmpty()) {
       andFilters.add(new Filter(Filter.Op.IN, ATTRIBUTE_KEY_KEY, keyFilterRequest));
+    }
+
+    if (attributeMetadataFilter.hasInternal()) {
+      andFilters.add(
+          new Filter(Op.EQ, ATTRIBUTE_INTERNAL_KEY, attributeMetadataFilter.getInternal()));
     }
 
     Filter queryFilter = new Filter();

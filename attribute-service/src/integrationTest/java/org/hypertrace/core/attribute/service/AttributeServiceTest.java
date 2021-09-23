@@ -148,7 +148,6 @@ public class AttributeServiceTest {
             .setGroupable(true)
             .setDefinition(AttributeDefinition.newBuilder().setSourcePath("sourcepath-1"))
             .setScopeString(AttributeScope.EVENT.name())
-            .setInternal(true)
             .build();
 
     AttributeCreateRequest request =
