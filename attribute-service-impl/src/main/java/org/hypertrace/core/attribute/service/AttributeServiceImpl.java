@@ -388,8 +388,13 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
     }
 
     if (attributeMetadataFilter.hasInternal()) {
-      andFilters.add(
-          new Filter(Op.EQ, ATTRIBUTE_INTERNAL_KEY, attributeMetadataFilter.getInternal()));
+      Filter internalFilter =
+          new Filter(Op.EQ, ATTRIBUTE_INTERNAL_KEY, attributeMetadataFilter.getInternal());
+      if (!attributeMetadataFilter.getInternal()) {
+        // For backwards compatibility, treat an attribute missing internal attribute as external
+        internalFilter = internalFilter.or(new Filter(Op.NOT_EXISTS, ATTRIBUTE_INTERNAL_KEY, null));
+      }
+      andFilters.add(internalFilter);
     }
 
     Filter queryFilter = new Filter();
