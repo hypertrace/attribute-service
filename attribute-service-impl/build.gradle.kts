@@ -19,7 +19,7 @@ dependencies {
 
   testImplementation("org.mockito:mockito-core:3.8.0")
   testImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
-  testImplementation("org.apache.logging.log4j:log4j-slf4j-impl:2.14.1")
+  testImplementation("org.apache.logging.log4j:log4j-slf4j-impl:2.15.0")
 }
 
 tasks.test {
