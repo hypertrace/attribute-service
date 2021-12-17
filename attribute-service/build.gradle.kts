@@ -71,6 +71,7 @@ dependencies {
   constraints {
     runtimeOnly("io.netty:netty-codec-http2:4.1.71.Final")
     runtimeOnly("io.netty:netty-handler-proxy:4.1.71.Final")
+  }
 
   // Config
   implementation("com.typesafe:config:1.4.1")
