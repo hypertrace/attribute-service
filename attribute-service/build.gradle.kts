@@ -56,35 +56,29 @@ tasks.integrationTest {
 dependencies {
   implementation(project(":attribute-service-impl"))
 
-  implementation("org.hypertrace.core.serviceframework:platform-service-framework:0.1.28")
-  implementation("org.hypertrace.core.grpcutils:grpc-server-utils:0.6.2")
-  implementation("org.hypertrace.core.grpcutils:grpc-client-utils:0.6.2")
+  implementation("org.hypertrace.core.serviceframework:platform-service-framework:0.1.33")
+  implementation("org.hypertrace.core.grpcutils:grpc-server-utils:0.7.0")
+  implementation("org.hypertrace.core.grpcutils:grpc-client-utils:0.7.0")
   implementation("org.hypertrace.core.documentstore:document-store:0.5.4")
-  implementation("io.grpc:grpc-services:1.42.0")
+  implementation("io.grpc:grpc-services")
 
   // Logging
-  implementation("org.slf4j:slf4j-api:1.7.30")
+  implementation("org.slf4j:slf4j-api:1.7.32")
   runtimeOnly("org.apache.logging.log4j:log4j-slf4j-impl:2.17.0")
-
-  // GRPC
-  runtimeOnly("io.grpc:grpc-netty:1.42.0")
-  constraints {
-    runtimeOnly("io.netty:netty-codec-http2:4.1.71.Final")
-    runtimeOnly("io.netty:netty-handler-proxy:4.1.71.Final")
-  }
+  runtimeOnly("io.grpc:grpc-netty")
 
   // Config
   implementation("com.typesafe:config:1.4.1")
 
   // Integration test dependencies
-  integrationTestImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
-  integrationTestImplementation("com.google.guava:guava:30.1.1-jre")
+  integrationTestImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
+  integrationTestImplementation("com.google.guava:guava:31.0.1-jre")
   integrationTestImplementation(project(":attribute-service-client"))
-  integrationTestImplementation("org.hypertrace.core.serviceframework:integrationtest-service-framework:0.1.28")
+  integrationTestImplementation("org.hypertrace.core.serviceframework:integrationtest-service-framework:0.1.33")
 }
 
 application {
-  mainClassName = "org.hypertrace.core.serviceframework.PlatformServiceLauncher"
+  mainClass.set("org.hypertrace.core.serviceframework.PlatformServiceLauncher")
 }
 
 // Config for gw run to be able to run this locally. Just execute gw run here on Intellij or on the console.
