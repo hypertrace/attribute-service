@@ -19,7 +19,7 @@ protobuf {
   }
   plugins {
     id("grpc_java") {
-      artifact = "io.grpc:protoc-gen-grpc-java:1.43.1"
+      artifact = "io.grpc:protoc-gen-grpc-java:1.44.0"
     }
 
     if (generateLocalGoGrpcFiles) {
@@ -57,7 +57,7 @@ sourceSets {
 }
 
 dependencies {
-  api(platform("io.grpc:grpc-bom:1.43.1"))
+  api(platform("io.grpc:grpc-bom:1.44.0"))
   api("io.grpc:grpc-stub")
   api("io.grpc:grpc-protobuf")
 

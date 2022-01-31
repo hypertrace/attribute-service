@@ -14,12 +14,12 @@ dependencies {
   implementation("com.fasterxml.jackson.core:jackson-databind:2.13.1")
   implementation("com.typesafe:config:1.4.1")
   implementation("org.slf4j:slf4j-api:1.7.32")
-  implementation("com.google.protobuf:protobuf-java-util:3.15.6")
+  implementation("com.google.protobuf:protobuf-java-util:3.19.2")
   implementation("com.google.guava:guava:31.0.1-jre")
 
   testImplementation("org.mockito:mockito-core:4.2.0")
   testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
-  testImplementation("org.apache.logging.log4j:log4j-slf4j-impl:2.17.0")
+  testImplementation("org.apache.logging.log4j:log4j-slf4j-impl:2.17.1")
 }
 
 tasks.test {
