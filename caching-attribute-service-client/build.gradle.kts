@@ -23,7 +23,7 @@ dependencies {
   testImplementation("org.mockito:mockito-core:4.2.0")
   testImplementation("org.mockito:mockito-junit-jupiter:4.2.0")
   testImplementation("io.grpc:grpc-core")
-  testImplementation("org.apache.logging.log4j:log4j-slf4j-impl:2.17.0")
+  testImplementation("org.apache.logging.log4j:log4j-slf4j-impl:2.17.1")
 }
 
 tasks.test {
