@@ -101,6 +101,7 @@ message AttributeMetadata {
   AttributeDefinition definition = 16;
   string scope_string = 17;
   bool internal = 18;
+  string category = 19;
 }
 
 message AttributeSourceMetadata {

@@ -37,6 +37,7 @@ public class AttributeMetadataModelTest {
             .setProjection(Projection.newBuilder().setAttributeId("test"))
             .build());
     attributeMetadataModel.setInternal(true);
+    attributeMetadataModel.setCategory("category");
 
     String json = attributeMetadataModel.toJson();
     String expectedJson =
@@ -48,11 +49,12 @@ public class AttributeMetadataModelTest {
             + "\"type\":\"ATTRIBUTE\","
             + "\"labels\":[\"item1\"],"
             + "\"groupable\":true,"
+            + "\"internal\":true,"
+            + "\"category\":\"category\","
             + "\"supportedAggregations\":[],"
             + "\"onlyAggregationsAllowed\":false,"
             + "\"sources\":[],"
             + "\"definition\":{\"projection\":{\"attributeId\":\"test\"}},"
-            + "\"internal\":true,"
             + "\"id\":\"EVENT.key\","
             + "\"value_kind\":\"TYPE_STRING\","
             + "\"display_name\":\"Some Name\","
@@ -244,11 +246,12 @@ public class AttributeMetadataModelTest {
             + "\"type\":\"ATTRIBUTE\","
             + "\"labels\":[],"
             + "\"groupable\":false,"
+            + "\"internal\":false,"
+            + "\"category\":\"\","
             + "\"supportedAggregations\":[],"
             + "\"onlyAggregationsAllowed\":false,"
             + "\"sources\":[],"
             + "\"definition\":{},"
-            + "\"internal\":false,"
             + "\"id\":\"EVENT.key\","
             + "\"value_kind\":\"TYPE_STRING\","
             + "\"display_name\":\"Display\","

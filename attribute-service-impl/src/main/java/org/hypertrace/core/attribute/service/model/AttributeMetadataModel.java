@@ -64,6 +64,8 @@ public class AttributeMetadataModel implements Document {
   private String tenantId;
 
   private Boolean groupable;
+  private boolean internal;
+  private String category;
 
   private List<AggregateFunction> supportedAggregations = Collections.emptyList();
   private boolean onlyAggregationsAllowed;
@@ -73,8 +75,6 @@ public class AttributeMetadataModel implements Document {
   @JsonSerialize(using = ProtobufMessageSerializer.class)
   @JsonDeserialize(using = AttributeDefinitionDeserializer.class)
   private AttributeDefinition definition = AttributeDefinition.getDefaultInstance();
-
-  private boolean internal;
 
   protected AttributeMetadataModel() {}
 
@@ -104,6 +104,7 @@ public class AttributeMetadataModel implements Document {
                     stringAttributeSourceMetadataEntry ->
                         stringAttributeSourceMetadataEntry.getValue().getSourceMetadataMap())));
     attributeMetadataModel.setInternal(attributeMetadata.getInternal());
+    attributeMetadataModel.setCategory(attributeMetadata.getCategory());
     return attributeMetadataModel;
   }
 
@@ -254,6 +255,14 @@ public class AttributeMetadataModel implements Document {
     this.internal = internal;
   }
 
+  public String getCategory() {
+    return category;
+  }
+
+  public void setCategory(String category) {
+    this.category = category;
+  }
+
   public AttributeMetadata toDTO() {
     return toDTOBuilder().build();
   }
@@ -289,6 +298,10 @@ public class AttributeMetadataModel implements Document {
 
     if (unit != null) {
       builder.setUnit(unit);
+    }
+
+    if (category != null) {
+      builder.setCategory(category);
     }
 
     return builder;
@@ -345,6 +358,8 @@ public class AttributeMetadataModel implements Document {
         + metadata
         + ", internal="
         + internal
+        + ", category="
+        + category
         + '}';
   }
 
