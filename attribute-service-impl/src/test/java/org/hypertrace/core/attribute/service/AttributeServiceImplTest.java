@@ -11,6 +11,7 @@ import com.google.common.collect.Iterators;
 import com.google.protobuf.ServiceException;
 import io.grpc.Context;
 import io.grpc.stub.StreamObserver;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import org.hypertrace.core.attribute.service.v1.AggregateFunction;
@@ -23,6 +24,7 @@ import org.hypertrace.core.attribute.service.v1.AttributeType;
 import org.hypertrace.core.attribute.service.v1.Empty;
 import org.hypertrace.core.attribute.service.v1.GetAttributesRequest;
 import org.hypertrace.core.attribute.service.v1.GetAttributesResponse;
+import org.hypertrace.core.documentstore.CloseableIterator;
 import org.hypertrace.core.documentstore.Collection;
 import org.hypertrace.core.documentstore.Document;
 import org.hypertrace.core.documentstore.Filter;
@@ -429,7 +431,8 @@ public class AttributeServiceImplTest {
 
   private Collection mockCollectionReturningDocuments(Document... documents) {
     Collection collection = mock(Collection.class);
-    when(collection.search(any(Query.class))).thenReturn(Iterators.forArray(documents));
+    when(collection.search(any(Query.class)))
+        .thenReturn(convertToCloseableIterator(Iterators.forArray(documents)));
     return collection;
   }
 
@@ -460,5 +463,22 @@ public class AttributeServiceImplTest {
 
     when(document.toJson()).thenReturn(sb.toString());
     return document;
+  }
+
+  private <T> CloseableIterator<T> convertToCloseableIterator(Iterator<T> iterator) {
+    return new CloseableIterator<>() {
+      @Override
+      public void close() {}
+
+      @Override
+      public boolean hasNext() {
+        return iterator.hasNext();
+      }
+
+      @Override
+      public T next() {
+        return iterator.next();
+      }
+    };
   }
 }
