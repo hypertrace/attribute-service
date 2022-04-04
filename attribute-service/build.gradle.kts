@@ -57,9 +57,9 @@ dependencies {
   implementation(project(":attribute-service-impl"))
 
   implementation("org.hypertrace.core.serviceframework:platform-service-framework:0.1.33")
-  implementation("org.hypertrace.core.grpcutils:grpc-server-utils:0.7.0")
-  implementation("org.hypertrace.core.grpcutils:grpc-client-utils:0.7.0")
-  implementation("org.hypertrace.core.documentstore:document-store:0.6.14")
+  implementation("org.hypertrace.core.grpcutils:grpc-server-utils:0.7.2")
+  implementation("org.hypertrace.core.grpcutils:grpc-client-utils:0.7.2")
+  implementation("org.hypertrace.core.documentstore:document-store:0.6.15")
   implementation("io.grpc:grpc-services")
 
   // Logging
