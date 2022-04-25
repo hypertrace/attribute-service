@@ -72,7 +72,7 @@ dependencies {
 
   // Integration test dependencies
   integrationTestImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
-  integrationTestImplementation("com.google.guava:guava:31.0.1-jre")
+  integrationTestImplementation("com.google.guava:guava:31.1-jre")
   integrationTestImplementation(project(":attribute-service-client"))
   integrationTestImplementation("org.hypertrace.core.serviceframework:integrationtest-service-framework:0.1.33")
 }
