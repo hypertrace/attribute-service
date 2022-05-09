@@ -28,7 +28,6 @@ enum AttributeScope {
   CLUSTERS_SNAPSHOT = 17;
   DOMAIN = 18;
   ACTOR = 19;
-  SENSITIVE_SPAN = 20;
 }
 
 enum AttributeKind {
