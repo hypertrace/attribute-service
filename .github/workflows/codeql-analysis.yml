@@ -37,19 +37,22 @@ jobs:
         with:
           languages: ${{ matrix.language }}
 
-      - name: Cache packages
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle
-          key: gradle-packages-${{ runner.os }}-${{ github.job }}-${{ hashFiles('**/checksum.txt') }}
-          restore-keys: |
-            gradle-packages-${{ runner.os }}-${{ github.job }}
-            gradle-packages-${{ runner.os }}
+      # - name: Cache packages
+      #   uses: actions/cache@v2
+      #   with:
+      #     path: ~/.gradle
+      #     key: gradle-packages-${{ runner.os }}-${{ github.job }}-${{ hashFiles('**/checksum.txt') }}
+      #     restore-keys: |
+      #       gradle-packages-${{ runner.os }}-${{ github.job }}
+      #       gradle-packages-${{ runner.os }}
+      #
+      # - name: Build with Gradle
+      #   uses: hypertrace/github-actions/gradle@main
+      #   with:
+      #     args: build
 
-      - name: Build with Gradle
-        uses: hypertrace/github-actions/gradle@main
-        with:
-          args: build
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v2
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
