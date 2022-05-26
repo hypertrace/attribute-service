@@ -37,20 +37,7 @@ jobs:
         with:
           languages: ${{ matrix.language }}
 
-      # - name: Cache packages
-      #   uses: actions/cache@v2
-      #   with:
-      #     path: ~/.gradle
-      #     key: gradle-packages-${{ runner.os }}-${{ github.job }}-${{ hashFiles('**/checksum.txt') }}
-      #     restore-keys: |
-      #       gradle-packages-${{ runner.os }}-${{ github.job }}
-      #       gradle-packages-${{ runner.os }}
-      #
-      # - name: Build with Gradle
-      #   uses: hypertrace/github-actions/gradle@main
-      #   with:
-      #     args: build
-
+      # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
       - name: Autobuild
         uses: github/codeql-action/autobuild@v2
 
