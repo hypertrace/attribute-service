@@ -1,5 +1,6 @@
 package org.hypertrace.core.attribute.service;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -13,6 +14,10 @@ public class A {
 
   public List<Integer> getList() {
     return l;
+  }
+
+  public void createDir(File dir) {
+    if (dir != null || !dir.exists()) dir.mkdir();
   }
 
   public static void main(String[] args) {
