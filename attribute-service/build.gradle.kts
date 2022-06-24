@@ -55,7 +55,7 @@ tasks.integrationTest {
 
 dependencies {
   implementation(project(":attribute-service-factory"))
-  implementation("org.hypertrace.core.serviceframework:platform-grpc-service-framework:0.1.34")
+  implementation("org.hypertrace.core.serviceframework:platform-grpc-service-framework:0.1.35")
   runtimeOnly("org.apache.logging.log4j:log4j-slf4j-impl:2.17.1")
   runtimeOnly("io.grpc:grpc-netty")
 
@@ -63,7 +63,7 @@ dependencies {
   integrationTestImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
   integrationTestImplementation("com.google.guava:guava:31.1-jre")
   integrationTestImplementation(project(":attribute-service-client"))
-  integrationTestImplementation("org.hypertrace.core.serviceframework:integrationtest-service-framework:0.1.34")
+  integrationTestImplementation("org.hypertrace.core.serviceframework:integrationtest-service-framework:0.1.35")
 }
 
 application {
