@@ -54,30 +54,16 @@ tasks.integrationTest {
 }
 
 dependencies {
-  implementation(project(":attribute-service-impl"))
-
-  implementation("org.hypertrace.core.serviceframework:platform-service-framework:0.1.33")
-  implementation("org.hypertrace.core.grpcutils:grpc-server-utils:0.7.2")
-  implementation("org.hypertrace.core.grpcutils:grpc-client-utils:0.7.2")
-  implementation("org.hypertrace.core.documentstore:document-store:0.6.15")
-  implementation("io.grpc:grpc-services")
-
-  // Logging
-  implementation("org.slf4j:slf4j-api:1.7.32")
+  implementation(project(":attribute-service-factory"))
+  implementation("org.hypertrace.core.serviceframework:platform-grpc-service-framework:0.1.35")
   runtimeOnly("org.apache.logging.log4j:log4j-slf4j-impl:2.17.1")
   runtimeOnly("io.grpc:grpc-netty")
-  constraints {
-    runtimeOnly("io.netty:netty-codec-http2:4.1.77.Final")
-  }
-
-  // Config
-  implementation("com.typesafe:config:1.4.1")
 
   // Integration test dependencies
   integrationTestImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
   integrationTestImplementation("com.google.guava:guava:31.1-jre")
   integrationTestImplementation(project(":attribute-service-client"))
-  integrationTestImplementation("org.hypertrace.core.serviceframework:integrationtest-service-framework:0.1.33")
+  integrationTestImplementation("org.hypertrace.core.serviceframework:integrationtest-service-framework:0.1.35")
 }
 
 application {
@@ -86,7 +72,7 @@ application {
 
 // Config for gw run to be able to run this locally. Just execute gw run here on Intellij or on the console.
 tasks.run<JavaExec> {
-  jvmArgs = listOf("-Dbootstrap.config.uri=file:$projectDir/src/main/resources/configs", "-Dservice.name=${project.name}")
+  jvmArgs = listOf("-Dservice.name=${project.name}")
 }
 
 tasks.jacocoIntegrationTestReport {
