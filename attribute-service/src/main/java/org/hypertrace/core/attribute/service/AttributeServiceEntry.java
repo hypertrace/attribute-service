@@ -1,7 +1,8 @@
 package org.hypertrace.core.attribute.service;
 
+import java.util.List;
 import org.hypertrace.core.serviceframework.config.ConfigClient;
-import org.hypertrace.core.serviceframework.grpc.GrpcPlatformServiceFactory;
+import org.hypertrace.core.serviceframework.grpc.GrpcPlatformServerDefinition;
 import org.hypertrace.core.serviceframework.grpc.StandAloneGrpcPlatformServiceContainer;
 
 public class AttributeServiceEntry extends StandAloneGrpcPlatformServiceContainer {
@@ -12,12 +13,12 @@ public class AttributeServiceEntry extends StandAloneGrpcPlatformServiceContaine
   }
 
   @Override
-  public GrpcPlatformServiceFactory getServiceFactory() {
-    return new AttributeServiceFactory();
-  }
-
-  @Override
-  protected int getServicePort() {
-    return getAppConfig().getInt(PORT_PATH);
+  protected List<GrpcPlatformServerDefinition> getServerDefinitions() {
+    return List.of(
+        GrpcPlatformServerDefinition.builder()
+            .name(this.getServiceName())
+            .port(this.getAppConfig().getInt(PORT_PATH))
+            .serviceFactory(new AttributeServiceFactory())
+            .build());
   }
 }
