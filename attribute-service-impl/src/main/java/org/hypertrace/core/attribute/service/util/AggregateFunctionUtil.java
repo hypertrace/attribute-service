@@ -29,7 +29,7 @@ public class AggregateFunctionUtil {
 
   @VisibleForTesting
   public static List<AggregateFunction> DEFAULT_AGG_FUNCS_FOR_STRING_ATTRS =
-      List.of(AggregateFunction.DISTINCT_COUNT);
+      List.of(AggregateFunction.DISTINCT_COUNT, AggregateFunction.DISTINCT_ARRAY);
 
   public static List<AggregateFunction> getDefaultAggregateFunctionsByTypeAndKind(
       AttributeType attributeType, AttributeKind attributeValueKind) {

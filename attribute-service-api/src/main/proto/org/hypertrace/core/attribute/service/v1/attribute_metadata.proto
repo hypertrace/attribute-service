@@ -69,6 +69,7 @@ enum AggregateFunction {
   DISTINCT_COUNT = 6;
   AVGRATE = 7;
   PERCENTILE = 8;
+  DISTINCT_ARRAY = 9;
 }
 
 //scope + name is unique
