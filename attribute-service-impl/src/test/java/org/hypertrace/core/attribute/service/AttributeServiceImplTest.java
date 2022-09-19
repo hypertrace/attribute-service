@@ -49,8 +49,7 @@ public class AttributeServiceImplTest {
           .setGroupable(true)
           .setType(AttributeType.ATTRIBUTE)
           // Add default aggregations. See SupportedAggregationsDecorator
-          .addAllSupportedAggregations(
-              List.of(AggregateFunction.DISTINCT_COUNT, AggregateFunction.DISTINCT_ARRAY))
+          .addAllSupportedAggregations(List.of(AggregateFunction.DISTINCT_COUNT))
           .build();
   private static final AttributeMetadata MOCK_EVENT_DURATION_ATTRIBUTE =
       AttributeMetadata.newBuilder()
