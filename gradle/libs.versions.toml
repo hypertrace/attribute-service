@@ -3,7 +3,7 @@ hypertrace-serviceFramework = "0.1.43"
 hypertrace-grpcUtils = "0.9.0"
 hypertrace-documentStore = "0.7.18"
 
-protoc = "3.21.8"
+protoc = "3.21.2"
 grpc = "1.48.0"
 mockito = "4.8.1"
 jackson = "2.13.4.2"
