@@ -1,90 +1,44 @@
 [versions]
-hypertrace-grpcUtils = "0.7.6"
-hypertrace-serviceFramework = "0.1.41"
-hypertrace-ingester = "0.7.6"
-hypertrace-entityService = "0.8.38"
-hypertrace-kafkaStreams = "0.2.0"
-hypertrace-dataModel = "0.1.22"
+hypertrace-serviceFramework = "0.1.43"
+hypertrace-grpcUtils = "0.9.0"
+hypertrace-documentStore = "0.7.18"
 
-traceable-modsecurity = "0.1.99"
-traceable-platformGateway = "0.6.44"
-traceable-traceEnricher = "0.18.56"
-traceable-licenseMeteringService = "0.1.40"
-traceable-config-service = "0.24.77"
-traceable-job-service = "0.1.105"
-traceable-insights-service = "0.49.27"
-
+protoc = "3.21.8"
 grpc = "1.48.0"
-netty = "4.1.79.Final"
-platform-metrics = "0.1.41"
-confluent-kafka = "7.2.1-ccs"
-confluent-platform = "7.2.1"
+mockito = "4.8.1"
+jackson = "2.13.4.2"
 
 [libraries]
-hypertrace-kafkaStreams-framework = { module = "org.hypertrace.core.kafkastreams.framework:kafka-streams-framework", version.ref = "hypertrace-kafkaStreams" }
-hypertrace-entityService-api = { module = "org.hypertrace.entity.service:entity-service-api", version.ref = "hypertrace-entityService" }
-hypertrace-entityService-client = { module = "org.hypertrace.entity.service:entity-service-client", version.ref = "hypertrace-entityService"}
-hypertrace-entity-change-event-api = { module = "org.hypertrace.entity.service:entity-service-change-event-api", version.ref = "hypertrace-entityService" }
-hypertrace-spanNormalizer-rawSpanConstants = { module = "org.hypertrace.core.spannormalizer:raw-span-constants", version.ref = "hypertrace-ingester" }
-hypertrace-traceEnricher-enrichedSpanConstants = { module = "org.hypertrace.traceenricher:enriched-span-constants", version.ref = "hypertrace-ingester" }
-hypertrace-serviceFramework-metrics = { module = "org.hypertrace.core.serviceframework:platform-metrics", version.ref = "hypertrace-serviceFramework" }
-hypertrace-platformMetrics = { module = "org.hypertrace.core.serviceframework:platform-metrics", version.ref = "platform-metrics" }
-hypertrace-serviceFramework-framework = { module = "org.hypertrace.core.serviceframework:platform-service-framework", version.ref = "hypertrace-serviceFramework" }
-hypertrace-dataModel = { module = "org.hypertrace.core.datamodel:data-model", version.ref = "hypertrace-dataModel"}
+hypertrace-serviceFramework-grpcFramework = { module = "org.hypertrace.core.serviceframework:platform-grpc-service-framework", version.ref = "hypertrace-serviceFramework" }
+hypertrace-serviceFramework-integrationTestFramework = { module = "org.hypertrace.core.serviceframework:integrationtest-service-framework", version.ref = "hypertrace-serviceFramework" }
 hypertrace-grpc-client-utils = { module = "org.hypertrace.core.grpcutils:grpc-client-utils", version.ref = "hypertrace-grpcUtils"}
+hypertrace-grpc-client-rx-utils = { module = "org.hypertrace.core.grpcutils:grpc-client-rx-utils", version.ref = "hypertrace-grpcUtils"}
 hypertrace-grpc-context-utils = { module = "org.hypertrace.core.grpcutils:grpc-context-utils", version.ref = "hypertrace-grpcUtils"}
+hypertrace-document-store = { module = "org.hypertrace.core.documentstore:document-store", version.ref = "hypertrace-documentStore" }
 
-traceable-insights-service-api = { module = "ai.traceable.platform:insights-service-api", version.ref = "traceable-insights-service" }
-traceable-insights-service-constants = { module = "ai.traceable.platform:insights-service-constants", version.ref = "traceable-insights-service" }
-traceable-platform-entityMigratingClient = { module = "ai.traceable.platform:entity-migrating-client", version = "0.10.5"}
-traceable-platformGateway-dataModel = { module = "ai.traceable.platform-gateway:data-model", version.ref = "traceable-platformGateway" }
-traceable-platformGateway-trainingEvaluationFramework = { module = "ai.traceable.platform-gateway:training-evaluation-framework", version.ref = "traceable-platformGateway" }
-traceable-platformGateway-apiUtils = { module = "ai.traceable.platform-gateway:api-utils", version.ref = "traceable-platformGateway" }
-traceable-platformGateway-graphqlApiUtils = { module = "ai.traceable.platform-gateway:graphql-api-utils", version.ref = "traceable-platformGateway" }
-traceable-platformGateway-toolsApi = { module = "ai.traceable.platform-gateway:tools-api", version.ref = "traceable-platformGateway" }
-traceable-platformGateway-deepDataStore = { module = "ai.traceable.platform-gateway:deep-data-store", version.ref = "traceable-platformGateway" }
-traceable-platformGateway-fileDataLoaders = { module = "ai.traceable.platform-gateway:file-data-loaders", version.ref = "traceable-platformGateway" }
-traceable-platformGateway-cacheProvider = { module = "ai.traceable.platform-gateway:cache-provider", version.ref = "traceable-platformGateway" }
-traceable-platform-traceEnricherConstants = { module = "ai.traceable.platform:trace-enricher-constants", version.ref = "traceable-traceEnricher" }
-traceable-platform-traceEnricherApi = { module = "ai.traceable.platform:trace-enricher-api", version.ref = "traceable-traceEnricher" }
-traceable-config-service-anomalyConfigServiceApi = { module = "ai.traceable.config.service:anomaly-config-service-api", version.ref="traceable-config-service"}
-traceable-config-service-rateLimitConfigServiceApi = { module = "ai.traceable.config.service:rate-limiting-config-service-api", version.ref="traceable-config-service"}
-traceable-config-service-apiAttributeOverrideService = { module = "ai.traceable.config.service:api-attribute-override-service-api", version.ref = "traceable-config-service"}
-traceable-config-service-spanProcessingConfigServiceApi = { module = "ai.traceable.config.service:traceable-span-processing-config-service-api", version.ref = "traceable-config-service"}
-traceable-config-service-configUtils = { module = "ai.traceable.config.service:config-utils", version.ref = "traceable-config-service"}
-traceable-config-providers = { module = "ai.traceable.platform:config-providers", version = "0.7.82" }
-traceable-license-metering-service = { module = "ai.traceable.license.metering.service:license-metering-service-api", version.ref = "traceable-licenseMeteringService"}
-traceable-job-service-api = { module = "ai.traceable.job.service:job-service-api", version.ref = "traceable-job-service" }
-traceable-platform-jniModsecurity = { module = "ai.traceable.platform:jni-modsecurity", version.ref = "traceable-modsecurity" }
-
-kafka-protobufserde = { module = "io.confluent:kafka-streams-protobuf-serde", version.ref = "confluent-platform" }
-kafka-avroserializer = { module = "io.confluent:kafka-avro-serializer", version.ref = "confluent-platform" }
-github-uuid-creator = { module = "com.github.f4b6a3:uuid-creator", version = "4.0.1" }
-github-retryer = { module = "com.github.rholder:guava-retrying", version = "2.0.0"}
-github-stefanbirkner-systemRules = { module = "com.github.stefanbirkner:system-rules", version = "1.19.0" }
-google-code-findbugs = { module = "com.google.code.findbugs:jsr305", version = "3.0.2" }
-google-guava = { module = "com.google.guava:guava", version = "31.1-jre" }
-google-inject-guice = { module = "com.google.inject:guice", version = "5.0.1" }
-typesafe-config = { module = "com.typesafe:config", version = "1.4.2" }
-apache-avro = { module = "org.apache.avro:avro", version = "1.11.1" }
-apache-commons-lang = { module = "org.apache.commons:commons-lang3", version = "3.11" }
-apache-log4j-slf4jImpl = { module = "org.apache.logging.log4j:log4j-slf4j-impl", version = "2.17.1" }
-apache-spark-core = { module = "org.apache.spark:spark-core_2.13", version = "3.3.0" }
-apache-spark-sql = { module = "org.apache.spark:spark-sql_2.13", version = "3.3.0" }
-slf4j-api = { module = "org.slf4j:slf4j-api", version = "1.7.30" }
-commons-cli = { module = "commons-cli:commons-cli", version = "1.4" }
-commons-io = { module = "commons-io:commons-io", version = "2.8.0" }
 grpc-netty = { module = "io.grpc:grpc-netty", version.ref = "grpc" }
-netty-codecHttp2 = { module = "io.netty:netty-codec-http2", version.ref = "netty" }
-netty-handlerProxy = { module = "io.netty:netty-handler-proxy", version.ref = "netty" }
-netty-handler = {module = "io.netty:netty-handler", version.ref = "netty"}
-lombok = { module = "org.projectlombok:lombok", version = "1.18.18" }
+grpc-stub = { module = "io.grpc:grpc-stub", version.ref = "grpc" }
+grpc-protobuf = { module = "io.grpc:grpc-protobuf", version.ref = "grpc" }
+grpc-api = { module = "io.grpc:grpc-api", version.ref = "grpc" }
+grpc-core = { module = "io.grpc:grpc-core", version.ref = "grpc" }
 
-junit-junit = { module = "junit:junit", version = "4.13.1" }
-junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version = "5.7.2" }
-mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version = "4.7.0" }
-mockito-core = { module = "org.mockito:mockito-core", version = "4.7.0" }
-mockito-inline = { module = "org.mockito:mockito-inline", version = "4.7.0" }
-graphql-java = { module = "com.graphql-java:graphql-java", version = "19.2" }
-graphql-javaKickstart = { module = "com.graphql-java-kickstart:graphql-java-kickstart", version = "11.0.0" }
-apache-kafka-kafkaStreamsTestUtils = { module = "org.apache.kafka:kafka-streams-test-utils", version.ref = "confluent-kafka" }
+protobuf-java-util = { module = "com.google.protobuf:protobuf-java-util", version.ref = "protoc" }
+
+jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
+rxjava = { module = "io.reactivex.rxjava3:rxjava", version = "3.1.3" }
+javax-annotation = { module = "javax.annotation:javax.annotation-api", version = "1.3.2" }
+google-guava = { module = "com.google.guava:guava", version = "31.1-jre" }
+findbugs-jsr = { module = "com.google.code.findbugs:jsr305", version = "3.0.2" }
+uuid-creator = { module = "com.github.f4b6a3:uuid-creator", version = "5.1.0" }
+typesafe-config = { module = "com.typesafe:config", version = "1.4.2" }
+lombok = { module = "org.projectlombok:lombok", version = "1.18.22" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version = "1.7.32" }
+apache-log4j-slf4jImpl = { module = "org.apache.logging.log4j:log4j-slf4j-impl", version = "2.17.1" }
+
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version = "5.8.2" }
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+mockito-junit = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
+
+[bundles]
+grpc-api = ["grpc-stub", "grpc-protobuf", "javax-annotation"]
+mockito = ["mockito-core", "mockito-junit"]
