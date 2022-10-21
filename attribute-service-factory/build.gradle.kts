@@ -3,10 +3,10 @@ plugins {
 }
 
 dependencies {
-  api("org.hypertrace.core.serviceframework:platform-grpc-service-framework:0.1.37")
+  api(libs.hypertrace.serviceFramework.grpcFramework)
 
   // Only required because AttributeService constructor test overload uses a doc store API
-  compileOnly("org.hypertrace.core.documentstore:document-store:0.7.17")
+  compileOnly(libs.hypertrace.document.store)
 
-  implementation(project(":attribute-service-impl"))
+  implementation(projects.attributeServiceImpl)
 }

@@ -12,6 +12,9 @@ plugins {
   id("org.hypertrace.version-settings") version "0.2.0"
 }
 
+enableFeaturePreview("VERSION_CATALOGS")
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
 include(":attribute-service-api")
 include(":attribute-service-client")
 include(":attribute-service-impl")

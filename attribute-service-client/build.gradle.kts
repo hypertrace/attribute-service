@@ -4,8 +4,8 @@ plugins {
 }
 
 dependencies {
-  api(project(":attribute-service-api"))
-  api("com.typesafe:config:1.4.1")
+  api(projects.attributeServiceApi)
+  api(libs.typesafe.config)
 
-  implementation("org.hypertrace.core.grpcutils:grpc-client-utils:0.7.2")
+  implementation(libs.hypertrace.grpc.client.utils)
 }

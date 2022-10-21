@@ -6,10 +6,10 @@ plugins {
 }
 
 dependencies {
-  api(project(":attribute-service-api"))
-  implementation(project(":attribute-projection-functions"))
-  implementation("com.google.guava:guava:31.1-jre")
-  testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
+  api(projects.attributeServiceApi)
+  implementation(projects.attributeProjectionFunctions)
+  implementation(libs.google.guava)
+  testImplementation(libs.junit.jupiter)
 }
 
 tasks.test {
