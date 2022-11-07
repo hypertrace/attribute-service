@@ -50,6 +50,7 @@ enum AttributeType {
   TYPE_UNDEFINED = 0;
   ATTRIBUTE = 1;
   METRIC = 2;
+  CUSTOM_ATTRIBUTE = 3;
 }
 
 enum AttributeSource {
