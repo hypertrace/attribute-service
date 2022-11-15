@@ -50,7 +50,6 @@ enum AttributeType {
   TYPE_UNDEFINED = 0;
   ATTRIBUTE = 1;
   METRIC = 2;
-  CUSTOM_ATTRIBUTE = 3;
 }
 
 enum AttributeSource {
@@ -103,6 +102,7 @@ message AttributeMetadata {
   AttributeDefinition definition = 16;
   string scope_string = 17;
   bool internal = 18;
+  bool custom = 19;
 }
 
 message AttributeSourceMetadata {
@@ -139,6 +139,7 @@ message AttributeMetadataFilter {
   repeated string key = 4;
   repeated string scope_string = 5;
   optional bool internal = 6;
+  optional bool custom = 7;
 }
 
 message Empty {

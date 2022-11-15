@@ -1,5 +1,6 @@
 package org.hypertrace.core.attribute.service;
 
+import static org.hypertrace.core.attribute.service.utils.tenant.TenantUtils.ROOT_TENANT_ID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -50,6 +51,22 @@ public class AttributeServiceImplTest {
           .setType(AttributeType.ATTRIBUTE)
           // Add default aggregations. See SupportedAggregationsDecorator
           .addAllSupportedAggregations(List.of(AggregateFunction.DISTINCT_COUNT))
+          .build();
+  private static final AttributeMetadata MOCK_EVENT_TYPE_ATTRIBUTE =
+      AttributeMetadata.newBuilder()
+          .setFqn("EVENT.type")
+          .setId("EVENT.type")
+          .setKey("type")
+          .setScope(AttributeScope.EVENT)
+          .setScopeString(AttributeScope.EVENT.name())
+          .setDisplayName("EVENT type")
+          .setValueKind(AttributeKind.TYPE_STRING)
+          .setDefinition(AttributeDefinition.getDefaultInstance())
+          .setGroupable(true)
+          .setType(AttributeType.ATTRIBUTE)
+          // Add default aggregations. See SupportedAggregationsDecorator
+          .addAllSupportedAggregations(List.of(AggregateFunction.DISTINCT_COUNT))
+          .setCustom(true)
           .build();
   private static final AttributeMetadata MOCK_EVENT_DURATION_ATTRIBUTE =
       AttributeMetadata.newBuilder()
@@ -405,6 +422,43 @@ public class AttributeServiceImplTest {
   }
 
   @Test
+  public void testGetCustomAttributes() {
+    RequestContext requestContext = mock(RequestContext.class);
+    final String TEST_TENANT_ID = "test-tenant-id";
+    when(requestContext.getTenantId()).thenReturn(Optional.of(TEST_TENANT_ID));
+    Context.current()
+        .withValue(RequestContext.CURRENT, requestContext)
+        .run(
+            () -> {
+              AttributeServiceImpl attributeService =
+                  new AttributeServiceImpl(
+                      mockCollectionReturningDocuments(
+                          createMockDocument(
+                              TEST_TENANT_ID,
+                              "type",
+                              AttributeScope.EVENT,
+                              AttributeType.ATTRIBUTE,
+                              AttributeKind.TYPE_STRING)));
+
+              StreamObserver<GetAttributesResponse> mockObserver = mock(StreamObserver.class);
+              attributeService.getAttributes(
+                  GetAttributesRequest.newBuilder()
+                      .setFilter(AttributeMetadataFilter.newBuilder().setCustom(true))
+                      .build(),
+                  mockObserver);
+
+              verify(mockObserver, times(1))
+                  .onNext(
+                      GetAttributesResponse.newBuilder()
+                          .addAttributes(MOCK_EVENT_TYPE_ATTRIBUTE)
+                          .build());
+
+              verify(mockObserver, times(1)).onCompleted();
+              verify(mockObserver, never()).onError(any());
+            });
+  }
+
+  @Test
   public void testFindAttributesNoTenantId() {
     RequestContext requestContext = mock(RequestContext.class);
     when(requestContext.getTenantId()).thenReturn(Optional.empty());
@@ -459,7 +513,13 @@ public class AttributeServiceImplTest {
         .append(scope.name())
         .append(" ")
         .append(key)
-        .append("\"}");
+        .append("\"");
+
+    if (tenantId != null && !ROOT_TENANT_ID.equals(tenantId)) {
+      sb.append(",\"custom\":true");
+    }
+
+    sb.append("}");
 
     when(document.toJson()).thenReturn(sb.toString());
     return document;
