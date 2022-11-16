@@ -287,7 +287,7 @@ public class AttributeMetadataModel implements Document {
                                     .build())))
             .setDefinition(this.definition)
             .setInternal(internal)
-            .setCustom(tenantId != null && !ROOT_TENANT_ID.equals(tenantId));
+            .setCustom(!ROOT_TENANT_ID.equals(tenantId));
 
     if (unit != null) {
       builder.setUnit(unit);

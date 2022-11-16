@@ -1,6 +1,5 @@
 package org.hypertrace.core.attribute.service;
 
-import static org.hypertrace.core.attribute.service.utils.tenant.TenantUtils.ROOT_TENANT_ID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -513,13 +512,7 @@ public class AttributeServiceImplTest {
         .append(scope.name())
         .append(" ")
         .append(key)
-        .append("\"");
-
-    if (tenantId != null && !ROOT_TENANT_ID.equals(tenantId)) {
-      sb.append(",\"custom\":true");
-    }
-
-    sb.append("}");
+        .append("\"}");
 
     when(document.toJson()).thenReturn(sb.toString());
     return document;

@@ -88,6 +88,7 @@ public class AttributeMetadataModelTest {
                     AttributeSourceMetadata.newBuilder()
                         .putAllSourceMetadata(Map.of("fqn", "some_internal_mapping"))
                         .build()))
+            .setCustom(true)
             .build();
 
     AttributeMetadata attributeMetadata1 =
@@ -270,6 +271,7 @@ public class AttributeMetadataModelTest {
             .setValueKind(AttributeKind.TYPE_BOOL)
             .setType(AttributeType.ATTRIBUTE)
             .setDefinition(AttributeDefinition.getDefaultInstance())
+            .setCustom(true)
             .build();
 
     // Given a scope enum, it should come back as a string too
@@ -354,53 +356,6 @@ public class AttributeMetadataModelTest {
             + "}";
     expected = template.toBuilder().setScopeString("NEWSCOPE").setId("NEWSCOPE.key").build();
     Assertions.assertEquals(expected, AttributeMetadataModel.fromJson(inputJson).toDTO());
-  }
-
-  @Test
-  void testCustomWithoutTenantId() throws IOException {
-    final String json =
-        "{"
-            + "\"fqn\":\"fqn\","
-            + "\"key\":\"key\","
-            + "\"materialized\":true,"
-            + "\"unit\":\"ms\","
-            + "\"type\":\"ATTRIBUTE\","
-            + "\"labels\":[\"item1\"],"
-            + "\"groupable\":true,"
-            + "\"supportedAggregations\":[],"
-            + "\"onlyAggregationsAllowed\":false,"
-            + "\"sources\":[],"
-            + "\"definition\":{\"projection\":{\"attributeId\":\"test\"}},"
-            + "\"internal\":true,"
-            + "\"id\":\"EVENT.key\","
-            + "\"value_kind\":\"TYPE_STRING\","
-            + "\"display_name\":\"Some Name\","
-            + "\"scope_string\":\"EVENT\""
-            + "}";
-
-    final AttributeMetadata expectedMetadata =
-        AttributeMetadata.newBuilder()
-            .addLabels("item1")
-            .setFqn("fqn")
-            .setKey("key")
-            .setId("EVENT.key")
-            .setDisplayName("Some Name")
-            .setMaterialized(true)
-            .setGroupable(true)
-            .setScope(AttributeScope.EVENT)
-            .setScopeString(AttributeScope.EVENT.name())
-            .setType(AttributeType.ATTRIBUTE)
-            .setUnit("ms")
-            .setValueKind(AttributeKind.TYPE_STRING)
-            .setDefinition(
-                AttributeDefinition.newBuilder()
-                    .setProjection(Projection.newBuilder().setAttributeId("test"))
-                    .build())
-            .setInternal(true)
-            .build();
-
-    final AttributeMetadata metadata = AttributeMetadataModel.fromJson(json).toDTO();
-    Assertions.assertEquals(expectedMetadata, metadata);
   }
 
   @Test
