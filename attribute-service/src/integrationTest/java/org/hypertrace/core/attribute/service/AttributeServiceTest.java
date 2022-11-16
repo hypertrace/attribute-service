@@ -104,6 +104,8 @@ public class AttributeServiceTest {
   public void setupMethod() {
     executeWithHeadersContext(
         requestHeaders, () -> stub.delete(AttributeMetadataFilter.getDefaultInstance()));
+    executeWithHeadersContext(
+        systemRequestHeaders, () -> stub.delete(AttributeMetadataFilter.getDefaultInstance()));
   }
 
   @Test

@@ -186,9 +186,10 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
       return;
     }
 
-    Query query = new Query();
-    query.setFilter(getTenantIdEqFilter(tenantId.get()));
-    Iterator<Document> documents = collection.search(getQueryForFilter(tenantId.get(), request));
+    // Make sure to delete only the custom attributes
+    final AttributeMetadataFilter updatedRequest = request.toBuilder().setCustom(true).build();
+    Iterator<Document> documents =
+        collection.search(getQueryForFilter(tenantId.get(), updatedRequest));
     boolean status =
         StreamSupport.stream(Spliterators.spliteratorUnknownSize(documents, 0), false)
             .map(Document::toJson)
@@ -203,7 +204,7 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
                       LOGGER.warn(
                           "Error updating source metadata for attribute:{}, request:{}",
                           metadata,
-                          request);
+                          updatedRequest);
                     }
                     return response;
                   } catch (IOException ex) {
