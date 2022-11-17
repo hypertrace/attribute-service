@@ -1,7 +1,7 @@
 package org.hypertrace.core.attribute.service;
 
 import static java.util.Objects.isNull;
-import static org.hypertrace.core.attribute.service.AttributeMetadataValidator.validateDeletionFilter;
+import static org.hypertrace.core.attribute.service.AttributeMetadataValidator.validateAndUpdateDeletionFilter;
 import static org.hypertrace.core.attribute.service.utils.tenant.TenantUtils.ROOT_TENANT_ID;
 
 import com.google.common.collect.Streams;
@@ -180,8 +180,9 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
   }
 
   @Override
-  public void delete(AttributeMetadataFilter request, StreamObserver<Empty> responseObserver) {
-    validateDeletionFilter(request);
+  public void delete(
+      final AttributeMetadataFilter request, final StreamObserver<Empty> responseObserver) {
+    final AttributeMetadataFilter modifiedRequest = validateAndUpdateDeletionFilter(request);
 
     Optional<String> tenantId = RequestContext.CURRENT.get().getTenantId();
     if (tenantId.isEmpty()) {
@@ -189,7 +190,8 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
       return;
     }
 
-    Iterator<Document> documents = collection.search(getQueryForFilter(tenantId.get(), request));
+    Iterator<Document> documents =
+        collection.search(getQueryForFilter(tenantId.get(), modifiedRequest));
     boolean status =
         StreamSupport.stream(Spliterators.spliteratorUnknownSize(documents, 0), false)
             .map(Document::toJson)
@@ -204,7 +206,7 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
                       LOGGER.warn(
                           "Error updating source metadata for attribute:{}, request:{}",
                           metadata,
-                          request);
+                          modifiedRequest);
                     }
                     return response;
                   } catch (IOException ex) {
@@ -221,7 +223,7 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
     } else {
       responseObserver.onError(
           new RuntimeException(
-              String.format("Error deleting attribute metadata for request:%s", request)));
+              String.format("Error deleting attribute metadata for request:%s", modifiedRequest)));
     }
   }
 

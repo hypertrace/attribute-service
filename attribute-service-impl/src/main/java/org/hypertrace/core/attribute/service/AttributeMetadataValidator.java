@@ -59,11 +59,18 @@ public class AttributeMetadataValidator {
     }
   }
 
-  public static void validateDeletionFilter(final AttributeMetadataFilter attributeMetadataFilter) {
-    if (!attributeMetadataFilter.getCustom()) {
-      throw Status.INVALID_ARGUMENT
-          .withDescription("Can only delete custom attributes")
-          .asRuntimeException();
+  public static AttributeMetadataFilter validateAndUpdateDeletionFilter(
+      final AttributeMetadataFilter attributeMetadataFilter) {
+    if (attributeMetadataFilter.hasCustom()) {
+      if (!attributeMetadataFilter.getCustom()) {
+        throw Status.INVALID_ARGUMENT
+            .withDescription("Can only delete custom attributes")
+            .asRuntimeException();
+      }
+
+      return attributeMetadataFilter;
+    } else {
+      return attributeMetadataFilter.toBuilder().setCustom(true).build();
     }
   }
 
