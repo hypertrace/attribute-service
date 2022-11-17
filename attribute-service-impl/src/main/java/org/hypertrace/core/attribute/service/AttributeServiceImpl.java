@@ -7,6 +7,8 @@ import static org.hypertrace.core.attribute.service.utils.tenant.TenantUtils.ROO
 import com.google.common.collect.Streams;
 import com.google.protobuf.ServiceException;
 import com.typesafe.config.Config;
+import io.grpc.Status;
+import io.grpc.StatusException;
 import io.grpc.stub.StreamObserver;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -67,8 +69,10 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
   }
 
   private static final String ATTRIBUTE_METADATA_COLLECTION = "attribute_metadata";
+  private static final String MAX_CUSTOM_ATTRIBUTES_PER_TENANT = "max.custom.attributes.per.tenant";
 
   private final Collection collection;
+  private final int maxCustomAttributesPerTenant;
 
   /**
    * Initiates with a configuration. The configuration should be production configuration, but for
@@ -77,10 +81,12 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
   public AttributeServiceImpl(Config config) {
     Datastore store = initDataStore(config);
     this.collection = store.getCollection(ATTRIBUTE_METADATA_COLLECTION);
+    this.maxCustomAttributesPerTenant = config.getInt(MAX_CUSTOM_ATTRIBUTES_PER_TENANT);
   }
 
   AttributeServiceImpl(Collection collection) {
     this.collection = collection;
+    this.maxCustomAttributesPerTenant = 20;
   }
 
   private Datastore initDataStore(Config config) {
@@ -92,25 +98,33 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
 
   @Override
   public void create(AttributeCreateRequest request, StreamObserver<Empty> responseObserver) {
-    Optional<String> tenantId = RequestContext.CURRENT.get().getTenantId();
-    if (tenantId.isEmpty()) {
+    Optional<String> tenantIdOptional = RequestContext.CURRENT.get().getTenantId();
+    if (tenantIdOptional.isEmpty()) {
       responseObserver.onError(new ServiceException("Tenant id is missing in the request."));
       return;
     }
+
+    final String tenantId = tenantIdOptional.orElseThrow();
 
     AttributeMetadataValidator.validate(request);
     Map<Key, Document> attributeDocs = new HashMap<>();
     for (AttributeMetadata attributeMetadata : request.getAttributesList()) {
       AttributeMetadataModel attributeMetadataModel =
           AttributeMetadataModel.fromDTO(attributeMetadata);
-      attributeMetadataModel.setTenantId(tenantId.get());
+      attributeMetadataModel.setTenantId(tenantId);
       attributeDocs.put(
           new AttributeMetadataDocKey(
-              tenantId.get(),
-              attributeMetadataModel.getScopeString(),
-              attributeMetadataModel.getKey()),
+              tenantId, attributeMetadataModel.getScopeString(), attributeMetadataModel.getKey()),
           attributeMetadataModel);
     }
+
+    try {
+      verifyCustomAttributeLimitReached(tenantId, attributeDocs.size());
+    } catch (final StatusException e) {
+      responseObserver.onError(e);
+      return;
+    }
+
     boolean status = collection.bulkUpsert(attributeDocs);
     if (status) {
       responseObserver.onNext(Empty.newBuilder().build());
@@ -337,6 +351,21 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
     responseObserver.onNext(
         GetAttributesResponse.newBuilder().addAllAttributes(attributes).build());
     responseObserver.onCompleted();
+  }
+
+  private void verifyCustomAttributeLimitReached(final String tenantId, final int newAttributeCount)
+      throws StatusException {
+    final AttributeMetadataFilter filter =
+        AttributeMetadataFilter.newBuilder().setCustom(true).build();
+    final long numCustomAttributes = collection.total(this.getQueryForFilter(tenantId, filter));
+    if (numCustomAttributes + newAttributeCount > maxCustomAttributesPerTenant) {
+      throw Status.RESOURCE_EXHAUSTED
+          .withDescription(
+              String.format(
+                  "%d custom attributes are present and %d custom attributes could not be registered because it exceeds the limit (%d)",
+                  numCustomAttributes, newAttributeCount, maxCustomAttributesPerTenant))
+          .asException();
+    }
   }
 
   private void sendResult(
