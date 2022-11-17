@@ -355,6 +355,11 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
 
   private void verifyCustomAttributeLimitReached(final String tenantId, final int newAttributeCount)
       throws StatusException {
+    if (ROOT_TENANT_ID.equals(tenantId)) {
+      // No rate limit validation for system attributes
+      return;
+    }
+
     final AttributeMetadataFilter filter =
         AttributeMetadataFilter.newBuilder().setCustom(true).build();
     final long numCustomAttributes = collection.total(this.getQueryForFilter(tenantId, filter));
