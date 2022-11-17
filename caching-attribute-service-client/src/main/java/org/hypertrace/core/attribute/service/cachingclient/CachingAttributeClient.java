@@ -2,9 +2,11 @@ package org.hypertrace.core.attribute.service.cachingclient;
 
 import io.grpc.CallCredentials;
 import io.grpc.Channel;
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nonnull;
@@ -21,6 +23,10 @@ public interface CachingAttributeClient {
   Single<List<AttributeMetadata>> getAll();
 
   Single<List<AttributeMetadata>> getAllInScope(String scope);
+
+  Completable create(final Collection<AttributeMetadata> attributeMetadata);
+
+  Completable delete(final AttributeMetadataFilter filter);
 
   static Builder builder(@Nonnull Channel channel) {
     return new Builder(Objects.requireNonNull(channel));

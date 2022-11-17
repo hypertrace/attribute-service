@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -25,10 +26,13 @@ import java.io.IOException;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import org.hypertrace.core.attribute.service.v1.AttributeCreateRequest;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadata;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadataFilter;
 import org.hypertrace.core.attribute.service.v1.AttributeScope;
 import org.hypertrace.core.attribute.service.v1.AttributeServiceGrpc.AttributeServiceImplBase;
+import org.hypertrace.core.attribute.service.v1.Empty;
 import org.hypertrace.core.attribute.service.v1.GetAttributesRequest;
 import org.hypertrace.core.attribute.service.v1.GetAttributesResponse;
 import org.hypertrace.core.grpcutils.context.RequestContext;
@@ -54,6 +58,12 @@ class CachingAttributeClientTest {
           .setKey("second")
           .setId("second-id")
           .build();
+  AttributeMetadata metadata3 =
+      AttributeMetadata.newBuilder()
+          .setScopeString(AttributeScope.EVENT.name())
+          .setKey("second")
+          .setId("second-id")
+          .build();
 
   @Mock RequestContext mockContext;
 
@@ -66,6 +76,7 @@ class CachingAttributeClientTest {
   Context grpcTestContext;
   List<AttributeMetadata> responseMetadata;
   Optional<Throwable> responseError;
+  AttributeMetadataFilter metadataFilter;
 
   @BeforeEach
   void beforeEach() throws IOException {
@@ -82,6 +93,8 @@ class CachingAttributeClientTest {
     this.grpcTestContext = Context.current().withValue(RequestContext.CURRENT, this.mockContext);
     this.responseMetadata = List.of(this.metadata1, this.metadata2);
     this.responseError = Optional.empty();
+    this.metadataFilter = AttributeMetadataFilter.getDefaultInstance();
+
     doAnswer(
             invocation -> {
               StreamObserver<GetAttributesResponse> observer =
@@ -252,5 +265,64 @@ class CachingAttributeClientTest {
         emptyList(),
         this.grpcTestContext.call(
             () -> this.attributeClient.getAllInScope("DOESNT_EXIST").blockingGet()));
+  }
+
+  @Test
+  void createInvalidatesCache() throws Exception {
+    doAnswer(
+            invocation -> {
+              @SuppressWarnings("unchecked")
+              final StreamObserver<Empty> observer =
+                  invocation.getArgument(1, StreamObserver.class);
+              responseError.ifPresentOrElse(
+                  observer::onError,
+                  () -> {
+                    observer.onNext(Empty.getDefaultInstance());
+                    observer.onCompleted();
+                  });
+              return null;
+            })
+        .when(this.mockAttributeService)
+        .create(any(), any());
+
+    this.grpcTestContext.call(
+        () -> this.attributeClient.create(List.of(metadata3)).blockingAwait(1, TimeUnit.SECONDS));
+    verify(this.mockAttributeService, times(1))
+        .create(eq(AttributeCreateRequest.newBuilder().addAttributes(metadata3).build()), any());
+    this.grpcTestContext.call(() -> this.attributeClient.getAllInScope("EVENT").blockingGet());
+
+    // Despite the number of times `getAllInScope()` is invoked, cache must be invalidated just once
+    this.grpcTestContext.call(() -> this.attributeClient.getAllInScope("EVENT").blockingGet());
+    verify(this.mockAttributeService, times(1)).getAttributes(any(), any());
+    verifyNoMoreInteractions(this.mockAttributeService);
+  }
+
+  @Test
+  void deleteInvalidatesCache() throws Exception {
+    doAnswer(
+            invocation -> {
+              @SuppressWarnings("unchecked")
+              final StreamObserver<Empty> observer =
+                  invocation.getArgument(1, StreamObserver.class);
+              responseError.ifPresentOrElse(
+                  observer::onError,
+                  () -> {
+                    observer.onNext(Empty.getDefaultInstance());
+                    observer.onCompleted();
+                  });
+              return null;
+            })
+        .when(this.mockAttributeService)
+        .delete(any(), any());
+
+    this.grpcTestContext.call(
+        () -> this.attributeClient.delete(metadataFilter).blockingAwait(1, TimeUnit.SECONDS));
+    verify(this.mockAttributeService, times(1)).delete(same(metadataFilter), any());
+    this.grpcTestContext.call(() -> this.attributeClient.getAllInScope("EVENT").blockingGet());
+
+    // Despite the number of times `getAllInScope()` is invoked, cache must be invalidated just once
+    this.grpcTestContext.call(() -> this.attributeClient.getAllInScope("EVENT").blockingGet());
+    verify(this.mockAttributeService, times(1)).getAttributes(any(), any());
+    verifyNoMoreInteractions(this.mockAttributeService);
   }
 }
