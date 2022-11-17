@@ -285,15 +285,15 @@ class CachingAttributeClientTest {
         .when(this.mockAttributeService)
         .create(any(), any());
 
+    this.grpcTestContext.call(() -> this.attributeClient.getAllInScope("EVENT").blockingGet());
     this.grpcTestContext.call(
         () -> this.attributeClient.create(List.of(metadata3)).blockingAwait(1, TimeUnit.SECONDS));
     verify(this.mockAttributeService, times(1))
         .create(eq(AttributeCreateRequest.newBuilder().addAttributes(metadata3).build()), any());
     this.grpcTestContext.call(() -> this.attributeClient.getAllInScope("EVENT").blockingGet());
 
-    // Despite the number of times `getAllInScope()` is invoked, cache must be invalidated just once
-    this.grpcTestContext.call(() -> this.attributeClient.getAllInScope("EVENT").blockingGet());
-    verify(this.mockAttributeService, times(1)).getAttributes(any(), any());
+    // Called once before create and once after
+    verify(this.mockAttributeService, times(2)).getAttributes(any(), any());
     verifyNoMoreInteractions(this.mockAttributeService);
   }
 
@@ -315,14 +315,14 @@ class CachingAttributeClientTest {
         .when(this.mockAttributeService)
         .delete(any(), any());
 
+    this.grpcTestContext.call(() -> this.attributeClient.getAllInScope("EVENT").blockingGet());
     this.grpcTestContext.call(
         () -> this.attributeClient.delete(metadataFilter).blockingAwait(1, TimeUnit.SECONDS));
     verify(this.mockAttributeService, times(1)).delete(same(metadataFilter), any());
     this.grpcTestContext.call(() -> this.attributeClient.getAllInScope("EVENT").blockingGet());
 
-    // Despite the number of times `getAllInScope()` is invoked, cache must be invalidated just once
-    this.grpcTestContext.call(() -> this.attributeClient.getAllInScope("EVENT").blockingGet());
-    verify(this.mockAttributeService, times(1)).getAttributes(any(), any());
+    // Called once before delete and once after
+    verify(this.mockAttributeService, times(2)).getAttributes(any(), any());
     verifyNoMoreInteractions(this.mockAttributeService);
   }
 }
