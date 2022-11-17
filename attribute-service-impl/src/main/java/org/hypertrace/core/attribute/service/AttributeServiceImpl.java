@@ -1,7 +1,6 @@
 package org.hypertrace.core.attribute.service;
 
 import static java.util.Objects.isNull;
-import static org.hypertrace.core.attribute.service.utils.tenant.TenantUtils.ROOT_TENANT_ID;
 
 import com.google.common.collect.Streams;
 import com.google.protobuf.ServiceException;
@@ -186,10 +185,7 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
       return;
     }
 
-    // Make sure to delete only the custom attributes
-    final AttributeMetadataFilter updatedRequest = request.toBuilder().setCustom(true).build();
-    Iterator<Document> documents =
-        collection.search(getQueryForFilter(tenantId.get(), updatedRequest));
+    Iterator<Document> documents = collection.search(getQueryForFilter(tenantId.get(), request));
     boolean status =
         StreamSupport.stream(Spliterators.spliteratorUnknownSize(documents, 0), false)
             .map(Document::toJson)
@@ -204,7 +200,7 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
                       LOGGER.warn(
                           "Error updating source metadata for attribute:{}, request:{}",
                           metadata,
-                          updatedRequest);
+                          request);
                     }
                     return response;
                   } catch (IOException ex) {
@@ -397,13 +393,6 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
         internalFilter = internalFilter.or(new Filter(Op.NOT_EXISTS, ATTRIBUTE_INTERNAL_KEY, null));
       }
       andFilters.add(internalFilter);
-    }
-
-    if (attributeMetadataFilter.hasCustom()) {
-      andFilters.add(
-          attributeMetadataFilter.getCustom()
-              ? getTenantIdEqFilter(tenantId)
-              : getTenantIdEqFilter(ROOT_TENANT_ID));
     }
 
     Filter queryFilter = new Filter();

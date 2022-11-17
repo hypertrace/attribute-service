@@ -139,7 +139,6 @@ message AttributeMetadataFilter {
   repeated string key = 4;
   repeated string scope_string = 5;
   optional bool internal = 6;
-  optional bool custom = 7;
 }
 
 message Empty {

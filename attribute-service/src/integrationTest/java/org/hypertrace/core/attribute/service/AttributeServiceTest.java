@@ -1,17 +1,18 @@
 package org.hypertrace.core.attribute.service;
 
 import static java.util.Collections.emptyList;
-import static org.hypertrace.core.grpcutils.client.GrpcClientRequestContextUtil.executeInTenantContext;
-import static org.hypertrace.core.grpcutils.client.GrpcClientRequestContextUtil.executeWithHeadersContext;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Streams;
 import io.grpc.Channel;
 import io.grpc.ManagedChannelBuilder;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.hypertrace.core.attribute.service.client.AttributeServiceClient;
 import org.hypertrace.core.attribute.service.v1.AggregateFunction;
 import org.hypertrace.core.attribute.service.v1.AttributeCreateRequest;
 import org.hypertrace.core.attribute.service.v1.AttributeDefinition;
@@ -19,15 +20,11 @@ import org.hypertrace.core.attribute.service.v1.AttributeKind;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadata;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadataFilter;
 import org.hypertrace.core.attribute.service.v1.AttributeScope;
-import org.hypertrace.core.attribute.service.v1.AttributeServiceGrpc;
-import org.hypertrace.core.attribute.service.v1.AttributeServiceGrpc.AttributeServiceBlockingStub;
 import org.hypertrace.core.attribute.service.v1.AttributeSource;
 import org.hypertrace.core.attribute.service.v1.AttributeSourceMetadata;
 import org.hypertrace.core.attribute.service.v1.AttributeSourceMetadataDeleteRequest;
 import org.hypertrace.core.attribute.service.v1.AttributeSourceMetadataUpdateRequest;
 import org.hypertrace.core.attribute.service.v1.AttributeType;
-import org.hypertrace.core.attribute.service.v1.GetAttributesRequest;
-import org.hypertrace.core.grpcutils.client.RequestContextClientCallCredsProviderFactory;
 import org.hypertrace.core.serviceframework.IntegrationTestServerUtil;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -42,7 +39,6 @@ public class AttributeServiceTest {
   private static final String TRACE_METRIC_ATTR = "TRACE.duration";
 
   private static final String TEST_TENANT_ID = "test-tenant-id";
-  private static final String ROOT_TENANT_ID = "__root";
 
   private final AttributeMetadata spanNameAttr =
       AttributeMetadata.newBuilder()
@@ -80,19 +76,15 @@ public class AttributeServiceTest {
           .build();
 
   private final Map<String, String> requestHeaders = Map.of("x-tenant-id", TEST_TENANT_ID);
-  private final Map<String, String> systemRequestHeaders = Map.of("x-tenant-id", ROOT_TENANT_ID);
 
-  private static AttributeServiceBlockingStub stub;
+  private static AttributeServiceClient client;
 
   @BeforeAll
   public static void setup() {
     System.out.println("Testing the Attribute E2E Test");
     IntegrationTestServerUtil.startServices(new String[] {"attribute-service"});
     Channel channel = ManagedChannelBuilder.forAddress("localhost", 9012).usePlaintext().build();
-    stub =
-        AttributeServiceGrpc.newBlockingStub(channel)
-            .withCallCredentials(
-                RequestContextClientCallCredsProviderFactory.getClientCallCredsProvider().get());
+    client = new AttributeServiceClient(channel);
   }
 
   @AfterAll
@@ -102,10 +94,7 @@ public class AttributeServiceTest {
 
   @BeforeEach
   public void setupMethod() {
-    executeWithHeadersContext(
-        requestHeaders, () -> stub.delete(AttributeMetadataFilter.getDefaultInstance()));
-    executeWithHeadersContext(
-        systemRequestHeaders, () -> stub.delete(AttributeMetadataFilter.getDefaultInstance()));
+    client.delete(requestHeaders, AttributeMetadataFilter.getDefaultInstance());
   }
 
   @Test
@@ -133,9 +122,9 @@ public class AttributeServiceTest {
                     .build())
             .build();
     if (useRequestHeaders) {
-      executeWithHeadersContext(requestHeaders, () -> stub.create(attributeCreateRequest));
+      client.create(requestHeaders, attributeCreateRequest);
     } else {
-      executeInTenantContext(TEST_TENANT_ID, () -> stub.create(attributeCreateRequest));
+      client.create(TEST_TENANT_ID, attributeCreateRequest);
     }
   }
 
@@ -164,203 +153,13 @@ public class AttributeServiceTest {
 
     AttributeCreateRequest request =
         AttributeCreateRequest.newBuilder().addAttributes(expectedAttributeMetadata).build();
-    executeWithHeadersContext(requestHeaders, () -> stub.create(request));
+    client.create(requestHeaders, request);
 
     List<AttributeMetadata> attributeMetadataList =
-        executeWithHeadersContext(
-                requestHeaders,
-                () ->
-                    stub.getAttributes(
-                        GetAttributesRequest.newBuilder()
-                            .setFilter(AttributeMetadataFilter.getDefaultInstance())
-                            .build()))
-            .getAttributesList();
+        Streams.stream(
+                client.findAttributes(requestHeaders, AttributeMetadataFilter.getDefaultInstance()))
+            .collect(Collectors.toList());
     assertEquals(List.of(expectedAttributeMetadata), attributeMetadataList);
-  }
-
-  @Test
-  public void testGetAllAttributeMetadata() {
-    AttributeMetadata expectedAttributeMetadata1 =
-        AttributeMetadata.newBuilder()
-            .setFqn("name-1")
-            .setValueKind(AttributeKind.TYPE_STRING)
-            .setKey("key-1")
-            .setDisplayName("displayname-1")
-            .setScope(AttributeScope.EVENT)
-            .setMaterialized(false)
-            .setUnit("unit-1")
-            .setType(AttributeType.ATTRIBUTE)
-            .addAllLabels(List.of("label-1", "label-2"))
-            .addAllSupportedAggregations(List.of(AggregateFunction.SUM, AggregateFunction.AVG))
-            .setOnlyAggregationsAllowed(true)
-            .addSources(AttributeSource.EDS)
-            .setId("EVENT.key-1")
-            .setGroupable(true)
-            .setDefinition(AttributeDefinition.newBuilder().setSourcePath("sourcepath-1"))
-            .setScopeString(AttributeScope.EVENT.name())
-            .setCustom(true)
-            .build();
-
-    AttributeMetadata expectedAttributeMetadata2 =
-        AttributeMetadata.newBuilder()
-            .setFqn("name-2")
-            .setValueKind(AttributeKind.TYPE_STRING)
-            .setKey("key-2")
-            .setDisplayName("displayname-2")
-            .setScope(AttributeScope.EVENT)
-            .setMaterialized(false)
-            .setUnit("unit-2")
-            .setType(AttributeType.ATTRIBUTE)
-            .addAllLabels(List.of("label-3", "label-4"))
-            .addAllSupportedAggregations(List.of(AggregateFunction.SUM, AggregateFunction.AVG))
-            .setOnlyAggregationsAllowed(true)
-            .addSources(AttributeSource.EDS)
-            .setId("EVENT.key-2")
-            .setGroupable(true)
-            .setDefinition(AttributeDefinition.newBuilder().setSourcePath("sourcepath-2"))
-            .setScopeString(AttributeScope.EVENT.name())
-            .build();
-
-    AttributeCreateRequest request1 =
-        AttributeCreateRequest.newBuilder().addAttributes(expectedAttributeMetadata1).build();
-    executeWithHeadersContext(requestHeaders, () -> stub.create(request1));
-
-    AttributeCreateRequest request2 =
-        AttributeCreateRequest.newBuilder().addAttributes(expectedAttributeMetadata2).build();
-    executeWithHeadersContext(systemRequestHeaders, () -> stub.create(request2));
-
-    List<AttributeMetadata> attributeMetadataList =
-        executeWithHeadersContext(
-                requestHeaders, () -> stub.getAttributes(GetAttributesRequest.newBuilder().build()))
-            .getAttributesList();
-    assertEquals(
-        List.of(expectedAttributeMetadata1, expectedAttributeMetadata2), attributeMetadataList);
-  }
-
-  @Test
-  public void testGetCustomAttributeMetadata() {
-    AttributeMetadata expectedAttributeMetadata1 =
-        AttributeMetadata.newBuilder()
-            .setFqn("name-1")
-            .setValueKind(AttributeKind.TYPE_STRING)
-            .setKey("key-1")
-            .setDisplayName("displayname-1")
-            .setScope(AttributeScope.EVENT)
-            .setMaterialized(false)
-            .setUnit("unit-1")
-            .setType(AttributeType.ATTRIBUTE)
-            .addAllLabels(List.of("label-1", "label-2"))
-            .addAllSupportedAggregations(List.of(AggregateFunction.SUM, AggregateFunction.AVG))
-            .setOnlyAggregationsAllowed(true)
-            .addSources(AttributeSource.EDS)
-            .setId("EVENT.key-1")
-            .setGroupable(true)
-            .setDefinition(AttributeDefinition.newBuilder().setSourcePath("sourcepath-1"))
-            .setScopeString(AttributeScope.EVENT.name())
-            .setCustom(true)
-            .build();
-
-    AttributeMetadata expectedAttributeMetadata2 =
-        AttributeMetadata.newBuilder()
-            .setFqn("name-2")
-            .setValueKind(AttributeKind.TYPE_STRING)
-            .setKey("key-2")
-            .setDisplayName("displayname-2")
-            .setScope(AttributeScope.EVENT)
-            .setMaterialized(false)
-            .setUnit("unit-2")
-            .setType(AttributeType.ATTRIBUTE)
-            .addAllLabels(List.of("label-3", "label-4"))
-            .addAllSupportedAggregations(List.of(AggregateFunction.SUM, AggregateFunction.AVG))
-            .setOnlyAggregationsAllowed(true)
-            .addSources(AttributeSource.EDS)
-            .setId("EVENT.key-2")
-            .setGroupable(true)
-            .setDefinition(AttributeDefinition.newBuilder().setSourcePath("sourcepath-2"))
-            .setScopeString(AttributeScope.EVENT.name())
-            .build();
-
-    AttributeCreateRequest request1 =
-        AttributeCreateRequest.newBuilder().addAttributes(expectedAttributeMetadata1).build();
-    executeWithHeadersContext(requestHeaders, () -> stub.create(request1));
-
-    AttributeCreateRequest request2 =
-        AttributeCreateRequest.newBuilder().addAttributes(expectedAttributeMetadata2).build();
-    executeWithHeadersContext(systemRequestHeaders, () -> stub.create(request2));
-
-    List<AttributeMetadata> attributeMetadataList =
-        executeWithHeadersContext(
-                requestHeaders,
-                () ->
-                    stub.getAttributes(
-                        GetAttributesRequest.newBuilder()
-                            .setFilter(AttributeMetadataFilter.newBuilder().setCustom(true))
-                            .build()))
-            .getAttributesList();
-    assertEquals(List.of(expectedAttributeMetadata1), attributeMetadataList);
-  }
-
-  @Test
-  public void testGetSystemAttributeMetadata() {
-    AttributeMetadata expectedAttributeMetadata1 =
-        AttributeMetadata.newBuilder()
-            .setFqn("name-1")
-            .setValueKind(AttributeKind.TYPE_STRING)
-            .setKey("key-1")
-            .setDisplayName("displayname-1")
-            .setScope(AttributeScope.EVENT)
-            .setMaterialized(false)
-            .setUnit("unit-1")
-            .setType(AttributeType.ATTRIBUTE)
-            .addAllLabels(List.of("label-1", "label-2"))
-            .addAllSupportedAggregations(List.of(AggregateFunction.SUM, AggregateFunction.AVG))
-            .setOnlyAggregationsAllowed(true)
-            .addSources(AttributeSource.EDS)
-            .setId("EVENT.key-1")
-            .setGroupable(true)
-            .setDefinition(AttributeDefinition.newBuilder().setSourcePath("sourcepath-1"))
-            .setScopeString(AttributeScope.EVENT.name())
-            .setCustom(true)
-            .build();
-
-    AttributeMetadata expectedAttributeMetadata2 =
-        AttributeMetadata.newBuilder()
-            .setFqn("name-2")
-            .setValueKind(AttributeKind.TYPE_STRING)
-            .setKey("key-2")
-            .setDisplayName("displayname-2")
-            .setScope(AttributeScope.EVENT)
-            .setMaterialized(false)
-            .setUnit("unit-2")
-            .setType(AttributeType.ATTRIBUTE)
-            .addAllLabels(List.of("label-3", "label-4"))
-            .addAllSupportedAggregations(List.of(AggregateFunction.SUM, AggregateFunction.AVG))
-            .setOnlyAggregationsAllowed(true)
-            .addSources(AttributeSource.EDS)
-            .setId("EVENT.key-2")
-            .setGroupable(true)
-            .setDefinition(AttributeDefinition.newBuilder().setSourcePath("sourcepath-2"))
-            .setScopeString(AttributeScope.EVENT.name())
-            .build();
-
-    AttributeCreateRequest request1 =
-        AttributeCreateRequest.newBuilder().addAttributes(expectedAttributeMetadata1).build();
-    executeWithHeadersContext(requestHeaders, () -> stub.create(request1));
-
-    AttributeCreateRequest request2 =
-        AttributeCreateRequest.newBuilder().addAttributes(expectedAttributeMetadata2).build();
-    executeWithHeadersContext(systemRequestHeaders, () -> stub.create(request2));
-
-    List<AttributeMetadata> attributeMetadataList =
-        executeWithHeadersContext(
-                requestHeaders,
-                () ->
-                    stub.getAttributes(
-                        GetAttributesRequest.newBuilder()
-                            .setFilter(AttributeMetadataFilter.newBuilder().setCustom(false))
-                            .build()))
-            .getAttributesList();
-    assertEquals(List.of(expectedAttributeMetadata2), attributeMetadataList);
   }
 
   @Test
@@ -370,18 +169,11 @@ public class AttributeServiceTest {
             .addAttributes(spanNameAttr)
             .addAttributes(spanIdAttr)
             .build();
-    executeWithHeadersContext(requestHeaders, () -> stub.create(attributeCreateRequest));
+    client.create(requestHeaders, attributeCreateRequest);
 
     List<String> attributeMetadataList =
-        executeWithHeadersContext(
-                requestHeaders,
-                () ->
-                    stub.getAttributes(
-                        GetAttributesRequest.newBuilder()
-                            .setFilter(AttributeMetadataFilter.getDefaultInstance())
-                            .build()))
-            .getAttributesList()
-            .stream()
+        Streams.stream(
+                client.findAttributes(requestHeaders, AttributeMetadataFilter.getDefaultInstance()))
             .map(AttributeMetadata::getId)
             .sorted()
             .collect(Collectors.toList());
@@ -399,7 +191,7 @@ public class AttributeServiceTest {
                   .addAttributes(spanNameAttr)
                   .addAttributes(spanIdAttr)
                   .build();
-          executeWithHeadersContext(headers, () -> stub.create(attributeCreateRequest));
+          client.create(headers, attributeCreateRequest);
         });
   }
 
@@ -420,9 +212,9 @@ public class AttributeServiceTest {
             .addAttributes(spanIdAttr)
             .build();
     if (useRequestHeaders) {
-      executeWithHeadersContext(requestHeaders, () -> stub.create(attributeCreateRequest));
+      client.create(requestHeaders, attributeCreateRequest);
     } else {
-      executeInTenantContext(TEST_TENANT_ID, () -> stub.create(attributeCreateRequest));
+      client.create(TEST_TENANT_ID, attributeCreateRequest);
     }
 
     AttributeSourceMetadataUpdateRequest request =
@@ -434,31 +226,19 @@ public class AttributeServiceTest {
 
     List<AttributeMetadata> attributeMetadataList;
     if (useRequestHeaders) {
-      executeWithHeadersContext(requestHeaders, () -> stub.updateSourceMetadata(request));
+      client.updateSourceMetadata(requestHeaders, request);
       attributeMetadataList =
           ImmutableList.copyOf(
-              executeWithHeadersContext(
+              client.findAttributes(
                   requestHeaders,
-                  () ->
-                      stub.getAttributes(
-                              GetAttributesRequest.newBuilder()
-                                  .setFilter(
-                                      AttributeMetadataFilter.newBuilder().addFqn(SPAN_NAME_ATTR))
-                                  .build())
-                          .getAttributesList()));
+                  AttributeMetadataFilter.newBuilder().addFqn(SPAN_NAME_ATTR).build()));
     } else {
-      executeInTenantContext(TEST_TENANT_ID, () -> stub.updateSourceMetadata(request));
+      client.updateSourceMetadata(TEST_TENANT_ID, request);
       attributeMetadataList =
           ImmutableList.copyOf(
-              executeInTenantContext(
+              client.findAttributes(
                   TEST_TENANT_ID,
-                  () ->
-                      stub.getAttributes(
-                              GetAttributesRequest.newBuilder()
-                                  .setFilter(
-                                      AttributeMetadataFilter.newBuilder().addFqn(SPAN_NAME_ATTR))
-                                  .build())
-                          .getAttributesList()));
+                  AttributeMetadataFilter.newBuilder().addFqn(SPAN_NAME_ATTR).build()));
     }
 
     assertEquals(1, attributeMetadataList.size());
@@ -470,45 +250,29 @@ public class AttributeServiceTest {
         attributeSourceMetadataMap.get(AttributeSource.EDS.name()).getSourceMetadataMap());
 
     if (useRequestHeaders) {
-      executeWithHeadersContext(
+      client.deleteSourceMetadata(
           requestHeaders,
-          () ->
-              stub.deleteSourceMetadata(
-                  AttributeSourceMetadataDeleteRequest.newBuilder()
-                      .setFqn(SPAN_NAME_ATTR)
-                      .setSource(AttributeSource.EDS)
-                      .build()));
+          AttributeSourceMetadataDeleteRequest.newBuilder()
+              .setFqn(SPAN_NAME_ATTR)
+              .setSource(AttributeSource.EDS)
+              .build());
       attributeMetadataList =
           ImmutableList.copyOf(
-              executeWithHeadersContext(
+              client.findAttributes(
                   requestHeaders,
-                  () ->
-                      stub.getAttributes(
-                              GetAttributesRequest.newBuilder()
-                                  .setFilter(
-                                      AttributeMetadataFilter.newBuilder().addFqn(SPAN_NAME_ATTR))
-                                  .build())
-                          .getAttributesList()));
+                  AttributeMetadataFilter.newBuilder().addFqn(SPAN_NAME_ATTR).build()));
     } else {
-      executeInTenantContext(
+      client.deleteSourceMetadata(
           TEST_TENANT_ID,
-          () ->
-              stub.deleteSourceMetadata(
-                  AttributeSourceMetadataDeleteRequest.newBuilder()
-                      .setFqn(SPAN_NAME_ATTR)
-                      .setSource(AttributeSource.EDS)
-                      .build()));
+          AttributeSourceMetadataDeleteRequest.newBuilder()
+              .setFqn(SPAN_NAME_ATTR)
+              .setSource(AttributeSource.EDS)
+              .build());
       attributeMetadataList =
           ImmutableList.copyOf(
-              executeInTenantContext(
+              client.findAttributes(
                   TEST_TENANT_ID,
-                  () ->
-                      stub.getAttributes(
-                              GetAttributesRequest.newBuilder()
-                                  .setFilter(
-                                      AttributeMetadataFilter.newBuilder().addFqn(SPAN_NAME_ATTR))
-                                  .build())
-                          .getAttributesList()));
+                  AttributeMetadataFilter.newBuilder().addFqn(SPAN_NAME_ATTR).build()));
     }
 
     assertEquals(1, attributeMetadataList.size());
@@ -530,26 +294,12 @@ public class AttributeServiceTest {
     createSampleAttributes(useRequestHeaders, spanNameAttr, spanIdAttr, traceDurationMillis);
 
     {
-      List<AttributeMetadata> attributeMetadataList =
+      Iterator<AttributeMetadata> attributeMetadataIterator =
           useRequestHeaders
-              ? executeWithHeadersContext(
-                      requestHeaders,
-                      () ->
-                          stub.getAttributes(
-                              GetAttributesRequest.newBuilder()
-                                  .setFilter(AttributeMetadataFilter.getDefaultInstance())
-                                  .build()))
-                  .getAttributesList()
-              : executeInTenantContext(
-                      TEST_TENANT_ID,
-                      () ->
-                          stub.getAttributes(
-                              GetAttributesRequest.newBuilder()
-                                  .setFilter(AttributeMetadataFilter.getDefaultInstance())
-                                  .build()))
-                  .getAttributesList();
+              ? client.findAttributes(requestHeaders, AttributeMetadataFilter.getDefaultInstance())
+              : client.findAttributes(TEST_TENANT_ID, AttributeMetadataFilter.getDefaultInstance());
       List<String> attributeMetadataIdList =
-          attributeMetadataList.stream()
+          Streams.stream(attributeMetadataIterator)
               .map(AttributeMetadata::getId)
               .sorted()
               .collect(Collectors.toList());
@@ -559,60 +309,40 @@ public class AttributeServiceTest {
     }
 
     {
-      List<AttributeMetadata> attributeMetadataList =
+      Iterator<AttributeMetadata> attributeMetadataIterator =
           useRequestHeaders
-              ? executeWithHeadersContext(
-                      requestHeaders,
-                      () ->
-                          stub.getAttributes(
-                              GetAttributesRequest.newBuilder()
-                                  .setFilter(
-                                      AttributeMetadataFilter.newBuilder()
-                                          .addFqn(spanNameAttr.getFqn()))
-                                  .build()))
-                  .getAttributesList()
-              : executeInTenantContext(
-                      TEST_TENANT_ID,
-                      () ->
-                          stub.getAttributes(
-                              GetAttributesRequest.newBuilder()
-                                  .setFilter(
-                                      AttributeMetadataFilter.newBuilder()
-                                          .addFqn(spanNameAttr.getFqn()))
-                                  .build()))
-                  .getAttributesList();
+              ? client.findAttributes(
+                  requestHeaders,
+                  AttributeMetadataFilter.newBuilder().addFqn(spanNameAttr.getFqn()).build())
+              : client.findAttributes(
+                  TEST_TENANT_ID,
+                  AttributeMetadataFilter.newBuilder().addFqn(spanNameAttr.getFqn()).build());
       List<String> attributeMetadataIdList =
-          attributeMetadataList.stream().map(AttributeMetadata::getId).collect(Collectors.toList());
+          Streams.stream(attributeMetadataIterator)
+              .map(AttributeMetadata::getId)
+              .collect(Collectors.toList());
       assertEquals(List.of(spanNameAttr.getId()), attributeMetadataIdList);
     }
 
     {
-      List<AttributeMetadata> attributeMetadataList =
+      Iterator<AttributeMetadata> attributeMetadataIterator =
           useRequestHeaders
-              ? executeWithHeadersContext(
-                      requestHeaders,
-                      () ->
-                          stub.getAttributes(
-                              GetAttributesRequest.newBuilder()
-                                  .setFilter(
-                                      AttributeMetadataFilter.newBuilder()
-                                          .addScopeString(spanNameAttr.getScopeString())
-                                          .addKey(spanNameAttr.getKey()))
-                                  .build()))
-                  .getAttributesList()
-              : executeInTenantContext(
-                      TEST_TENANT_ID,
-                      () ->
-                          stub.getAttributes(
-                              GetAttributesRequest.newBuilder()
-                                  .setFilter(
-                                      AttributeMetadataFilter.newBuilder()
-                                          .addScopeString(spanNameAttr.getScopeString())
-                                          .addKey(spanNameAttr.getKey()))
-                                  .build()))
-                  .getAttributesList();
+              ? client.findAttributes(
+                  requestHeaders,
+                  AttributeMetadataFilter.newBuilder()
+                      .addScopeString(spanNameAttr.getScopeString())
+                      .addKey(spanNameAttr.getKey())
+                      .build())
+              : client.findAttributes(
+                  TEST_TENANT_ID,
+                  AttributeMetadataFilter.newBuilder()
+                      .addScopeString(spanNameAttr.getScopeString())
+                      .addKey(spanNameAttr.getKey())
+                      .build());
       List<String> attributeMetadataIdList =
-          attributeMetadataList.stream().map(AttributeMetadata::getId).collect(Collectors.toList());
+          Streams.stream(attributeMetadataIterator)
+              .map(AttributeMetadata::getId)
+              .collect(Collectors.toList());
       assertEquals(List.of(spanNameAttr.getId()), attributeMetadataIdList);
     }
   }
@@ -633,68 +363,44 @@ public class AttributeServiceTest {
 
     final AttributeMetadataFilter otherScopeFilter =
         AttributeMetadataFilter.newBuilder().addScopeString("OTHER").build();
-    executeWithHeadersContext(
+
+    client.create(
         requestHeaders,
-        () ->
-            stub.create(
-                AttributeCreateRequest.newBuilder()
-                    .addAllAttributes(List.of(spanNameAttr, otherNameAttr))
-                    .build()));
+        AttributeCreateRequest.newBuilder()
+            .addAllAttributes(List.of(spanNameAttr, otherNameAttr))
+            .build());
 
     List<String> attributeMetadataIdList =
-        executeWithHeadersContext(
-                requestHeaders,
-                () ->
-                    stub.getAttributes(
-                        GetAttributesRequest.newBuilder().setFilter(otherScopeFilter).build()))
-            .getAttributesList()
-            .stream()
+        Streams.stream(client.findAttributes(requestHeaders, otherScopeFilter))
             .map(AttributeMetadata::getId)
             .collect(Collectors.toList());
 
     assertEquals(List.of(otherNameAttr.getId()), attributeMetadataIdList);
 
     attributeMetadataIdList =
-        executeWithHeadersContext(
-                requestHeaders,
-                () ->
-                    stub.getAttributes(
-                        GetAttributesRequest.newBuilder()
-                            .setFilter(AttributeMetadataFilter.newBuilder().addScopeString("EVENT"))
-                            .build()))
-            .getAttributesList()
-            .stream()
+        Streams.stream(
+                client.findAttributes(
+                    requestHeaders,
+                    AttributeMetadataFilter.newBuilder().addScopeString("EVENT").build()))
             .map(AttributeMetadata::getId)
             .collect(Collectors.toList());
 
     assertEquals(List.of(spanNameAttr.getId()), attributeMetadataIdList);
 
     attributeMetadataIdList =
-        executeWithHeadersContext(
-                requestHeaders,
-                () ->
-                    stub.getAttributes(
-                        GetAttributesRequest.newBuilder()
-                            .setFilter(
-                                AttributeMetadataFilter.newBuilder().addScope(AttributeScope.EVENT))
-                            .build()))
-            .getAttributesList()
-            .stream()
+        Streams.stream(
+                client.findAttributes(
+                    requestHeaders,
+                    AttributeMetadataFilter.newBuilder().addScope(AttributeScope.EVENT).build()))
             .map(AttributeMetadata::getId)
             .collect(Collectors.toList());
 
     assertEquals(List.of(spanNameAttr.getId()), attributeMetadataIdList);
 
-    executeWithHeadersContext(requestHeaders, () -> stub.delete(otherScopeFilter));
+    client.delete(requestHeaders, otherScopeFilter);
 
     assertEquals(
-        emptyList(),
-        executeWithHeadersContext(
-                requestHeaders,
-                () ->
-                    stub.getAttributes(
-                        GetAttributesRequest.newBuilder().setFilter(otherScopeFilter).build()))
-            .getAttributesList());
+        emptyList(), ImmutableList.copyOf(client.findAttributes(requestHeaders, otherScopeFilter)));
   }
 
   @Test
@@ -712,78 +418,50 @@ public class AttributeServiceTest {
     {
       List<AttributeMetadata> attributeMetadataList;
       if (useRequestHeaders) {
-        executeWithHeadersContext(
-            requestHeaders, () -> stub.delete(AttributeMetadataFilter.getDefaultInstance()));
+        client.delete(requestHeaders, AttributeMetadataFilter.getDefaultInstance());
         attributeMetadataList =
-            executeWithHeadersContext(
-                    requestHeaders,
-                    () ->
-                        stub.getAttributes(
-                            GetAttributesRequest.newBuilder()
-                                .setFilter(AttributeMetadataFilter.getDefaultInstance())
-                                .build()))
-                .getAttributesList();
+            ImmutableList.copyOf(
+                client.findAttributes(
+                    requestHeaders, AttributeMetadataFilter.getDefaultInstance()));
       } else {
-        executeInTenantContext(
-            TEST_TENANT_ID, () -> stub.delete(AttributeMetadataFilter.getDefaultInstance()));
+        client.delete(TEST_TENANT_ID, AttributeMetadataFilter.getDefaultInstance());
         attributeMetadataList =
-            executeInTenantContext(
-                    TEST_TENANT_ID,
-                    () ->
-                        stub.getAttributes(
-                            GetAttributesRequest.newBuilder()
-                                .setFilter(AttributeMetadataFilter.getDefaultInstance())
-                                .build()))
-                .getAttributesList();
+            ImmutableList.copyOf(
+                client.findAttributes(
+                    TEST_TENANT_ID, AttributeMetadataFilter.getDefaultInstance()));
       }
       assertEquals(emptyList(), attributeMetadataList);
     }
 
     createSampleAttributes(useRequestHeaders, spanNameAttr, spanIdAttr, traceDurationMillis);
     {
-      List<AttributeMetadata> attributeMetadataList;
+      Iterator<AttributeMetadata> attributeMetadataIterator;
       if (useRequestHeaders) {
-        executeWithHeadersContext(
+        client.delete(
             requestHeaders,
-            () ->
-                stub.delete(
-                    AttributeMetadataFilter.newBuilder()
-                        .addScopeString(spanNameAttr.getScopeString())
-                        .addKey(spanNameAttr.getKey())
-                        .build()));
-        attributeMetadataList =
-            executeWithHeadersContext(
-                    requestHeaders,
-                    () ->
-                        stub.getAttributes(
-                            GetAttributesRequest.newBuilder()
-                                .setFilter(AttributeMetadataFilter.getDefaultInstance())
-                                .build()))
-                .getAttributesList();
+            AttributeMetadataFilter.newBuilder()
+                .addScopeString(spanNameAttr.getScopeString())
+                .addKey(spanNameAttr.getKey())
+                .build());
+        attributeMetadataIterator =
+            client.findAttributes(requestHeaders, AttributeMetadataFilter.getDefaultInstance());
       } else {
-        executeInTenantContext(
+        client.delete(
             TEST_TENANT_ID,
-            () ->
-                stub.delete(
-                    AttributeMetadataFilter.newBuilder()
-                        .addScopeString(spanNameAttr.getScopeString())
-                        .addKey(spanNameAttr.getKey())
-                        .build()));
-        attributeMetadataList =
-            executeInTenantContext(
-                    TEST_TENANT_ID,
-                    () ->
-                        stub.getAttributes(
-                            GetAttributesRequest.newBuilder()
-                                .setFilter(AttributeMetadataFilter.getDefaultInstance())
-                                .build()))
-                .getAttributesList();
+            AttributeMetadataFilter.newBuilder()
+                .addScopeString(spanNameAttr.getScopeString())
+                .addKey(spanNameAttr.getKey())
+                .build());
+        attributeMetadataIterator =
+            client.findAttributes(TEST_TENANT_ID, AttributeMetadataFilter.getDefaultInstance());
       }
-      List<String> attributeMetadataIdList =
-          attributeMetadataList.stream().map(AttributeMetadata::getId).collect(Collectors.toList());
-      assertEquals(2, attributeMetadataIdList.size());
+      List<String> attributeMetadataList =
+          Streams.stream(attributeMetadataIterator)
+              .map(AttributeMetadata::getId)
+              .collect(Collectors.toList());
+      assertEquals(2, attributeMetadataList.size());
       Assertions.assertTrue(
-          attributeMetadataIdList.containsAll(
+          attributeMetadataList.containsAll(
               Arrays.asList(spanIdAttr.getId(), traceDurationMillis.getId())));
     }
   }
@@ -795,9 +473,9 @@ public class AttributeServiceTest {
             .addAllAttributes(Arrays.asList(attributeMetadata))
             .build();
     if (useRequestHeaders) {
-      executeWithHeadersContext(requestHeaders, () -> stub.create(attributeCreateRequest));
+      client.create(requestHeaders, attributeCreateRequest);
     } else {
-      executeInTenantContext(TEST_TENANT_ID, () -> stub.create(attributeCreateRequest));
+      client.create(TEST_TENANT_ID, attributeCreateRequest);
     }
   }
 }

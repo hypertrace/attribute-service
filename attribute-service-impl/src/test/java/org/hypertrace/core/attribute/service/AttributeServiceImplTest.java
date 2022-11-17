@@ -421,43 +421,6 @@ public class AttributeServiceImplTest {
   }
 
   @Test
-  public void testGetCustomAttributes() {
-    RequestContext requestContext = mock(RequestContext.class);
-    final String TEST_TENANT_ID = "test-tenant-id";
-    when(requestContext.getTenantId()).thenReturn(Optional.of(TEST_TENANT_ID));
-    Context.current()
-        .withValue(RequestContext.CURRENT, requestContext)
-        .run(
-            () -> {
-              AttributeServiceImpl attributeService =
-                  new AttributeServiceImpl(
-                      mockCollectionReturningDocuments(
-                          createMockDocument(
-                              TEST_TENANT_ID,
-                              "type",
-                              AttributeScope.EVENT,
-                              AttributeType.ATTRIBUTE,
-                              AttributeKind.TYPE_STRING)));
-
-              StreamObserver<GetAttributesResponse> mockObserver = mock(StreamObserver.class);
-              attributeService.getAttributes(
-                  GetAttributesRequest.newBuilder()
-                      .setFilter(AttributeMetadataFilter.newBuilder().setCustom(true))
-                      .build(),
-                  mockObserver);
-
-              verify(mockObserver, times(1))
-                  .onNext(
-                      GetAttributesResponse.newBuilder()
-                          .addAttributes(MOCK_EVENT_TYPE_ATTRIBUTE)
-                          .build());
-
-              verify(mockObserver, times(1)).onCompleted();
-              verify(mockObserver, never()).onError(any());
-            });
-  }
-
-  @Test
   public void testFindAttributesNoTenantId() {
     RequestContext requestContext = mock(RequestContext.class);
     when(requestContext.getTenantId()).thenReturn(Optional.empty());
