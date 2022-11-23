@@ -7,6 +7,7 @@ import static org.hypertrace.core.attribute.service.utils.tenant.TenantUtils.ROO
 import com.google.common.collect.Streams;
 import com.google.protobuf.ServiceException;
 import com.typesafe.config.Config;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -190,40 +191,50 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
       return;
     }
 
-    Iterator<Document> documents =
-        collection.search(getQueryForFilter(tenantId.get(), modifiedRequest));
-    boolean status =
-        StreamSupport.stream(Spliterators.spliteratorUnknownSize(documents, 0), false)
-            .map(Document::toJson)
-            .map(
-                attrMetadataDoc -> {
-                  try {
-                    AttributeMetadata metadata =
-                        AttributeMetadataModel.fromJson(attrMetadataDoc).toDTO();
-                    boolean response =
-                        collection.delete(AttributeMetadataDocKey.from(tenantId.get(), metadata));
-                    if (!response) {
+    try {
+      Iterator<Document> documents =
+          collection.search(getQueryForFilter(tenantId.get(), modifiedRequest));
+      boolean status =
+          StreamSupport.stream(Spliterators.spliteratorUnknownSize(documents, 0), false)
+              .map(Document::toJson)
+              .map(
+                  attrMetadataDoc -> {
+                    try {
+                      AttributeMetadata metadata =
+                          AttributeMetadataModel.fromJson(attrMetadataDoc).toDTO();
+                      boolean response =
+                          collection.delete(AttributeMetadataDocKey.from(tenantId.get(), metadata));
+                      if (!response) {
+                        LOGGER.warn(
+                            "Error updating source metadata for attribute:{}, request:{}",
+                            metadata,
+                            modifiedRequest);
+                      }
+                      return response;
+                    } catch (IOException ex) {
                       LOGGER.warn(
-                          "Error updating source metadata for attribute:{}, request:{}",
-                          metadata,
-                          modifiedRequest);
+                          "Unable to convert this Json String to AttributeMetadata : {}",
+                          attrMetadataDoc);
+                      return false;
                     }
-                    return response;
-                  } catch (IOException ex) {
-                    LOGGER.warn(
-                        "Unable to convert this Json String to AttributeMetadata : {}",
-                        attrMetadataDoc);
-                    return false;
-                  }
-                })
-            .reduce(true, (b1, b2) -> b1 && b2);
-    if (status) {
-      responseObserver.onNext(Empty.newBuilder().build());
-      responseObserver.onCompleted();
-    } else {
+                  })
+              .reduce(true, (b1, b2) -> b1 && b2);
+      if (status) {
+        responseObserver.onNext(Empty.newBuilder().build());
+        responseObserver.onCompleted();
+      } else {
+        responseObserver.onError(
+            new RuntimeException(
+                String.format(
+                    "Error deleting attribute metadata for request:%s", modifiedRequest)));
+      }
+    } catch (final Exception e) {
+      LOGGER.warn("Error deleting attribute metadata for request: " + request, e);
       responseObserver.onError(
-          new RuntimeException(
-              String.format("Error deleting attribute metadata for request:%s", modifiedRequest)));
+          Status.INTERNAL
+              .withDescription(
+                  String.format("Error deleting attribute metadata for request: %s", request))
+              .asException());
     }
   }
 
