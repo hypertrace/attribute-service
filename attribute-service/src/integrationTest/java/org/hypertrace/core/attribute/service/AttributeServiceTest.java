@@ -107,8 +107,9 @@ public class AttributeServiceTest {
 
   @BeforeEach
   public void setupMethod() {
-    client.delete(requestHeaders, buildCustomFilter(true));
-    RequestContext.forTenantId(ROOT_TENANT_ID).call(() -> stub.delete(buildCustomFilter(true)));
+    client.delete(requestHeaders, AttributeMetadataFilter.getDefaultInstance());
+    RequestContext.forTenantId(ROOT_TENANT_ID)
+        .call(() -> stub.delete(AttributeMetadataFilter.getDefaultInstance()));
   }
 
   @Test
@@ -613,12 +614,12 @@ public class AttributeServiceTest {
   }
 
   @Test
-  public void testDeleteWithoutCustom_throwsException() {
+  public void testDeleteNonCustomAttributes_throwsException() {
     assertThrows(
         RuntimeException.class,
-        () -> client.delete(requestHeaders, AttributeMetadataFilter.getDefaultInstance()));
-    assertThrows(
-        RuntimeException.class, () -> client.delete(requestHeaders, buildCustomFilter(false)));
+        () ->
+            client.delete(
+                requestHeaders, AttributeMetadataFilter.newBuilder().setCustom(false).build()));
   }
 
   private void testDeleteByFilter(boolean useRequestHeaders) {
@@ -626,13 +627,13 @@ public class AttributeServiceTest {
     {
       List<AttributeMetadata> attributeMetadataList;
       if (useRequestHeaders) {
-        client.delete(requestHeaders, buildCustomFilter(true));
+        client.delete(requestHeaders, AttributeMetadataFilter.getDefaultInstance());
         attributeMetadataList =
             ImmutableList.copyOf(
                 client.findAttributes(
                     requestHeaders, AttributeMetadataFilter.getDefaultInstance()));
       } else {
-        client.delete(TEST_TENANT_ID, buildCustomFilter(true));
+        client.delete(TEST_TENANT_ID, AttributeMetadataFilter.getDefaultInstance());
         attributeMetadataList =
             ImmutableList.copyOf(
                 client.findAttributes(
@@ -650,7 +651,6 @@ public class AttributeServiceTest {
             AttributeMetadataFilter.newBuilder()
                 .addScopeString(spanNameAttr.getScopeString())
                 .addKey(spanNameAttr.getKey())
-                .setCustom(true)
                 .build());
         attributeMetadataIterator =
             client.findAttributes(requestHeaders, AttributeMetadataFilter.getDefaultInstance());
@@ -660,7 +660,6 @@ public class AttributeServiceTest {
             AttributeMetadataFilter.newBuilder()
                 .addScopeString(spanNameAttr.getScopeString())
                 .addKey(spanNameAttr.getKey())
-                .setCustom(true)
                 .build());
         attributeMetadataIterator =
             client.findAttributes(TEST_TENANT_ID, AttributeMetadataFilter.getDefaultInstance());
@@ -674,10 +673,6 @@ public class AttributeServiceTest {
           attributeMetadataList.containsAll(
               Arrays.asList(spanIdAttr.getId(), traceDurationMillis.getId())));
     }
-  }
-
-  private AttributeMetadataFilter buildCustomFilter(final boolean value) {
-    return AttributeMetadataFilter.newBuilder().setCustom(value).build();
   }
 
   private void createSampleAttributes(
