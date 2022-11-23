@@ -8,7 +8,6 @@ import com.google.common.collect.Streams;
 import com.google.protobuf.ServiceException;
 import com.typesafe.config.Config;
 import io.grpc.Status;
-import io.grpc.StatusException;
 import io.grpc.stub.StreamObserver;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -69,10 +68,9 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
   }
 
   private static final String ATTRIBUTE_METADATA_COLLECTION = "attribute_metadata";
-  private static final String MAX_CUSTOM_ATTRIBUTES_PER_TENANT = "max.custom.attributes.per.tenant";
 
   private final Collection collection;
-  private final int maxCustomAttributesPerTenant;
+  private final AttributeMetadataValidator validator;
 
   /**
    * Initiates with a configuration. The configuration should be production configuration, but for
@@ -81,12 +79,12 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
   public AttributeServiceImpl(Config config) {
     Datastore store = initDataStore(config);
     this.collection = store.getCollection(ATTRIBUTE_METADATA_COLLECTION);
-    this.maxCustomAttributesPerTenant = config.getInt(MAX_CUSTOM_ATTRIBUTES_PER_TENANT);
+    this.validator = new AttributeMetadataValidator(config);
   }
 
   AttributeServiceImpl(Collection collection) {
     this.collection = collection;
-    this.maxCustomAttributesPerTenant = 20;
+    this.validator = new AttributeMetadataValidator();
   }
 
   private Datastore initDataStore(Config config) {
@@ -105,35 +103,39 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
     }
 
     final String tenantId = tenantIdOptional.orElseThrow();
-
-    AttributeMetadataValidator.validate(request);
-    Map<Key, Document> attributeDocs = new HashMap<>();
-    for (AttributeMetadata attributeMetadata : request.getAttributesList()) {
-      AttributeMetadataModel attributeMetadataModel =
-          AttributeMetadataModel.fromDTO(attributeMetadata);
-      attributeMetadataModel.setTenantId(tenantId);
-      attributeDocs.put(
-          new AttributeMetadataDocKey(
-              tenantId, attributeMetadataModel.getScopeString(), attributeMetadataModel.getKey()),
-          attributeMetadataModel);
-    }
+    final AttributeMetadataFilter filter =
+        AttributeMetadataFilter.newBuilder().setCustom(true).build();
 
     try {
-      verifyCustomAttributeLimitReached(tenantId, attributeDocs.size());
-    } catch (final StatusException e) {
-      responseObserver.onError(e);
-      return;
-    }
+      validator.validate(
+          request, tenantId, () -> collection.total(getQueryForFilter(tenantId, filter)));
+      Map<Key, Document> attributeDocs = new HashMap<>();
+      for (AttributeMetadata attributeMetadata : request.getAttributesList()) {
+        AttributeMetadataModel attributeMetadataModel =
+            AttributeMetadataModel.fromDTO(attributeMetadata);
+        attributeMetadataModel.setTenantId(tenantId);
+        attributeDocs.put(
+            new AttributeMetadataDocKey(
+                tenantId, attributeMetadataModel.getScopeString(), attributeMetadataModel.getKey()),
+            attributeMetadataModel);
+      }
 
-    boolean status = collection.bulkUpsert(attributeDocs);
-    if (status) {
-      responseObserver.onNext(Empty.newBuilder().build());
-      responseObserver.onCompleted();
-    } else {
+      boolean status = collection.bulkUpsert(attributeDocs);
+      if (status) {
+        responseObserver.onNext(Empty.newBuilder().build());
+        responseObserver.onCompleted();
+      } else {
+        responseObserver.onError(
+            new RuntimeException(
+                String.format(
+                    "Could not bulk insert attributes. AttributeCreateRequest:%s", request)));
+      }
+    } catch (final Exception e) {
+      LOGGER.warn("Could not create attributes with request: " + request, e);
       responseObserver.onError(
-          new RuntimeException(
-              String.format(
-                  "Could not bulk insert attributes. AttributeCreateRequest:%s", request)));
+          Status.INTERNAL
+              .withDescription("Could not create attributes with request: " + request)
+              .asException());
     }
   }
 
@@ -363,26 +365,6 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
     responseObserver.onNext(
         GetAttributesResponse.newBuilder().addAllAttributes(attributes).build());
     responseObserver.onCompleted();
-  }
-
-  private void verifyCustomAttributeLimitReached(final String tenantId, final int newAttributeCount)
-      throws StatusException {
-    if (ROOT_TENANT_ID.equals(tenantId)) {
-      // No rate limit validation for system attributes
-      return;
-    }
-
-    final AttributeMetadataFilter filter =
-        AttributeMetadataFilter.newBuilder().setCustom(true).build();
-    final long numCustomAttributes = collection.total(this.getQueryForFilter(tenantId, filter));
-    if (numCustomAttributes + newAttributeCount > maxCustomAttributesPerTenant) {
-      throw Status.RESOURCE_EXHAUSTED
-          .withDescription(
-              String.format(
-                  "%d custom attributes are present and %d custom attributes could not be registered because it exceeds the limit (%d)",
-                  numCustomAttributes, newAttributeCount, maxCustomAttributesPerTenant))
-          .asException();
-    }
   }
 
   private void sendResult(

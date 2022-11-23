@@ -1,13 +1,16 @@
 package org.hypertrace.core.attribute.service;
 
 import static org.hypertrace.core.attribute.service.util.AttributeScopeUtil.resolveScopeString;
+import static org.hypertrace.core.attribute.service.utils.tenant.TenantUtils.ROOT_TENANT_ID;
 
 import com.google.common.base.Strings;
+import com.typesafe.config.Config;
 import io.grpc.Status;
 import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.LongSupplier;
 import java.util.stream.Collectors;
 import org.hypertrace.core.attribute.service.v1.AttributeCreateRequest;
 import org.hypertrace.core.attribute.service.v1.AttributeKind;
@@ -18,8 +21,21 @@ import org.hypertrace.core.attribute.service.v1.AttributeType;
 
 /** Validates {@link AttributeCreateRequest} */
 public class AttributeMetadataValidator {
+  private static final String MAX_CUSTOM_ATTRIBUTES_PER_TENANT = "max.custom.attributes.per.tenant";
+  private final long maxCustomAttributesPerTenant;
 
-  public static void validate(AttributeCreateRequest attributeCreateRequest) {
+  AttributeMetadataValidator() {
+    this.maxCustomAttributesPerTenant = 20;
+  }
+
+  AttributeMetadataValidator(final Config config) {
+    this.maxCustomAttributesPerTenant = config.getInt(MAX_CUSTOM_ATTRIBUTES_PER_TENANT);
+  }
+
+  public void validate(
+      AttributeCreateRequest attributeCreateRequest,
+      final String tenantId,
+      final LongSupplier customAttributeCountSupplier) {
     attributeCreateRequest.getAttributesList().forEach(AttributeMetadataValidator::validate);
 
     // Ensure Scope + Key is unique
@@ -57,6 +73,9 @@ public class AttributeMetadataValidator {
       throw new IllegalArgumentException(
           String.format("Duplicate scope + FQN found for:%s", duplicateScopeFQNs));
     }
+
+    verifyCustomAttributeLimitNotReached(
+        tenantId, customAttributeCountSupplier, attributeCreateRequest.getAttributesCount());
   }
 
   public static AttributeMetadataFilter validateAndUpdateDeletionFilter(
@@ -83,6 +102,26 @@ public class AttributeMetadataValidator {
         || attributeMetadata.getType().equals(AttributeType.UNRECOGNIZED)
         || attributeMetadata.getType().equals(AttributeType.TYPE_UNDEFINED)) {
       throw new IllegalArgumentException(String.format("Invalid attribute:%s", attributeMetadata));
+    }
+  }
+
+  private void verifyCustomAttributeLimitNotReached(
+      final String tenantId,
+      final LongSupplier customAttributeCountSupplier,
+      final int newAttributeCount) {
+    if (ROOT_TENANT_ID.equals(tenantId)) {
+      // No limit validation for system attributes
+      return;
+    }
+
+    final long numCustomAttributes = customAttributeCountSupplier.getAsLong();
+    if (numCustomAttributes + newAttributeCount > maxCustomAttributesPerTenant) {
+      throw Status.RESOURCE_EXHAUSTED
+          .withDescription(
+              String.format(
+                  "%d custom attributes are present and %d custom attributes could not be registered because it exceeds the limit (%d)",
+                  numCustomAttributes, newAttributeCount, maxCustomAttributesPerTenant))
+          .asRuntimeException();
     }
   }
 }
