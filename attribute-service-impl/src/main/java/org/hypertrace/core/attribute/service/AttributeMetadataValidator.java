@@ -3,6 +3,7 @@ package org.hypertrace.core.attribute.service;
 import static org.hypertrace.core.attribute.service.util.AttributeScopeUtil.resolveScopeString;
 
 import com.google.common.base.Strings;
+import io.grpc.Status;
 import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,7 @@ import java.util.stream.Collectors;
 import org.hypertrace.core.attribute.service.v1.AttributeCreateRequest;
 import org.hypertrace.core.attribute.service.v1.AttributeKind;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadata;
+import org.hypertrace.core.attribute.service.v1.AttributeMetadataFilter;
 import org.hypertrace.core.attribute.service.v1.AttributeScope;
 import org.hypertrace.core.attribute.service.v1.AttributeType;
 
@@ -54,6 +56,21 @@ public class AttributeMetadataValidator {
     if (!duplicateScopeFQNs.isEmpty()) {
       throw new IllegalArgumentException(
           String.format("Duplicate scope + FQN found for:%s", duplicateScopeFQNs));
+    }
+  }
+
+  public static AttributeMetadataFilter validateAndUpdateDeletionFilter(
+      final AttributeMetadataFilter attributeMetadataFilter) {
+    if (attributeMetadataFilter.hasCustom()) {
+      if (!attributeMetadataFilter.getCustom()) {
+        throw Status.INVALID_ARGUMENT
+            .withDescription("Can only delete custom attributes")
+            .asRuntimeException();
+      }
+
+      return attributeMetadataFilter;
+    } else {
+      return attributeMetadataFilter.toBuilder().setCustom(true).build();
     }
   }
 
