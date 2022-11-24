@@ -2,6 +2,7 @@ package org.hypertrace.core.attribute.service.model;
 
 import static org.hypertrace.core.attribute.service.util.AttributeScopeUtil.resolveScope;
 import static org.hypertrace.core.attribute.service.util.AttributeScopeUtil.resolveScopeString;
+import static org.hypertrace.core.attribute.service.utils.tenant.TenantUtils.ROOT_TENANT_ID;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -285,7 +286,8 @@ public class AttributeMetadataModel implements Document {
                                     .putAllSourceMetadata(stringMapEntry.getValue())
                                     .build())))
             .setDefinition(this.definition)
-            .setInternal(internal);
+            .setInternal(internal)
+            .setCustom(!ROOT_TENANT_ID.equals(tenantId));
 
     if (unit != null) {
       builder.setUnit(unit);
