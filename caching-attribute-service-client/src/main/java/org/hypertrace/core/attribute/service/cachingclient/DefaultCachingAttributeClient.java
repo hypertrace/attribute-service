@@ -9,18 +9,22 @@ import com.google.common.collect.Table;
 import com.google.common.util.concurrent.RateLimiter;
 import io.grpc.CallCredentials;
 import io.grpc.Channel;
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
 import java.time.Duration;
+import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.function.Function;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
+import org.hypertrace.core.attribute.service.v1.AttributeCreateRequest;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadata;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadataFilter;
 import org.hypertrace.core.attribute.service.v1.AttributeServiceGrpc;
 import org.hypertrace.core.attribute.service.v1.AttributeServiceGrpc.AttributeServiceStub;
+import org.hypertrace.core.attribute.service.v1.Empty;
 import org.hypertrace.core.attribute.service.v1.GetAttributesRequest;
 import org.hypertrace.core.attribute.service.v1.GetAttributesResponse;
 
@@ -82,6 +86,27 @@ class DefaultCachingAttributeClient implements CachingAttributeClient {
   public Single<List<AttributeMetadata>> getAll() {
     return this.getOrInvalidate(AttributeCacheContextKey.forCurrentContext())
         .map(table -> List.copyOf(table.values()));
+  }
+
+  @Override
+  public Completable create(final Collection<AttributeMetadata> attributeMetadata) {
+    final AttributeCacheContextKey key = AttributeCacheContextKey.forCurrentContext();
+    return key.getExecutionContext().<Empty>stream(
+            streamObserver ->
+                this.attributeServiceClient.create(
+                    AttributeCreateRequest.newBuilder().addAllAttributes(attributeMetadata).build(),
+                    streamObserver))
+        .doOnNext(empty -> cache.invalidate(key))
+        .ignoreElements();
+  }
+
+  @Override
+  public Completable delete(final AttributeMetadataFilter filter) {
+    final AttributeCacheContextKey key = AttributeCacheContextKey.forCurrentContext();
+    return key.getExecutionContext().<Empty>stream(
+            streamObserver -> this.attributeServiceClient.delete(filter, streamObserver))
+        .doOnNext(empty -> cache.invalidate(key))
+        .ignoreElements();
   }
 
   private Single<Table<String, String, AttributeMetadata>> loadTable(AttributeCacheContextKey key) {
