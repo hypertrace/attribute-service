@@ -93,6 +93,21 @@ public class AttributeMetadataValidator {
     }
   }
 
+  public static AttributeMetadataFilter validateAndUpdateDeletionFilter(
+      final AttributeMetadataFilter attributeMetadataFilter) {
+    if (attributeMetadataFilter.hasCustom()) {
+      if (!attributeMetadataFilter.getCustom()) {
+        throw Status.INVALID_ARGUMENT
+            .withDescription("Can only delete custom attributes")
+            .asRuntimeException();
+      }
+
+      return attributeMetadataFilter;
+    } else {
+      return attributeMetadataFilter.toBuilder().setCustom(true).build();
+    }
+  }
+
   private static void validate(AttributeMetadata attributeMetadata) {
     if (resolveScopeString(attributeMetadata).equals(AttributeScope.SCOPE_UNDEFINED.name())
         || Strings.isNullOrEmpty(attributeMetadata.getKey())
