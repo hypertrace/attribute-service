@@ -35,7 +35,7 @@ public interface CachingAttributeClient {
   final class Builder {
     private final Channel channel;
     private int maxCacheContexts = 100;
-    private Duration cacheExpiration = Duration.of(1, ChronoUnit.MINUTES);
+    private Duration cacheExpiration = Duration.of(3, ChronoUnit.MINUTES);
     private CallCredentials callCredentials =
         RequestContextClientCallCredsProviderFactory.getClientCallCredsProvider().get();
     private AttributeMetadataFilter attributeFilter = AttributeMetadataFilter.getDefaultInstance();
