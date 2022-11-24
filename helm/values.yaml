@@ -69,6 +69,7 @@ configMap:
     host: postgres
     port: 5432
     url: ""
+  maxCustomAttributesPerTenant: 5
 
 logConfig:
   name: attribute-service-log-appender-config

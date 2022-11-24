@@ -25,7 +25,7 @@ public class AttributeMetadataValidator {
   private final long maxCustomAttributesPerTenant;
 
   AttributeMetadataValidator() {
-    this.maxCustomAttributesPerTenant = 20;
+    this.maxCustomAttributesPerTenant = 5;
   }
 
   AttributeMetadataValidator(final Config config) {
@@ -76,21 +76,6 @@ public class AttributeMetadataValidator {
 
     verifyCustomAttributeLimitNotReached(
         tenantId, customAttributeCountSupplier, attributeCreateRequest.getAttributesCount());
-  }
-
-  public static AttributeMetadataFilter validateAndUpdateDeletionFilter(
-      final AttributeMetadataFilter attributeMetadataFilter) {
-    if (attributeMetadataFilter.hasCustom()) {
-      if (!attributeMetadataFilter.getCustom()) {
-        throw Status.INVALID_ARGUMENT
-            .withDescription("Can only delete custom attributes")
-            .asRuntimeException();
-      }
-
-      return attributeMetadataFilter;
-    } else {
-      return attributeMetadataFilter.toBuilder().setCustom(true).build();
-    }
   }
 
   public static AttributeMetadataFilter validateAndUpdateDeletionFilter(

@@ -1,5 +1,6 @@
 package org.hypertrace.core.attribute.service;
 
+import static org.hypertrace.core.attribute.service.utils.tenant.TenantUtils.ROOT_TENANT_ID;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -27,7 +28,7 @@ public class AttributeMetadataValidatorTest {
                     .setType(AttributeType.ATTRIBUTE)
                     .build())
             .build();
-    new AttributeMetadataValidator().validate(attributeCreateRequest, "someTenantId", () -> 10);
+    new AttributeMetadataValidator().validate(attributeCreateRequest, "someTenantId", () -> 4);
   }
 
   @Test
@@ -47,7 +48,7 @@ public class AttributeMetadataValidatorTest {
                           .build())
                   .build();
           new AttributeMetadataValidator()
-              .validate(attributeCreateRequest, "someTenantId", () -> 10);
+              .validate(attributeCreateRequest, "someTenantId", () -> 4);
         });
   }
 
@@ -91,6 +92,27 @@ public class AttributeMetadataValidatorTest {
           new AttributeMetadataValidator(
                   ConfigFactory.parseMap(Map.of("max.custom.attributes.per.tenant", "7")))
               .validate(attributeCreateRequest, "someTenantId", () -> 7);
+        });
+  }
+
+  @Test
+  public void testAttributeMetadataValidatorCustomAttributesExceedingLimitForSystemTenant() {
+    assertDoesNotThrow(
+        () -> {
+          AttributeCreateRequest attributeCreateRequest =
+              AttributeCreateRequest.newBuilder()
+                  .addAttributes(
+                      AttributeMetadata.newBuilder()
+                          .setScope(AttributeScope.EVENT)
+                          .setKey("name")
+                          .setFqn("EVENT.name")
+                          .setValueKind(AttributeKind.TYPE_STRING)
+                          .setType(AttributeType.ATTRIBUTE)
+                          .build())
+                  .build();
+          new AttributeMetadataValidator(
+                  ConfigFactory.parseMap(Map.of("max.custom.attributes.per.tenant", "7")))
+              .validate(attributeCreateRequest, ROOT_TENANT_ID, () -> 7);
         });
   }
 }
