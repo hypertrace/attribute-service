@@ -17,3 +17,5 @@ data:
         {{- end }}
       }
     }
+
+    max.custom.attributes.per.tenant: {{ .Values.configMap.maxCustomAttributesPerTenant }}

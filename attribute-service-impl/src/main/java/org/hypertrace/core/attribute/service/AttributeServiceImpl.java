@@ -70,6 +70,7 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
   private static final String ATTRIBUTE_METADATA_COLLECTION = "attribute_metadata";
 
   private final Collection collection;
+  private final AttributeMetadataValidator validator;
 
   /**
    * Initiates with a configuration. The configuration should be production configuration, but for
@@ -78,10 +79,12 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
   public AttributeServiceImpl(Config config) {
     Datastore store = initDataStore(config);
     this.collection = store.getCollection(ATTRIBUTE_METADATA_COLLECTION);
+    this.validator = new AttributeMetadataValidator(config);
   }
 
   AttributeServiceImpl(Collection collection) {
     this.collection = collection;
+    this.validator = new AttributeMetadataValidator();
   }
 
   private Datastore initDataStore(Config config) {
@@ -93,34 +96,46 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
 
   @Override
   public void create(AttributeCreateRequest request, StreamObserver<Empty> responseObserver) {
-    Optional<String> tenantId = RequestContext.CURRENT.get().getTenantId();
-    if (tenantId.isEmpty()) {
+    Optional<String> tenantIdOptional = RequestContext.CURRENT.get().getTenantId();
+    if (tenantIdOptional.isEmpty()) {
       responseObserver.onError(new ServiceException("Tenant id is missing in the request."));
       return;
     }
 
-    AttributeMetadataValidator.validate(request);
-    Map<Key, Document> attributeDocs = new HashMap<>();
-    for (AttributeMetadata attributeMetadata : request.getAttributesList()) {
-      AttributeMetadataModel attributeMetadataModel =
-          AttributeMetadataModel.fromDTO(attributeMetadata);
-      attributeMetadataModel.setTenantId(tenantId.get());
-      attributeDocs.put(
-          new AttributeMetadataDocKey(
-              tenantId.get(),
-              attributeMetadataModel.getScopeString(),
-              attributeMetadataModel.getKey()),
-          attributeMetadataModel);
-    }
-    boolean status = collection.bulkUpsert(attributeDocs);
-    if (status) {
-      responseObserver.onNext(Empty.newBuilder().build());
-      responseObserver.onCompleted();
-    } else {
+    final String tenantId = tenantIdOptional.orElseThrow();
+    final AttributeMetadataFilter filter =
+        AttributeMetadataFilter.newBuilder().setCustom(true).build();
+
+    try {
+      validator.validate(
+          request, tenantId, () -> collection.total(getQueryForFilter(tenantId, filter)));
+      Map<Key, Document> attributeDocs = new HashMap<>();
+      for (AttributeMetadata attributeMetadata : request.getAttributesList()) {
+        AttributeMetadataModel attributeMetadataModel =
+            AttributeMetadataModel.fromDTO(attributeMetadata);
+        attributeMetadataModel.setTenantId(tenantId);
+        attributeDocs.put(
+            new AttributeMetadataDocKey(
+                tenantId, attributeMetadataModel.getScopeString(), attributeMetadataModel.getKey()),
+            attributeMetadataModel);
+      }
+
+      boolean status = collection.bulkUpsert(attributeDocs);
+      if (status) {
+        responseObserver.onNext(Empty.newBuilder().build());
+        responseObserver.onCompleted();
+      } else {
+        responseObserver.onError(
+            new RuntimeException(
+                String.format(
+                    "Could not bulk insert attributes. AttributeCreateRequest:%s", request)));
+      }
+    } catch (final Exception e) {
+      LOGGER.warn("Could not create attributes with request: " + request, e);
       responseObserver.onError(
-          new RuntimeException(
-              String.format(
-                  "Could not bulk insert attributes. AttributeCreateRequest:%s", request)));
+          Status.INTERNAL
+              .withDescription("Could not create attributes with request: " + request)
+              .asException());
     }
   }
 
