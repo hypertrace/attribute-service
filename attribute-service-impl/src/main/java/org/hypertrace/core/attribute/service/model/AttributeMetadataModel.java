@@ -77,6 +77,9 @@ public class AttributeMetadataModel implements Document {
 
   private boolean internal;
 
+  @JsonProperty(value = "value_externally_writable")
+  private boolean valueExternallyWritable;
+
   protected AttributeMetadataModel() {}
 
   public static AttributeMetadataModel fromDTO(AttributeMetadata attributeMetadata) {
@@ -105,6 +108,8 @@ public class AttributeMetadataModel implements Document {
                     stringAttributeSourceMetadataEntry ->
                         stringAttributeSourceMetadataEntry.getValue().getSourceMetadataMap())));
     attributeMetadataModel.setInternal(attributeMetadata.getInternal());
+    attributeMetadataModel.setValueExternallyWritable(
+        attributeMetadata.getValueExternallyWritable());
     return attributeMetadataModel;
   }
 
@@ -255,6 +260,14 @@ public class AttributeMetadataModel implements Document {
     this.internal = internal;
   }
 
+  public boolean isValueExternallyWritable() {
+    return valueExternallyWritable;
+  }
+
+  public void setValueExternallyWritable(final boolean valueExternallyWritable) {
+    this.valueExternallyWritable = valueExternallyWritable;
+  }
+
   public AttributeMetadata toDTO() {
     return toDTOBuilder().build();
   }
@@ -287,6 +300,7 @@ public class AttributeMetadataModel implements Document {
                                     .build())))
             .setDefinition(this.definition)
             .setInternal(internal)
+            .setValueExternallyWritable(valueExternallyWritable)
             .setCustom(!ROOT_TENANT_ID.equals(tenantId));
 
     if (unit != null) {

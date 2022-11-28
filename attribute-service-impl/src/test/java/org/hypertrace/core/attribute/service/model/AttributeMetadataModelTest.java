@@ -39,6 +39,7 @@ public class AttributeMetadataModelTest {
             .setProjection(Projection.newBuilder().setAttributeId("test"))
             .build());
     attributeMetadataModel.setInternal(true);
+    attributeMetadataModel.setValueExternallyWritable(true);
 
     String json = attributeMetadataModel.toJson();
     String expectedJson =
@@ -59,7 +60,8 @@ public class AttributeMetadataModelTest {
             + "\"value_kind\":\"TYPE_STRING\","
             + "\"display_name\":\"Some Name\","
             + "\"scope_string\":\"EVENT\","
-            + "\"tenant_id\":\"tenantId\""
+            + "\"tenant_id\":\"tenantId\","
+            + "\"value_externally_writable\":true"
             + "}";
     Assertions.assertEquals(expectedJson, json);
     AttributeMetadataModel deserializedModel = AttributeMetadataModel.fromJson(json);
@@ -215,7 +217,8 @@ public class AttributeMetadataModelTest {
             + "\"id\":\"EVENT.key\","
             + "\"value_kind\":\"TYPE_BOOL\","
             + "\"display_name\":\"Some Name\","
-            + "\"tenant_id\":\"tenantId\""
+            + "\"tenant_id\":\"tenantId\","
+            + "\"value_externally_writable\":false"
             + "}";
 
     AttributeMetadataModel deserializedModel = AttributeMetadataModel.fromJson(json);
@@ -256,7 +259,8 @@ public class AttributeMetadataModelTest {
             + "\"value_kind\":\"TYPE_STRING\","
             + "\"display_name\":\"Display\","
             + "\"scope_string\":\"EVENT\","
-            + "\"tenant_id\":null"
+            + "\"tenant_id\":null,"
+            + "\"value_externally_writable\":false"
             + "}";
     Assertions.assertEquals(expectedJson, modelFromMetadataWithoutDefinition.toJson());
   }

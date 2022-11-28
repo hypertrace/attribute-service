@@ -103,6 +103,8 @@ message AttributeMetadata {
   string scope_string = 17;
   bool internal = 18;
   bool custom = 19;
+  // Whether the attribute value can be created, updated or deleted externally
+  bool value_externally_writable = 20;
 }
 
 message AttributeSourceMetadata {
