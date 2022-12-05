@@ -145,6 +145,11 @@ message AttributeMetadataFilter {
 message Empty {
 }
 
+message AttributeIdentifier {
+  string scope_string = 1;
+  string key = 2;
+}
+
 message AttributeDefinition {
   oneof value {
     Projection projection = 1;
