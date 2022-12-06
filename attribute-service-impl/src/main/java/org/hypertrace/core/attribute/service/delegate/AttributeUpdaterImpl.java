@@ -19,7 +19,6 @@ import org.hypertrace.core.attribute.service.v1.UpdateMetadataRequest;
 import org.hypertrace.core.attribute.service.v1.UpdateMetadataResponse;
 import org.hypertrace.core.documentstore.Collection;
 import org.hypertrace.core.documentstore.Document;
-import org.hypertrace.core.documentstore.expression.impl.LogicalExpression;
 import org.hypertrace.core.documentstore.expression.type.FilterTypeExpression;
 import org.hypertrace.core.documentstore.model.subdoc.SubDocumentUpdate;
 import org.hypertrace.core.documentstore.query.Query;
@@ -78,13 +77,14 @@ public class AttributeUpdaterImpl implements AttributeUpdater {
     }
   }
 
-  private LogicalExpression buildFilter(UpdateMetadataRequest request, String tenantId) {
+  private FilterTypeExpression buildFilter(
+      final UpdateMetadataRequest request, final String tenantId) {
     final FilterTypeExpression idFilter = filterBuilder.buildIdFilter(request.getAttributeId());
     final FilterTypeExpression tenantIdFilter = filterBuilder.buildTenantIdFilter(tenantId);
     return and(idFilter, tenantIdFilter);
   }
 
-  private List<SubDocumentUpdate> buildUpdates(UpdateMetadataRequest request) {
+  private List<SubDocumentUpdate> buildUpdates(final UpdateMetadataRequest request) {
     return request.getUpdatesList().stream()
         .map(updateBuilder::buildUpdate)
         .flatMap(Optional::stream)
