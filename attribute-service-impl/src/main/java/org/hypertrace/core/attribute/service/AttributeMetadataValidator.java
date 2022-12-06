@@ -18,6 +18,7 @@ import org.hypertrace.core.attribute.service.v1.AttributeMetadata;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadataFilter;
 import org.hypertrace.core.attribute.service.v1.AttributeScope;
 import org.hypertrace.core.attribute.service.v1.AttributeType;
+import org.hypertrace.core.grpcutils.context.RequestContext;
 
 /** Validates {@link AttributeCreateRequest} */
 public class AttributeMetadataValidator {
@@ -91,6 +92,16 @@ public class AttributeMetadataValidator {
     } else {
       return attributeMetadataFilter.toBuilder().setCustom(true).build();
     }
+  }
+
+  public static String validateContextAndGetTenantId(final RequestContext context) {
+    return context
+        .getTenantId()
+        .orElseThrow(
+            () ->
+                Status.UNAUTHENTICATED
+                    .withDescription("Tenant id is missing in the request.")
+                    .asRuntimeException());
   }
 
   private static void validate(AttributeMetadata attributeMetadata) {

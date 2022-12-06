@@ -30,6 +30,8 @@ import org.hypertrace.core.attribute.service.v1.AttributeSourceMetadataDeleteReq
 import org.hypertrace.core.attribute.service.v1.AttributeSourceMetadataUpdateRequest;
 import org.hypertrace.core.attribute.service.v1.AttributeType;
 import org.hypertrace.core.attribute.service.v1.GetAttributesRequest;
+import org.hypertrace.core.attribute.service.v1.Update;
+import org.hypertrace.core.attribute.service.v1.UpdateMetadataRequest;
 import org.hypertrace.core.grpcutils.client.RequestContextClientCallCredsProviderFactory;
 import org.hypertrace.core.grpcutils.context.RequestContext;
 import org.hypertrace.core.serviceframework.IntegrationTestServerUtil;
@@ -488,6 +490,63 @@ public class AttributeServiceTest {
                             .build()))
             .getAttributesList();
     assertEquals(List.of(expectedAttributeMetadata2), attributeMetadataList);
+  }
+
+  @Test
+  public void testUpdateAttributeMetadata() {
+    final AttributeMetadata createdMetadata =
+        AttributeMetadata.newBuilder()
+            .setFqn("name-1")
+            .setValueKind(AttributeKind.TYPE_STRING)
+            .setKey("key-1")
+            .setDisplayName("displayname-1")
+            .setMaterialized(false)
+            .setUnit("unit-1")
+            .setType(AttributeType.ATTRIBUTE)
+            .addAllLabels(List.of("label-1", "label-2"))
+            .addAllSupportedAggregations(List.of(AggregateFunction.SUM, AggregateFunction.AVG))
+            .setOnlyAggregationsAllowed(true)
+            .addSources(AttributeSource.EDS)
+            .setGroupable(true)
+            .setDefinition(AttributeDefinition.newBuilder().setSourcePath("sourcepath-1"))
+            .setScopeString(AttributeScope.EVENT.name())
+            .build();
+
+    final AttributeCreateRequest createRequest =
+        AttributeCreateRequest.newBuilder().addAttributes(createdMetadata).build();
+    RequestContext.forTenantId(TEST_TENANT_ID).call(() -> stub.create(createRequest));
+
+    final GetAttributesRequest getRequest =
+        GetAttributesRequest.newBuilder()
+            .setFilter(
+                AttributeMetadataFilter.newBuilder()
+                    .addScopeString(AttributeScope.EVENT.name())
+                    .addKey("key-1"))
+            .build();
+    final List<AttributeMetadata> attributeMetadataList =
+        RequestContext.forTenantId(TEST_TENANT_ID)
+            .call(() -> stub.getAttributes(getRequest))
+            .getAttributesList();
+    assertEquals(1, attributeMetadataList.size());
+
+    final UpdateMetadataRequest updateRequest =
+        UpdateMetadataRequest.newBuilder()
+            .setAttributeId(attributeMetadataList.get(0).getId())
+            .addUpdates(Update.newBuilder().setDisplayName("updated-display-name"))
+            .build();
+    final AttributeMetadata updatedMetadata =
+        createdMetadata.toBuilder()
+            .setDisplayName("updated-display-name")
+            .setId("EVENT.key-1")
+            .setScope(AttributeScope.EVENT)
+            .setCustom(true)
+            .build();
+
+    final AttributeMetadata attributeMetadata =
+        RequestContext.forTenantId(TEST_TENANT_ID)
+            .call(() -> stub.updateMetadata(updateRequest))
+            .getAttribute();
+    assertEquals(updatedMetadata, attributeMetadata);
   }
 
   private void testFindByFilter(boolean useRequestHeaders) {

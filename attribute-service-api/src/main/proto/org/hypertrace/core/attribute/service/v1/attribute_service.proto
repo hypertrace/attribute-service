@@ -31,7 +31,7 @@ message GetAttributesResponse {
 }
 
 message UpdateMetadataRequest {
-  AttributeIdentifier identifier = 1;
+  string attribute_id = 1;
   repeated Update updates = 2;
 }
 
@@ -42,5 +42,5 @@ message Update {
 }
 
 message UpdateMetadataResponse {
-
+  AttributeMetadata attribute = 1;
 }

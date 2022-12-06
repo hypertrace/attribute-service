@@ -20,7 +20,10 @@ import java.util.Spliterators;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-import org.hypertrace.core.attribute.service.decorator.SupportedAggregationsDecorator;
+import org.hypertrace.core.attribute.service.converter.AttributeMetadataConverter;
+import org.hypertrace.core.attribute.service.converter.AttributeMetadataConverterImpl;
+import org.hypertrace.core.attribute.service.delegate.AttributeUpdater;
+import org.hypertrace.core.attribute.service.delegate.AttributeUpdaterImpl;
 import org.hypertrace.core.attribute.service.model.AttributeMetadataDocKey;
 import org.hypertrace.core.attribute.service.model.AttributeMetadataModel;
 import org.hypertrace.core.attribute.service.utils.tenant.TenantUtils;
@@ -35,6 +38,8 @@ import org.hypertrace.core.attribute.service.v1.AttributeSourceMetadataUpdateReq
 import org.hypertrace.core.attribute.service.v1.Empty;
 import org.hypertrace.core.attribute.service.v1.GetAttributesRequest;
 import org.hypertrace.core.attribute.service.v1.GetAttributesResponse;
+import org.hypertrace.core.attribute.service.v1.UpdateMetadataRequest;
+import org.hypertrace.core.attribute.service.v1.UpdateMetadataResponse;
 import org.hypertrace.core.documentstore.Collection;
 import org.hypertrace.core.documentstore.Datastore;
 import org.hypertrace.core.documentstore.DatastoreProvider;
@@ -71,6 +76,8 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
 
   private final Collection collection;
   private final AttributeMetadataValidator validator;
+  private final AttributeMetadataConverter converter;
+  private final AttributeUpdater updater;
 
   /**
    * Initiates with a configuration. The configuration should be production configuration, but for
@@ -80,11 +87,15 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
     Datastore store = initDataStore(config);
     this.collection = store.getCollection(ATTRIBUTE_METADATA_COLLECTION);
     this.validator = new AttributeMetadataValidator(config);
+    this.converter = new AttributeMetadataConverterImpl();
+    this.updater = new AttributeUpdaterImpl(collection);
   }
 
   AttributeServiceImpl(Collection collection) {
     this.collection = collection;
     this.validator = new AttributeMetadataValidator();
+    this.converter = new AttributeMetadataConverterImpl();
+    this.updater = new AttributeUpdaterImpl(collection);
   }
 
   private Datastore initDataStore(Config config) {
@@ -358,7 +369,7 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
 
     List<AttributeMetadata> attributes =
         Streams.stream(collection.search(this.getQueryForFilter(tenantId, request.getFilter())))
-            .map(this::buildAttributeMetadata)
+            .map(converter::convert)
             .flatMap(Optional::stream)
             .collect(Collectors.toUnmodifiableList());
 
@@ -367,27 +378,26 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
     responseObserver.onCompleted();
   }
 
+  @Override
+  public void updateMetadata(
+      final UpdateMetadataRequest request,
+      final StreamObserver<UpdateMetadataResponse> responseObserver) {
+    try {
+      final UpdateMetadataResponse response = updater.update(request, RequestContext.CURRENT.get());
+      responseObserver.onNext(response);
+      responseObserver.onCompleted();
+    } catch (final Exception e) {
+      LOGGER.error("Error updating attribute metadata", e);
+      responseObserver.onError(e);
+    }
+  }
+
   private void sendResult(
       Iterator<Document> documents, StreamObserver<AttributeMetadata> responseObserver) {
     while (documents.hasNext()) {
-      this.buildAttributeMetadata(documents.next()).ifPresent(responseObserver::onNext);
+      converter.convert(documents.next()).ifPresent(responseObserver::onNext);
     }
     responseObserver.onCompleted();
-  }
-
-  private Optional<AttributeMetadata> buildAttributeMetadata(Document document) {
-    String documentJson = document.toJson();
-    try {
-      return Optional.of(
-          new SupportedAggregationsDecorator(
-                  AttributeMetadataModel.fromJson(documentJson).toDTOBuilder())
-              .decorate()
-              .build());
-    } catch (IOException exception) {
-      LOGGER.error(
-          "Unable to convert this Json String to AttributeMetadata : {}", documentJson, exception);
-      return Optional.empty();
-    }
   }
 
   private Query getQueryForFilter(
