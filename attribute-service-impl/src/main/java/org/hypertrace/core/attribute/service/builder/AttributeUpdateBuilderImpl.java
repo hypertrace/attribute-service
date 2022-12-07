@@ -1,6 +1,7 @@
 package org.hypertrace.core.attribute.service.builder;
 
 import static java.util.Map.entry;
+import static org.hypertrace.core.attribute.service.AttributeMetadataValidator.validateMaxLength;
 import static org.hypertrace.core.attribute.service.v1.Update.TypeCase.DISPLAY_NAME;
 
 import java.util.Map;
@@ -10,8 +11,6 @@ import org.hypertrace.core.attribute.service.v1.Update.TypeCase;
 import org.hypertrace.core.documentstore.model.subdoc.SubDocumentUpdate;
 
 public class AttributeUpdateBuilderImpl implements AttributeUpdateBuilder {
-  private static final int MAX_STRING_LENGTH = 1000;
-
   private static final String DISPLAY_NAME_SUB_DOC_PATH = "display_name";
 
   private static final Map<TypeCase, Function<Update, SubDocumentUpdate>> UPDATE_PROVIDER_MAP =
@@ -20,15 +19,6 @@ public class AttributeUpdateBuilderImpl implements AttributeUpdateBuilder {
   private static SubDocumentUpdate getDisplayNameUpdate(final Update update) {
     validateMaxLength(update.getDisplayName());
     return SubDocumentUpdate.of(DISPLAY_NAME_SUB_DOC_PATH, update.getDisplayName());
-  }
-
-  private static void validateMaxLength(final String string) {
-    if (string.length() > MAX_STRING_LENGTH) {
-      throw new IllegalArgumentException(
-          String.format(
-              "Length cannot be more than allowed (%d). '%s' is exceeding this limit",
-              MAX_STRING_LENGTH, string));
-    }
   }
 
   @Override
