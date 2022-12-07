@@ -52,13 +52,12 @@ public class AttributeUpdaterImpl implements AttributeUpdater {
     if (docOptional.isEmpty()) {
       throw Status.NOT_FOUND
           .withDescription(
-              String.format("No attribute found with id: %s", request.getAttributeId()))
+              String.format("No custom attribute found with id: %s.", request.getAttributeId()))
           .asRuntimeException();
     }
 
     return docOptional
-        .map(converter::convert)
-        .map(Optional::orElseThrow)
+        .flatMap(converter::convert)
         .map(metadata -> UpdateMetadataResponse.newBuilder().setAttribute(metadata).build())
         .orElseThrow();
   }
@@ -66,7 +65,7 @@ public class AttributeUpdaterImpl implements AttributeUpdater {
   private void validate(final UpdateMetadataRequest request) {
     if (request.getAttributeId().isBlank()) {
       throw Status.INVALID_ARGUMENT
-          .withDescription("Attribute id is must for updating")
+          .withDescription("Attribute id is required for updating")
           .asRuntimeException();
     }
 
@@ -80,14 +79,20 @@ public class AttributeUpdaterImpl implements AttributeUpdater {
   private FilterTypeExpression buildFilter(
       final UpdateMetadataRequest request, final String tenantId) {
     final FilterTypeExpression idFilter = filterBuilder.buildIdFilter(request.getAttributeId());
+
+    // Not filtering by the tenant hierarchy to update only the custom attributes
     final FilterTypeExpression tenantIdFilter = filterBuilder.buildTenantIdFilter(tenantId);
+
     return and(idFilter, tenantIdFilter);
   }
 
   private List<SubDocumentUpdate> buildUpdates(final UpdateMetadataRequest request) {
-    return request.getUpdatesList().stream()
-        .map(updateBuilder::buildUpdate)
-        .flatMap(Optional::stream)
-        .collect(toUnmodifiableList());
+    try {
+      return request.getUpdatesList().stream()
+          .map(updateBuilder::buildUpdate)
+          .collect(toUnmodifiableList());
+    } catch (final UnsupportedOperationException e) {
+      throw Status.INVALID_ARGUMENT.withDescription(e.getMessage()).asRuntimeException();
+    }
   }
 }

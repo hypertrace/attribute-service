@@ -2,6 +2,13 @@ package org.hypertrace.core.attribute.service;
 
 import static java.util.Objects.isNull;
 import static org.hypertrace.core.attribute.service.AttributeMetadataValidator.validateAndUpdateDeletionFilter;
+import static org.hypertrace.core.attribute.service.constants.AttributeFieldPathConstants.FQN_PATH;
+import static org.hypertrace.core.attribute.service.constants.AttributeFieldPathConstants.INTERNAL_PATH;
+import static org.hypertrace.core.attribute.service.constants.AttributeFieldPathConstants.KEY_PATH;
+import static org.hypertrace.core.attribute.service.constants.AttributeFieldPathConstants.SCOPE_PATH;
+import static org.hypertrace.core.attribute.service.constants.AttributeFieldPathConstants.SCOPE_STRING_PATH;
+import static org.hypertrace.core.attribute.service.constants.AttributeFieldPathConstants.TENANT_ID_PATH;
+import static org.hypertrace.core.attribute.service.constants.AttributeFieldPathConstants.sourceMetadataPathFor;
 import static org.hypertrace.core.attribute.service.utils.tenant.TenantUtils.ROOT_TENANT_ID;
 
 import com.google.common.collect.Streams;
@@ -32,7 +39,6 @@ import org.hypertrace.core.attribute.service.v1.AttributeMetadata;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadataFilter;
 import org.hypertrace.core.attribute.service.v1.AttributeScope;
 import org.hypertrace.core.attribute.service.v1.AttributeServiceGrpc;
-import org.hypertrace.core.attribute.service.v1.AttributeSource;
 import org.hypertrace.core.attribute.service.v1.AttributeSourceMetadataDeleteRequest;
 import org.hypertrace.core.attribute.service.v1.AttributeSourceMetadataUpdateRequest;
 import org.hypertrace.core.attribute.service.v1.Empty;
@@ -58,20 +64,9 @@ import org.slf4j.LoggerFactory;
  */
 public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceImplBase {
   private static final Logger LOGGER = LoggerFactory.getLogger(AttributeServiceImpl.class);
-  private static final String ATTRIBUTE_FQN_KEY = "fqn";
-  private static final String ATTRIBUTE_SCOPE_KEY = "scope";
-  private static final String ATTRIBUTE_SCOPE_STRING_KEY = "scope_string";
-  private static final String ATTRIBUTE_KEY_KEY = "key";
-  private static final String ATTRIBUTE_INTERNAL_KEY = "internal";
+
   private static final String DOC_STORE_CONFIG_KEY = "document.store";
   private static final String DATA_STORE_TYPE = "dataStoreType";
-  private static final String TENANT_ID_KEY = "tenant_id";
-  private static final String SOURCE_METADATA_PATH = "metadata";
-
-  private static String sourceMetadataPathFor(AttributeSource source) {
-    return String.join(".", SOURCE_METADATA_PATH, source.name());
-  }
-
   private static final String ATTRIBUTE_METADATA_COLLECTION = "attribute_metadata";
 
   private final Collection collection;
@@ -414,25 +409,25 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
     andFilters.add(getTenantIdInFilter(TenantUtils.getTenantHierarchy(tenantId)));
 
     if (fqnFilterRequest != null && !fqnFilterRequest.isEmpty()) {
-      andFilters.add(new Filter(Filter.Op.IN, ATTRIBUTE_FQN_KEY, fqnFilterRequest));
+      andFilters.add(new Filter(Filter.Op.IN, FQN_PATH, fqnFilterRequest));
     }
 
     if (!scopeFilterList.isEmpty()) {
       andFilters.add(
-          new Filter(Filter.Op.IN, ATTRIBUTE_SCOPE_STRING_KEY, scopeFilterList)
-              .or(new Filter(Filter.Op.IN, ATTRIBUTE_SCOPE_KEY, scopeFilterList)));
+          new Filter(Filter.Op.IN, SCOPE_STRING_PATH, scopeFilterList)
+              .or(new Filter(Filter.Op.IN, SCOPE_PATH, scopeFilterList)));
     }
 
     if (!keyFilterRequest.isEmpty()) {
-      andFilters.add(new Filter(Filter.Op.IN, ATTRIBUTE_KEY_KEY, keyFilterRequest));
+      andFilters.add(new Filter(Filter.Op.IN, KEY_PATH, keyFilterRequest));
     }
 
     if (attributeMetadataFilter.hasInternal()) {
       Filter internalFilter =
-          new Filter(Op.EQ, ATTRIBUTE_INTERNAL_KEY, attributeMetadataFilter.getInternal());
+          new Filter(Op.EQ, INTERNAL_PATH, attributeMetadataFilter.getInternal());
       if (!attributeMetadataFilter.getInternal()) {
         // For backwards compatibility, treat an attribute missing internal attribute as external
-        internalFilter = internalFilter.or(new Filter(Op.NOT_EXISTS, ATTRIBUTE_INTERNAL_KEY, null));
+        internalFilter = internalFilter.or(new Filter(Op.NOT_EXISTS, INTERNAL_PATH, null));
       }
       andFilters.add(internalFilter);
     }
@@ -462,9 +457,7 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
     Filter queryFilter = new Filter();
     queryFilter.setOp(Filter.Op.AND);
     queryFilter.setChildFilters(
-        new Filter[] {
-          getTenantIdEqFilter(tenantId), new Filter(Filter.Op.EQ, ATTRIBUTE_FQN_KEY, fqn)
-        });
+        new Filter[] {getTenantIdEqFilter(tenantId), new Filter(Filter.Op.EQ, FQN_PATH, fqn)});
     Query query = new Query();
     query.setFilter(queryFilter);
     return query;
@@ -476,7 +469,7 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
    * @param tenantId The tenant id.
    */
   private Filter getTenantIdEqFilter(String tenantId) {
-    return new Filter(Filter.Op.EQ, TENANT_ID_KEY, tenantId);
+    return new Filter(Filter.Op.EQ, TENANT_ID_PATH, tenantId);
   }
 
   /**
@@ -485,6 +478,6 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
    * @param tenantIds The tenant id.
    */
   private Filter getTenantIdInFilter(List<String> tenantIds) {
-    return new Filter(Filter.Op.IN, TENANT_ID_KEY, tenantIds);
+    return new Filter(Filter.Op.IN, TENANT_ID_PATH, tenantIds);
   }
 }
