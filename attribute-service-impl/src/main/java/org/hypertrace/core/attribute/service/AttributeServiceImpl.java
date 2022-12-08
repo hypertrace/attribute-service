@@ -2,6 +2,13 @@ package org.hypertrace.core.attribute.service;
 
 import static java.util.Objects.isNull;
 import static org.hypertrace.core.attribute.service.AttributeMetadataValidator.validateAndUpdateDeletionFilter;
+import static org.hypertrace.core.attribute.service.constants.AttributeFieldPathConstants.FQN_PATH;
+import static org.hypertrace.core.attribute.service.constants.AttributeFieldPathConstants.INTERNAL_PATH;
+import static org.hypertrace.core.attribute.service.constants.AttributeFieldPathConstants.KEY_PATH;
+import static org.hypertrace.core.attribute.service.constants.AttributeFieldPathConstants.SCOPE_PATH;
+import static org.hypertrace.core.attribute.service.constants.AttributeFieldPathConstants.SCOPE_STRING_PATH;
+import static org.hypertrace.core.attribute.service.constants.AttributeFieldPathConstants.TENANT_ID_PATH;
+import static org.hypertrace.core.attribute.service.constants.AttributeFieldPathConstants.sourceMetadataPathFor;
 import static org.hypertrace.core.attribute.service.utils.tenant.TenantUtils.ROOT_TENANT_ID;
 
 import com.google.common.collect.Streams;
@@ -20,7 +27,10 @@ import java.util.Spliterators;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-import org.hypertrace.core.attribute.service.decorator.SupportedAggregationsDecorator;
+import org.hypertrace.core.attribute.service.converter.AttributeMetadataConverter;
+import org.hypertrace.core.attribute.service.converter.AttributeMetadataConverterImpl;
+import org.hypertrace.core.attribute.service.delegate.AttributeUpdater;
+import org.hypertrace.core.attribute.service.delegate.AttributeUpdaterImpl;
 import org.hypertrace.core.attribute.service.model.AttributeMetadataDocKey;
 import org.hypertrace.core.attribute.service.model.AttributeMetadataModel;
 import org.hypertrace.core.attribute.service.utils.tenant.TenantUtils;
@@ -29,12 +39,13 @@ import org.hypertrace.core.attribute.service.v1.AttributeMetadata;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadataFilter;
 import org.hypertrace.core.attribute.service.v1.AttributeScope;
 import org.hypertrace.core.attribute.service.v1.AttributeServiceGrpc;
-import org.hypertrace.core.attribute.service.v1.AttributeSource;
 import org.hypertrace.core.attribute.service.v1.AttributeSourceMetadataDeleteRequest;
 import org.hypertrace.core.attribute.service.v1.AttributeSourceMetadataUpdateRequest;
 import org.hypertrace.core.attribute.service.v1.Empty;
 import org.hypertrace.core.attribute.service.v1.GetAttributesRequest;
 import org.hypertrace.core.attribute.service.v1.GetAttributesResponse;
+import org.hypertrace.core.attribute.service.v1.UpdateMetadataRequest;
+import org.hypertrace.core.attribute.service.v1.UpdateMetadataResponse;
 import org.hypertrace.core.documentstore.Collection;
 import org.hypertrace.core.documentstore.Datastore;
 import org.hypertrace.core.documentstore.DatastoreProvider;
@@ -53,24 +64,15 @@ import org.slf4j.LoggerFactory;
  */
 public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceImplBase {
   private static final Logger LOGGER = LoggerFactory.getLogger(AttributeServiceImpl.class);
-  private static final String ATTRIBUTE_FQN_KEY = "fqn";
-  private static final String ATTRIBUTE_SCOPE_KEY = "scope";
-  private static final String ATTRIBUTE_SCOPE_STRING_KEY = "scope_string";
-  private static final String ATTRIBUTE_KEY_KEY = "key";
-  private static final String ATTRIBUTE_INTERNAL_KEY = "internal";
+
   private static final String DOC_STORE_CONFIG_KEY = "document.store";
   private static final String DATA_STORE_TYPE = "dataStoreType";
-  private static final String TENANT_ID_KEY = "tenant_id";
-  private static final String SOURCE_METADATA_PATH = "metadata";
-
-  private static String sourceMetadataPathFor(AttributeSource source) {
-    return String.join(".", SOURCE_METADATA_PATH, source.name());
-  }
-
   private static final String ATTRIBUTE_METADATA_COLLECTION = "attribute_metadata";
 
   private final Collection collection;
   private final AttributeMetadataValidator validator;
+  private final AttributeMetadataConverter converter;
+  private final AttributeUpdater updater;
 
   /**
    * Initiates with a configuration. The configuration should be production configuration, but for
@@ -80,11 +82,15 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
     Datastore store = initDataStore(config);
     this.collection = store.getCollection(ATTRIBUTE_METADATA_COLLECTION);
     this.validator = new AttributeMetadataValidator(config);
+    this.converter = new AttributeMetadataConverterImpl();
+    this.updater = new AttributeUpdaterImpl(collection);
   }
 
   AttributeServiceImpl(Collection collection) {
     this.collection = collection;
     this.validator = new AttributeMetadataValidator();
+    this.converter = new AttributeMetadataConverterImpl();
+    this.updater = new AttributeUpdaterImpl(collection);
   }
 
   private Datastore initDataStore(Config config) {
@@ -358,7 +364,7 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
 
     List<AttributeMetadata> attributes =
         Streams.stream(collection.search(this.getQueryForFilter(tenantId, request.getFilter())))
-            .map(this::buildAttributeMetadata)
+            .map(converter::convert)
             .flatMap(Optional::stream)
             .collect(Collectors.toUnmodifiableList());
 
@@ -367,27 +373,26 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
     responseObserver.onCompleted();
   }
 
+  @Override
+  public void updateMetadata(
+      final UpdateMetadataRequest request,
+      final StreamObserver<UpdateMetadataResponse> responseObserver) {
+    try {
+      final UpdateMetadataResponse response = updater.update(request, RequestContext.CURRENT.get());
+      responseObserver.onNext(response);
+      responseObserver.onCompleted();
+    } catch (final Exception e) {
+      LOGGER.error("Error updating attribute metadata", e);
+      responseObserver.onError(e);
+    }
+  }
+
   private void sendResult(
       Iterator<Document> documents, StreamObserver<AttributeMetadata> responseObserver) {
     while (documents.hasNext()) {
-      this.buildAttributeMetadata(documents.next()).ifPresent(responseObserver::onNext);
+      converter.convert(documents.next()).ifPresent(responseObserver::onNext);
     }
     responseObserver.onCompleted();
-  }
-
-  private Optional<AttributeMetadata> buildAttributeMetadata(Document document) {
-    String documentJson = document.toJson();
-    try {
-      return Optional.of(
-          new SupportedAggregationsDecorator(
-                  AttributeMetadataModel.fromJson(documentJson).toDTOBuilder())
-              .decorate()
-              .build());
-    } catch (IOException exception) {
-      LOGGER.error(
-          "Unable to convert this Json String to AttributeMetadata : {}", documentJson, exception);
-      return Optional.empty();
-    }
   }
 
   private Query getQueryForFilter(
@@ -404,25 +409,25 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
     andFilters.add(getTenantIdInFilter(TenantUtils.getTenantHierarchy(tenantId)));
 
     if (fqnFilterRequest != null && !fqnFilterRequest.isEmpty()) {
-      andFilters.add(new Filter(Filter.Op.IN, ATTRIBUTE_FQN_KEY, fqnFilterRequest));
+      andFilters.add(new Filter(Filter.Op.IN, FQN_PATH, fqnFilterRequest));
     }
 
     if (!scopeFilterList.isEmpty()) {
       andFilters.add(
-          new Filter(Filter.Op.IN, ATTRIBUTE_SCOPE_STRING_KEY, scopeFilterList)
-              .or(new Filter(Filter.Op.IN, ATTRIBUTE_SCOPE_KEY, scopeFilterList)));
+          new Filter(Filter.Op.IN, SCOPE_STRING_PATH, scopeFilterList)
+              .or(new Filter(Filter.Op.IN, SCOPE_PATH, scopeFilterList)));
     }
 
     if (!keyFilterRequest.isEmpty()) {
-      andFilters.add(new Filter(Filter.Op.IN, ATTRIBUTE_KEY_KEY, keyFilterRequest));
+      andFilters.add(new Filter(Filter.Op.IN, KEY_PATH, keyFilterRequest));
     }
 
     if (attributeMetadataFilter.hasInternal()) {
       Filter internalFilter =
-          new Filter(Op.EQ, ATTRIBUTE_INTERNAL_KEY, attributeMetadataFilter.getInternal());
+          new Filter(Op.EQ, INTERNAL_PATH, attributeMetadataFilter.getInternal());
       if (!attributeMetadataFilter.getInternal()) {
         // For backwards compatibility, treat an attribute missing internal attribute as external
-        internalFilter = internalFilter.or(new Filter(Op.NOT_EXISTS, ATTRIBUTE_INTERNAL_KEY, null));
+        internalFilter = internalFilter.or(new Filter(Op.NOT_EXISTS, INTERNAL_PATH, null));
       }
       andFilters.add(internalFilter);
     }
@@ -452,9 +457,7 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
     Filter queryFilter = new Filter();
     queryFilter.setOp(Filter.Op.AND);
     queryFilter.setChildFilters(
-        new Filter[] {
-          getTenantIdEqFilter(tenantId), new Filter(Filter.Op.EQ, ATTRIBUTE_FQN_KEY, fqn)
-        });
+        new Filter[] {getTenantIdEqFilter(tenantId), new Filter(Filter.Op.EQ, FQN_PATH, fqn)});
     Query query = new Query();
     query.setFilter(queryFilter);
     return query;
@@ -466,7 +469,7 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
    * @param tenantId The tenant id.
    */
   private Filter getTenantIdEqFilter(String tenantId) {
-    return new Filter(Filter.Op.EQ, TENANT_ID_KEY, tenantId);
+    return new Filter(Filter.Op.EQ, TENANT_ID_PATH, tenantId);
   }
 
   /**
@@ -475,6 +478,6 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
    * @param tenantIds The tenant id.
    */
   private Filter getTenantIdInFilter(List<String> tenantIds) {
-    return new Filter(Filter.Op.IN, TENANT_ID_KEY, tenantIds);
+    return new Filter(Filter.Op.IN, TENANT_ID_PATH, tenantIds);
   }
 }

@@ -12,6 +12,7 @@ import java.util.Objects;
 import javax.annotation.Nonnull;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadata;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadataFilter;
+import org.hypertrace.core.attribute.service.v1.Update;
 import org.hypertrace.core.grpcutils.client.RequestContextClientCallCredsProviderFactory;
 
 public interface CachingAttributeClient {
@@ -27,6 +28,8 @@ public interface CachingAttributeClient {
   Completable create(final Collection<AttributeMetadata> attributeMetadata);
 
   Completable delete(final AttributeMetadataFilter filter);
+
+  Single<AttributeMetadata> update(final String id, final Collection<Update> updates);
 
   static Builder builder(@Nonnull Channel channel) {
     return new Builder(Objects.requireNonNull(channel));

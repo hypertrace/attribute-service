@@ -19,6 +19,7 @@ service AttributeService {
     option deprecated = true;
   };
   rpc GetAttributes (GetAttributesRequest) returns (GetAttributesResponse);
+  rpc UpdateMetadata (UpdateMetadataRequest) returns (UpdateMetadataResponse);
 }
 
 message GetAttributesRequest {
@@ -27,4 +28,19 @@ message GetAttributesRequest {
 
 message GetAttributesResponse {
   repeated AttributeMetadata attributes = 1;
+}
+
+message UpdateMetadataRequest {
+  string attribute_id = 1;
+  repeated Update updates = 2;
+}
+
+message Update {
+  oneof type {
+    string display_name = 1;
+  }
+}
+
+message UpdateMetadataResponse {
+  AttributeMetadata attribute = 1;
 }

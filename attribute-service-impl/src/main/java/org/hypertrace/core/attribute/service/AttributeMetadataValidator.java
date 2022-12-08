@@ -18,10 +18,13 @@ import org.hypertrace.core.attribute.service.v1.AttributeMetadata;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadataFilter;
 import org.hypertrace.core.attribute.service.v1.AttributeScope;
 import org.hypertrace.core.attribute.service.v1.AttributeType;
+import org.hypertrace.core.grpcutils.context.RequestContext;
 
 /** Validates {@link AttributeCreateRequest} */
 public class AttributeMetadataValidator {
   private static final String MAX_CUSTOM_ATTRIBUTES_PER_TENANT = "max.custom.attributes.per.tenant";
+  private static final int MAX_STRING_LENGTH = 1000;
+
   private final long maxCustomAttributesPerTenant;
 
   AttributeMetadataValidator() {
@@ -93,6 +96,25 @@ public class AttributeMetadataValidator {
     }
   }
 
+  public static String validateContextAndGetTenantId(final RequestContext context) {
+    return context
+        .getTenantId()
+        .orElseThrow(
+            () ->
+                Status.UNAUTHENTICATED
+                    .withDescription("Tenant id is missing in the request.")
+                    .asRuntimeException());
+  }
+
+  public static void validateMaxLength(final String string) {
+    if (string.length() > MAX_STRING_LENGTH) {
+      throw new IllegalArgumentException(
+          String.format(
+              "Length cannot be more than allowed (%d). '%s' is exceeding this limit",
+              MAX_STRING_LENGTH, string));
+    }
+  }
+
   private static void validate(AttributeMetadata attributeMetadata) {
     if (resolveScopeString(attributeMetadata).equals(AttributeScope.SCOPE_UNDEFINED.name())
         || Strings.isNullOrEmpty(attributeMetadata.getKey())
@@ -103,6 +125,8 @@ public class AttributeMetadataValidator {
         || attributeMetadata.getType().equals(AttributeType.TYPE_UNDEFINED)) {
       throw new IllegalArgumentException(String.format("Invalid attribute:%s", attributeMetadata));
     }
+
+    // TODO: Add length validation for all the string fields
   }
 
   private void verifyCustomAttributeLimitNotReached(

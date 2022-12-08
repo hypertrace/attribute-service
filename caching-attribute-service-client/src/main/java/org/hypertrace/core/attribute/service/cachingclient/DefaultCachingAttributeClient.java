@@ -27,6 +27,9 @@ import org.hypertrace.core.attribute.service.v1.AttributeServiceGrpc.AttributeSe
 import org.hypertrace.core.attribute.service.v1.Empty;
 import org.hypertrace.core.attribute.service.v1.GetAttributesRequest;
 import org.hypertrace.core.attribute.service.v1.GetAttributesResponse;
+import org.hypertrace.core.attribute.service.v1.Update;
+import org.hypertrace.core.attribute.service.v1.UpdateMetadataRequest;
+import org.hypertrace.core.attribute.service.v1.UpdateMetadataResponse;
 
 @Slf4j
 class DefaultCachingAttributeClient implements CachingAttributeClient {
@@ -107,6 +110,18 @@ class DefaultCachingAttributeClient implements CachingAttributeClient {
             streamObserver -> this.attributeServiceClient.delete(filter, streamObserver))
         .doOnNext(empty -> cache.invalidate(key))
         .ignoreElements();
+  }
+
+  @Override
+  public Single<AttributeMetadata> update(final String id, final Collection<Update> updates) {
+    final UpdateMetadataRequest request =
+        UpdateMetadataRequest.newBuilder().setAttributeId(id).addAllUpdates(updates).build();
+    final AttributeCacheContextKey key = AttributeCacheContextKey.forCurrentContext();
+    return key.getExecutionContext().<UpdateMetadataResponse>stream(
+            streamObserver -> this.attributeServiceClient.updateMetadata(request, streamObserver))
+        .doOnNext(response -> cache.invalidate(key))
+        .map(UpdateMetadataResponse::getAttribute)
+        .firstOrError();
   }
 
   private Single<Table<String, String, AttributeMetadata>> loadTable(AttributeCacheContextKey key) {
