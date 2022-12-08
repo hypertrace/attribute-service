@@ -8,7 +8,6 @@ import io.grpc.Status;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
-import org.hypertrace.core.attribute.service.AttributeMetadataValidator;
 import org.hypertrace.core.attribute.service.builder.AttributeFilterBuilder;
 import org.hypertrace.core.attribute.service.builder.AttributeFilterBuilderImpl;
 import org.hypertrace.core.attribute.service.builder.AttributeUpdateBuilder;
@@ -17,6 +16,9 @@ import org.hypertrace.core.attribute.service.converter.AttributeMetadataConverte
 import org.hypertrace.core.attribute.service.converter.AttributeMetadataConverterImpl;
 import org.hypertrace.core.attribute.service.v1.UpdateMetadataRequest;
 import org.hypertrace.core.attribute.service.v1.UpdateMetadataResponse;
+import org.hypertrace.core.attribute.service.validator.AttributeMetadataValidator;
+import org.hypertrace.core.attribute.service.validator.StringLengthValidator;
+import org.hypertrace.core.attribute.service.validator.StringLengthValidatorImpl;
 import org.hypertrace.core.documentstore.Collection;
 import org.hypertrace.core.documentstore.Document;
 import org.hypertrace.core.documentstore.expression.type.FilterTypeExpression;
@@ -29,12 +31,14 @@ public class AttributeUpdaterImpl implements AttributeUpdater {
   private final AttributeMetadataConverter converter;
   private final AttributeFilterBuilder filterBuilder;
   private final AttributeUpdateBuilder updateBuilder;
+  private final StringLengthValidator stringLengthValidator;
 
   public AttributeUpdaterImpl(final Collection collection) {
     this.collection = collection;
     this.converter = new AttributeMetadataConverterImpl();
     this.filterBuilder = new AttributeFilterBuilderImpl();
     this.updateBuilder = new AttributeUpdateBuilderImpl();
+    this.stringLengthValidator = new StringLengthValidatorImpl();
   }
 
   @Override
@@ -74,6 +78,8 @@ public class AttributeUpdaterImpl implements AttributeUpdater {
           .withDescription("At least one update is required")
           .asRuntimeException();
     }
+
+    stringLengthValidator.validate(request);
   }
 
   private FilterTypeExpression buildFilter(
@@ -87,12 +93,8 @@ public class AttributeUpdaterImpl implements AttributeUpdater {
   }
 
   private List<SubDocumentUpdate> buildUpdates(final UpdateMetadataRequest request) {
-    try {
-      return request.getUpdatesList().stream()
-          .map(updateBuilder::buildUpdate)
-          .collect(toUnmodifiableList());
-    } catch (final UnsupportedOperationException e) {
-      throw Status.INVALID_ARGUMENT.withDescription(e.getMessage()).asRuntimeException();
-    }
+    return request.getUpdatesList().stream()
+        .map(updateBuilder::buildUpdate)
+        .collect(toUnmodifiableList());
   }
 }

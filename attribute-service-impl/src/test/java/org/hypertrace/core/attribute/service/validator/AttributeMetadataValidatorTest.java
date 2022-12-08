@@ -1,4 +1,4 @@
-package org.hypertrace.core.attribute.service;
+package org.hypertrace.core.attribute.service.validator;
 
 import static org.hypertrace.core.attribute.service.utils.tenant.TenantUtils.ROOT_TENANT_ID;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;

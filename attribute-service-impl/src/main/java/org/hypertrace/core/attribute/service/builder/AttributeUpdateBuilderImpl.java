@@ -1,9 +1,9 @@
 package org.hypertrace.core.attribute.service.builder;
 
 import static java.util.Map.entry;
-import static org.hypertrace.core.attribute.service.AttributeMetadataValidator.validateMaxLength;
 import static org.hypertrace.core.attribute.service.v1.Update.TypeCase.DISPLAY_NAME;
 
+import io.grpc.Status;
 import java.util.Map;
 import java.util.function.Function;
 import org.hypertrace.core.attribute.service.v1.Update;
@@ -17,7 +17,6 @@ public class AttributeUpdateBuilderImpl implements AttributeUpdateBuilder {
       Map.ofEntries(entry(DISPLAY_NAME, AttributeUpdateBuilderImpl::getDisplayNameUpdate));
 
   private static SubDocumentUpdate getDisplayNameUpdate(final Update update) {
-    validateMaxLength(update.getDisplayName());
     return SubDocumentUpdate.of(DISPLAY_NAME_SUB_DOC_PATH, update.getDisplayName());
   }
 
@@ -27,8 +26,9 @@ public class AttributeUpdateBuilderImpl implements AttributeUpdateBuilder {
     final Function<Update, SubDocumentUpdate> updater = UPDATE_PROVIDER_MAP.get(typeCase);
 
     if (updater == null) {
-      throw new UnsupportedOperationException(
-          String.format("Updating %s is not supported yet", typeCase));
+      throw Status.UNIMPLEMENTED
+          .withDescription(String.format("Updating %s is not supported yet", typeCase))
+          .asRuntimeException();
     }
 
     return updater.apply(update);
