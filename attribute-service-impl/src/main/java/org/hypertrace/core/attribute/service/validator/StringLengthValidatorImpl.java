@@ -20,6 +20,7 @@ public class StringLengthValidatorImpl implements StringLengthValidator {
 
   private void validateProto(final Message message, final Descriptor descriptor) {
     final List<FieldDescriptor> fieldDescriptors = descriptor.getFields();
+
     for (final FieldDescriptor fieldDescriptor : fieldDescriptors) {
       if (fieldDescriptor.getJavaType() == MESSAGE) {
         validateProto(message, fieldDescriptor);
@@ -29,7 +30,7 @@ public class StringLengthValidatorImpl implements StringLengthValidator {
     }
   }
 
-  private void validateProto(Message message, FieldDescriptor fieldDescriptor) {
+  private void validateProto(final Message message, final FieldDescriptor fieldDescriptor) {
     if (fieldDescriptor.isRepeated()) {
       validateRepeatedProto(message, fieldDescriptor);
     } else {
@@ -37,8 +38,9 @@ public class StringLengthValidatorImpl implements StringLengthValidator {
     }
   }
 
-  private void validateRepeatedProto(Message message, FieldDescriptor fieldDescriptor) {
+  private void validateRepeatedProto(final Message message, final FieldDescriptor fieldDescriptor) {
     final Object object = message.getField(fieldDescriptor);
+
     if (object instanceof List) {
       final List<?> values = (List<?>) object;
       values.stream()
@@ -48,8 +50,9 @@ public class StringLengthValidatorImpl implements StringLengthValidator {
     }
   }
 
-  private void validateSingleProto(Message message, FieldDescriptor fieldDescriptor) {
+  private void validateSingleProto(final Message message, final FieldDescriptor fieldDescriptor) {
     final Object object = message.getField(fieldDescriptor);
+    
     if (object instanceof Message) {
       final Message value = (Message) object;
       validateProto(value, fieldDescriptor.getMessageType());
