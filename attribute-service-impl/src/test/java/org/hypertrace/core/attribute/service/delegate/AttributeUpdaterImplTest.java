@@ -106,7 +106,7 @@ class AttributeUpdaterImplTest {
             .setDisplayName(IntStream.range(0, 1001).mapToObj(i -> "a").collect(joining()))
             .build();
     final UpdateMetadataRequest request =
-        UpdateMetadataRequest.newBuilder().addUpdates(update).build();
+        UpdateMetadataRequest.newBuilder().setAttributeId("attributeId").addUpdates(update).build();
     assertThrows(
         StatusRuntimeException.class, () -> attributeUpdaterImpl.update(request, mockContext));
   }
