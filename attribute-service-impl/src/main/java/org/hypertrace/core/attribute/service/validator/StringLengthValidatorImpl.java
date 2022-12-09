@@ -52,7 +52,7 @@ public class StringLengthValidatorImpl implements StringLengthValidator {
 
   private void validateSingleProto(final Message message, final FieldDescriptor fieldDescriptor) {
     final Object object = message.getField(fieldDescriptor);
-    
+
     if (object instanceof Message) {
       final Message value = (Message) object;
       validateProto(value, fieldDescriptor.getMessageType());
