@@ -1,5 +1,6 @@
 package org.hypertrace.core.attribute.service.delegate;
 
+import static java.util.stream.Collectors.joining;
 import static org.hypertrace.core.attribute.service.v1.AggregateFunction.DISTINCT_COUNT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -12,6 +13,7 @@ import com.google.common.collect.Lists;
 import io.grpc.StatusRuntimeException;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.stream.IntStream;
 import org.hypertrace.core.attribute.service.v1.AttributeDefinition;
 import org.hypertrace.core.attribute.service.v1.AttributeKind;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadata;
@@ -95,6 +97,18 @@ class AttributeUpdaterImplTest {
 
     final UpdateMetadataResponse result = attributeUpdaterImpl.update(request, mockContext);
     assertEquals(expectedResult, result);
+  }
+
+  @Test
+  void testBuildUpdateLengthyDisplayName() {
+    final Update update =
+        Update.newBuilder()
+            .setDisplayName(IntStream.range(0, 1001).mapToObj(i -> "a").collect(joining()))
+            .build();
+    final UpdateMetadataRequest request =
+        UpdateMetadataRequest.newBuilder().setAttributeId("attributeId").addUpdates(update).build();
+    assertThrows(
+        StatusRuntimeException.class, () -> attributeUpdaterImpl.update(request, mockContext));
   }
 
   @Test

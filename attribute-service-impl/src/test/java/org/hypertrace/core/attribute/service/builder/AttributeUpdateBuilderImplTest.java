@@ -1,9 +1,7 @@
 package org.hypertrace.core.attribute.service.builder;
 
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toUnmodifiableSet;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -12,7 +10,6 @@ import com.google.common.collect.Sets;
 import com.google.protobuf.Internal.EnumLite;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.hypertrace.core.attribute.service.v1.Update;
 import org.hypertrace.core.documentstore.model.subdoc.PrimitiveSubDocumentValue;
@@ -47,16 +44,6 @@ class AttributeUpdateBuilderImplTest {
     assertEquals("display_name", result.getSubDocument().getPath());
     assertEquals(
         "new_display_name", ((PrimitiveSubDocumentValue) result.getSubDocumentValue()).getValue());
-  }
-
-  @Test
-  void testBuildUpdateLengthyDisplayName() {
-    final Update update =
-        Update.newBuilder()
-            .setDisplayName(IntStream.range(0, 1001).mapToObj(i -> "a").collect(joining()))
-            .build();
-    assertThrows(
-        IllegalArgumentException.class, () -> attributeUpdateBuilderImpl.buildUpdate(update));
   }
 
   private static <SOURCE, ENUM extends Enum<ENUM> & EnumLite> void verifyAllOneOfCasesCovered(

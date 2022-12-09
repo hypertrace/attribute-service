@@ -1,4 +1,4 @@
-package org.hypertrace.core.attribute.service;
+package org.hypertrace.core.attribute.service.validator;
 
 import static org.hypertrace.core.attribute.service.util.AttributeScopeUtil.resolveScopeString;
 import static org.hypertrace.core.attribute.service.utils.tenant.TenantUtils.ROOT_TENANT_ID;
@@ -24,14 +24,17 @@ import org.hypertrace.core.grpcutils.context.RequestContext;
 public class AttributeMetadataValidator {
   private static final String MAX_CUSTOM_ATTRIBUTES_PER_TENANT = "max.custom.attributes.per.tenant";
   private static final int MAX_STRING_LENGTH = 1000;
+  private static final StringLengthValidator stringLengthValidator =
+      new StringLengthValidatorImpl();
+  ;
 
   private final long maxCustomAttributesPerTenant;
 
-  AttributeMetadataValidator() {
+  public AttributeMetadataValidator() {
     this.maxCustomAttributesPerTenant = 5;
   }
 
-  AttributeMetadataValidator(final Config config) {
+  public AttributeMetadataValidator(final Config config) {
     this.maxCustomAttributesPerTenant = config.getInt(MAX_CUSTOM_ATTRIBUTES_PER_TENANT);
   }
 
@@ -106,15 +109,6 @@ public class AttributeMetadataValidator {
                     .asRuntimeException());
   }
 
-  public static void validateMaxLength(final String string) {
-    if (string.length() > MAX_STRING_LENGTH) {
-      throw new IllegalArgumentException(
-          String.format(
-              "Length cannot be more than allowed (%d). '%s' is exceeding this limit",
-              MAX_STRING_LENGTH, string));
-    }
-  }
-
   private static void validate(AttributeMetadata attributeMetadata) {
     if (resolveScopeString(attributeMetadata).equals(AttributeScope.SCOPE_UNDEFINED.name())
         || Strings.isNullOrEmpty(attributeMetadata.getKey())
@@ -126,7 +120,7 @@ public class AttributeMetadataValidator {
       throw new IllegalArgumentException(String.format("Invalid attribute:%s", attributeMetadata));
     }
 
-    // TODO: Add length validation for all the string fields
+    stringLengthValidator.validate(attributeMetadata);
   }
 
   private void verifyCustomAttributeLimitNotReached(

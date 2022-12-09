@@ -1,15 +1,15 @@
 package org.hypertrace.core.attribute.service;
 
 import static java.util.Objects.isNull;
-import static org.hypertrace.core.attribute.service.AttributeMetadataValidator.validateAndUpdateDeletionFilter;
 import static org.hypertrace.core.attribute.service.constants.AttributeFieldPathConstants.FQN_PATH;
 import static org.hypertrace.core.attribute.service.constants.AttributeFieldPathConstants.INTERNAL_PATH;
 import static org.hypertrace.core.attribute.service.constants.AttributeFieldPathConstants.KEY_PATH;
 import static org.hypertrace.core.attribute.service.constants.AttributeFieldPathConstants.SCOPE_PATH;
 import static org.hypertrace.core.attribute.service.constants.AttributeFieldPathConstants.SCOPE_STRING_PATH;
+import static org.hypertrace.core.attribute.service.constants.AttributeFieldPathConstants.SOURCE_METADATA_PATH;
 import static org.hypertrace.core.attribute.service.constants.AttributeFieldPathConstants.TENANT_ID_PATH;
-import static org.hypertrace.core.attribute.service.constants.AttributeFieldPathConstants.sourceMetadataPathFor;
 import static org.hypertrace.core.attribute.service.utils.tenant.TenantUtils.ROOT_TENANT_ID;
+import static org.hypertrace.core.attribute.service.validator.AttributeMetadataValidator.validateAndUpdateDeletionFilter;
 
 import com.google.common.collect.Streams;
 import com.google.protobuf.ServiceException;
@@ -39,6 +39,7 @@ import org.hypertrace.core.attribute.service.v1.AttributeMetadata;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadataFilter;
 import org.hypertrace.core.attribute.service.v1.AttributeScope;
 import org.hypertrace.core.attribute.service.v1.AttributeServiceGrpc;
+import org.hypertrace.core.attribute.service.v1.AttributeSource;
 import org.hypertrace.core.attribute.service.v1.AttributeSourceMetadataDeleteRequest;
 import org.hypertrace.core.attribute.service.v1.AttributeSourceMetadataUpdateRequest;
 import org.hypertrace.core.attribute.service.v1.Empty;
@@ -46,6 +47,7 @@ import org.hypertrace.core.attribute.service.v1.GetAttributesRequest;
 import org.hypertrace.core.attribute.service.v1.GetAttributesResponse;
 import org.hypertrace.core.attribute.service.v1.UpdateMetadataRequest;
 import org.hypertrace.core.attribute.service.v1.UpdateMetadataResponse;
+import org.hypertrace.core.attribute.service.validator.AttributeMetadataValidator;
 import org.hypertrace.core.documentstore.Collection;
 import org.hypertrace.core.documentstore.Datastore;
 import org.hypertrace.core.documentstore.DatastoreProvider;
@@ -73,6 +75,10 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
   private final AttributeMetadataValidator validator;
   private final AttributeMetadataConverter converter;
   private final AttributeUpdater updater;
+
+  private static String sourceMetadataPathFor(final AttributeSource source) {
+    return String.join(".", SOURCE_METADATA_PATH, source.name());
+  }
 
   /**
    * Initiates with a configuration. The configuration should be production configuration, but for
