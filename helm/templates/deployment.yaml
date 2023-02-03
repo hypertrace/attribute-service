@@ -26,7 +26,7 @@ spec:
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
         prometheus.io/scrape: "true"
-        prometheus.io/port: "{{ .Values.containerHealthProbePort }}"
+        prometheus.io/port: "{{ .Values.containerAdminPort }}"
       {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
@@ -63,11 +63,11 @@ spec:
           image: "{{ include "attributeservice.image" . }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - name: grpc-port
+            - name: {{ .Values.containerPortName }}
               containerPort: {{ .Values.containerPort }}
               protocol: TCP
-            - name: health-port
-              containerPort: {{ .Values.containerHealthProbePort }}
+            - name: {{ .Values.containerAdminPortName }}
+              containerPort: {{ .Values.containerAdminPort }}
               protocol: TCP
           env:
             - name: SERVICE_NAME
@@ -90,13 +90,13 @@ spec:
             timeoutSeconds: {{ int .Values.livenessProbe.timeoutSeconds }}
             httpGet:
               path: /health
-              port: {{ .Values.containerHealthProbePort }}
+              port: {{ .Values.containerAdminPort }}
           startupProbe:
             periodSeconds: {{ int .Values.startupProbe.periodSeconds }}
             failureThreshold: {{ int .Values.startupProbe.failureThreshold }}
             timeoutSeconds: {{ int .Values.startupProbe.timeoutSeconds }}
             httpGet:
               path: /health
-              port: {{ .Values.containerHealthProbePort }}
+              port: {{ .Values.containerAdminPort }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
