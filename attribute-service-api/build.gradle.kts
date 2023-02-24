@@ -15,7 +15,7 @@ val generateLocalGoGrpcFiles = false
 
 protobuf {
   protoc {
-    artifact = "com.google.protobuf:protoc:3.21.1"
+    artifact = "com.google.protobuf:protoc:3.21.12"
   }
   plugins {
     id("grpc_java") {
