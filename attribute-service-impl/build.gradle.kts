@@ -11,10 +11,10 @@ dependencies {
   implementation("org.hypertrace.core.documentstore:document-store:0.7.20")
   implementation("org.hypertrace.core.grpcutils:grpc-context-utils:0.9.0")
 
-  implementation("com.fasterxml.jackson.core:jackson-databind:2.13.2.2")
+  implementation("com.fasterxml.jackson.core:jackson-databind:2.14.2")
   implementation("com.typesafe:config:1.4.1")
   implementation("org.slf4j:slf4j-api:1.7.32")
-  implementation("com.google.protobuf:protobuf-java-util:3.19.2")
+  implementation("com.google.protobuf:protobuf-java-util:3.21.12")
   implementation("com.google.guava:guava:31.1-jre")
 
   testImplementation("org.mockito:mockito-core:4.2.0")
