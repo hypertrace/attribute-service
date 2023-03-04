@@ -8,8 +8,8 @@ dependencies {
   api(project(":attribute-service-api"))
   implementation(project(":attribute-service-tenant-api"))
 
-  implementation("org.hypertrace.core.documentstore:document-store:0.7.20")
-  implementation("org.hypertrace.core.grpcutils:grpc-context-utils:0.9.0")
+  implementation("org.hypertrace.core.documentstore:document-store:0.7.26")
+  implementation("org.hypertrace.core.grpcutils:grpc-context-utils:0.11.2")
 
   implementation("com.fasterxml.jackson.core:jackson-databind:2.14.2")
   implementation("com.typesafe:config:1.4.1")
