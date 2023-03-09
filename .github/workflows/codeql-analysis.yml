@@ -35,8 +35,10 @@ jobs:
           languages: ${{ matrix.language }}
 
       - uses: hypertrace/github-actions/gradle@main
-        with:
-          args: assemble
+
+      # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v2
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
