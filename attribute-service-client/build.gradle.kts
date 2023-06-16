@@ -7,5 +7,5 @@ dependencies {
   api(project(":attribute-service-api"))
   api("com.typesafe:config:1.4.1")
 
-  implementation("org.hypertrace.core.grpcutils:grpc-client-utils:0.11.2")
+  implementation("org.hypertrace.core.grpcutils:grpc-client-utils:0.12.0")
 }
