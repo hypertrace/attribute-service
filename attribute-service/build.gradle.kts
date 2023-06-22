@@ -64,7 +64,7 @@ dependencies {
   integrationTestImplementation("com.google.guava:guava:32.0.1-jre")
   integrationTestImplementation(project(":attribute-service-client"))
   integrationTestImplementation("org.hypertrace.core.serviceframework:integrationtest-service-framework:0.1.52")
-  integrationTestImplementation("org.hypertrace.core.grpcutils:grpc-context-utils:0.12.0")
+  integrationTestImplementation("org.hypertrace.core.grpcutils:grpc-context-utils:0.12.1")
 }
 
 application {
