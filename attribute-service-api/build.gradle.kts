@@ -12,7 +12,7 @@ protobuf {
   }
   plugins {
     id("grpc") {
-      artifact = "io.grpc:protoc-gen-grpc-java:1.56.0"
+      artifact = "io.grpc:protoc-gen-grpc-java:1.57.2"
     }
   }
   generateProtoTasks {
@@ -33,7 +33,7 @@ sourceSets {
 }
 
 dependencies {
-  api(platform("io.grpc:grpc-bom:1.56.0"))
+  api(platform("io.grpc:grpc-bom:1.57.2"))
   api("io.grpc:grpc-stub")
   api("io.grpc:grpc-protobuf")
 
