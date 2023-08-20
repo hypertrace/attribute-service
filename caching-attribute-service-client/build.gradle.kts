@@ -11,9 +11,9 @@ dependencies {
   api("io.grpc:grpc-api")
 
   implementation("io.grpc:grpc-stub")
-  implementation("org.hypertrace.core.grpcutils:grpc-client-utils:0.12.1")
-  implementation("org.hypertrace.core.grpcutils:grpc-client-rx-utils:0.12.1")
-  implementation("org.hypertrace.core.grpcutils:grpc-context-utils:0.12.1")
+  implementation("org.hypertrace.core.grpcutils:grpc-client-utils:0.12.2")
+  implementation("org.hypertrace.core.grpcutils:grpc-client-rx-utils:0.12.2")
+  implementation("org.hypertrace.core.grpcutils:grpc-context-utils:0.12.2")
   implementation("com.google.guava:guava:32.0.1-jre")
   annotationProcessor("org.projectlombok:lombok:1.18.22")
   compileOnly("org.projectlombok:lombok:1.18.22")
