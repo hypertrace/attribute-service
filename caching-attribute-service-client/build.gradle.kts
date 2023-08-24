@@ -1,29 +1,31 @@
 plugins {
   `java-library`
   jacoco
-  id("org.hypertrace.jacoco-report-plugin")
-  id("org.hypertrace.publish-plugin")
+  alias(commonLibs.plugins.hypertrace.jacoco)
+  alias(commonLibs.plugins.hypertrace.publish)
 }
 
 dependencies {
-  api(project(":attribute-service-api"))
-  api("io.reactivex.rxjava3:rxjava:3.1.3")
-  api("io.grpc:grpc-api")
+  api(projects.attributeServiceApi)
+  api(commonLibs.rxjava3)
+  api(commonLibs.grpc.api)
+  api(platform(commonLibs.hypertrace.bom))
 
-  implementation("io.grpc:grpc-stub")
-  implementation("org.hypertrace.core.grpcutils:grpc-client-utils:0.12.2")
-  implementation("org.hypertrace.core.grpcutils:grpc-client-rx-utils:0.12.2")
-  implementation("org.hypertrace.core.grpcutils:grpc-context-utils:0.12.2")
-  implementation("com.google.guava:guava:32.0.1-jre")
-  annotationProcessor("org.projectlombok:lombok:1.18.22")
-  compileOnly("org.projectlombok:lombok:1.18.22")
-  implementation("org.slf4j:slf4j-api:1.7.32")
+  implementation(commonLibs.grpc.stub)
+  implementation(commonLibs.hypertrace.grpcutils.client)
+  implementation(commonLibs.hypertrace.grpcutils.rx.client)
+  implementation(commonLibs.hypertrace.grpcutils.context)
+  implementation(commonLibs.guava)
+  implementation(commonLibs.slf4j2.api)
 
-  testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
-  testImplementation("org.mockito:mockito-core:4.2.0")
-  testImplementation("org.mockito:mockito-junit-jupiter:4.2.0")
-  testImplementation("io.grpc:grpc-core")
-  testImplementation("org.apache.logging.log4j:log4j-slf4j-impl:2.17.1")
+  annotationProcessor(commonLibs.lombok)
+  compileOnly(commonLibs.lombok)
+
+  testImplementation(commonLibs.junit.jupiter)
+  testImplementation(commonLibs.mockito.core)
+  testImplementation(commonLibs.mockito.junit)
+  testImplementation(commonLibs.grpc.core)
+  testImplementation(commonLibs.log4j.slf4j2.impl)
 }
 
 tasks.test {

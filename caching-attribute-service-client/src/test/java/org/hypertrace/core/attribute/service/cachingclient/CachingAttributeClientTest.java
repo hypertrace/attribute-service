@@ -31,6 +31,7 @@ import org.hypertrace.core.attribute.service.v1.AttributeCreateRequest;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadata;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadataFilter;
 import org.hypertrace.core.attribute.service.v1.AttributeScope;
+import org.hypertrace.core.attribute.service.v1.AttributeServiceGrpc;
 import org.hypertrace.core.attribute.service.v1.AttributeServiceGrpc.AttributeServiceImplBase;
 import org.hypertrace.core.attribute.service.v1.Empty;
 import org.hypertrace.core.attribute.service.v1.GetAttributesRequest;
@@ -80,6 +81,8 @@ class CachingAttributeClientTest {
 
   @BeforeEach
   void beforeEach() throws IOException {
+    when(mockAttributeService.bindService())
+        .thenReturn(AttributeServiceGrpc.bindService(mockAttributeService));
     String uniqueName = InProcessServerBuilder.generateName();
     this.grpcServer =
         InProcessServerBuilder.forName(uniqueName)

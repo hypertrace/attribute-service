@@ -8,6 +8,22 @@ pluginManagement {
   }
 }
 
+dependencyResolutionManagement {
+  repositories {
+    mavenLocal()
+    mavenCentral()
+    maven("https://hypertrace.jfrog.io/artifactory/maven")
+  }
+  versionCatalogs {
+    create("commonLibs") {
+      from("org.hypertrace.bom:hypertrace-version-catalog:+")
+    }
+  }
+}
+
+
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
 plugins {
   id("org.hypertrace.version-settings") version "0.2.0"
 }

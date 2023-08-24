@@ -2,17 +2,17 @@ import com.google.protobuf.gradle.id
 
 plugins {
   `java-library`
-  id("com.google.protobuf") version "0.9.2"
-  id("org.hypertrace.publish-plugin")
+  alias(commonLibs.plugins.google.protobuf)
+  alias(commonLibs.plugins.hypertrace.publish)
 }
 
 protobuf {
   protoc {
-    artifact = "com.google.protobuf:protoc:3.21.12"
+    artifact = "com.google.protobuf:protoc:${commonLibs.versions.protoc.get()}"
   }
   plugins {
     id("grpc") {
-      artifact = "io.grpc:protoc-gen-grpc-java:1.57.2"
+      artifact = "io.grpc:protoc-gen-grpc-java:${commonLibs.versions.grpc.get()}"
     }
   }
   generateProtoTasks {
@@ -33,14 +33,9 @@ sourceSets {
 }
 
 dependencies {
-  api(platform("io.grpc:grpc-bom:1.57.2"))
-  api("io.grpc:grpc-stub")
-  api("io.grpc:grpc-protobuf")
+  api(platform(commonLibs.hypertrace.bom))
+  api(commonLibs.grpc.stub)
+  api(commonLibs.grpc.protobuf)
 
-  implementation("javax.annotation:javax.annotation-api:1.3.2")
-  constraints {
-    implementation("com.google.guava:guava:32.0.1-jre") {
-      because("https://nvd.nist.gov/vuln/detail/CVE-2023-2976")
-    }
-  }
+  implementation(commonLibs.javax.annotation)
 }

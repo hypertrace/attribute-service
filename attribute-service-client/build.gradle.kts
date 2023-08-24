@@ -1,11 +1,12 @@
 plugins {
   `java-library`
-  id("org.hypertrace.publish-plugin")
+  alias(commonLibs.plugins.hypertrace.publish)
 }
 
 dependencies {
-  api(project(":attribute-service-api"))
-  api("com.typesafe:config:1.4.1")
+  api(platform(commonLibs.hypertrace.bom))
+  api(projects.attributeServiceApi)
+  api(commonLibs.typesafe.config)
 
-  implementation("org.hypertrace.core.grpcutils:grpc-client-utils:0.12.2")
+  implementation(commonLibs.hypertrace.grpcutils.client)
 }
