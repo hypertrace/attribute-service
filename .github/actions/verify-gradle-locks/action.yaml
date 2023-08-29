@@ -1,0 +1,15 @@
+name: Verify Gradle Lockfiles
+description: Verifies Gradle lockfiles are up to date
+
+runs:
+  using: composite
+  steps:
+    - name: Update lockfiles
+      uses: hypertrace/github-actions/gradle@main
+      with:
+        args: resolveAndLockAll --write-locks
+    - name: Fail if git dirty
+      shell: sh
+      run: |
+        test -z "$(git status --porcelain)"
+

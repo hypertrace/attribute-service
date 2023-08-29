@@ -20,7 +20,38 @@ dependencyResolutionManagement {
     }
   }
 }
+gradle.allprojects {
+  pluginManager.withPlugin("java") {
+    dependencies {
 
+      configurations {
+        named("compileClasspath") {
+          resolutionStrategy.activateDependencyLocking()
+        }
+        named("runtimeClasspath") {
+          resolutionStrategy.activateDependencyLocking()
+        }
+      }
+
+      dependencyLocking {
+        lockMode.set(LockMode.STRICT)
+      }
+
+      tasks.register("resolveAndLockAll") {
+        notCompatibleWithConfigurationCache("Filters configurations at execution time")
+        doFirst {
+          require(gradle.startParameter.isWriteDependencyLocks) { "$path must be run from the command line with the `--write-locks` flag" }
+        }
+        doLast {
+          configurations.filter {
+            // Add any custom filtering on the configurations to be resolved
+            it.isCanBeResolved
+          }.forEach { it.resolve() }
+        }
+      }
+    }
+  }
+}
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
