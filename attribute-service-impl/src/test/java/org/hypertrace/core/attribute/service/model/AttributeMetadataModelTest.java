@@ -82,7 +82,6 @@ public class AttributeMetadataModelTest {
             .setType(AttributeType.ATTRIBUTE)
             .setUnit("ms")
             .setValueKind(AttributeKind.TYPE_STRING)
-            .setDefinition(AttributeDefinition.getDefaultInstance())
             .putAllMetadata(
                 Collections.singletonMap(
                     AttributeSource.EDS.name(),
@@ -271,7 +270,6 @@ public class AttributeMetadataModelTest {
             .setDisplayName("Some Name")
             .setValueKind(AttributeKind.TYPE_BOOL)
             .setType(AttributeType.ATTRIBUTE)
-            .setDefinition(AttributeDefinition.getDefaultInstance())
             .setCustom(true)
             .build();
 
