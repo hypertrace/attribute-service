@@ -1,6 +1,7 @@
 package org.hypertrace.core.attribute.service.model;
 
 import static org.hypertrace.core.attribute.service.utils.tenant.TenantUtils.ROOT_TENANT_ID;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import com.google.common.collect.Lists;
 import java.io.IOException;
@@ -81,7 +82,6 @@ public class AttributeMetadataModelTest {
             .setType(AttributeType.ATTRIBUTE)
             .setUnit("ms")
             .setValueKind(AttributeKind.TYPE_STRING)
-            .setDefinition(AttributeDefinition.getDefaultInstance())
             .putAllMetadata(
                 Collections.singletonMap(
                     AttributeSource.EDS.name(),
@@ -118,9 +118,9 @@ public class AttributeMetadataModelTest {
 
     // backward compatibility test, no groupable field, BOOL type
     AttributeMetadataModel deserializedModel = AttributeMetadataModel.fromJson(json);
-    Assertions.assertFalse(deserializedModel.isGroupable());
+    assertFalse(deserializedModel.isGroupable());
     AttributeMetadata metadata = deserializedModel.toDTO();
-    Assertions.assertFalse(metadata.getGroupable());
+    assertFalse(metadata.getGroupable());
 
     json =
         "{"
@@ -192,9 +192,9 @@ public class AttributeMetadataModelTest {
 
     // override default, STRING type
     deserializedModel = AttributeMetadataModel.fromJson(json);
-    Assertions.assertFalse(deserializedModel.isGroupable());
+    assertFalse(deserializedModel.isGroupable());
     metadata = deserializedModel.toDTO();
-    Assertions.assertFalse(metadata.getGroupable());
+    assertFalse(metadata.getGroupable());
   }
 
   @Test
@@ -270,7 +270,6 @@ public class AttributeMetadataModelTest {
             .setDisplayName("Some Name")
             .setValueKind(AttributeKind.TYPE_BOOL)
             .setType(AttributeType.ATTRIBUTE)
-            .setDefinition(AttributeDefinition.getDefaultInstance())
             .setCustom(true)
             .build();
 
@@ -456,5 +455,34 @@ public class AttributeMetadataModelTest {
 
     final AttributeMetadata metadata = AttributeMetadataModel.fromJson(json).toDTO();
     Assertions.assertEquals(expectedMetadata, metadata);
+  }
+
+  @Test
+  void testCustomAttributeDefinitionIsUnsetIfMissingOrDefaultInModel() throws IOException {
+    final String missingDefinitionJson =
+        "{"
+            + "\"fqn\":\"fqn\","
+            + "\"type\":\"ATTRIBUTE\","
+            + "\"display_name\":\"Some Name\","
+            + "\"key\":\"key\","
+            + "\"id\":\"EVENT.key\","
+            + "\"value_kind\":\"TYPE_STRING\","
+            + "\"scope_string\":\"EVENT\""
+            + "}";
+    assertFalse(AttributeMetadataModel.fromJson(missingDefinitionJson).toDTO().hasDefinition());
+
+    final String defaultDefinitionJson =
+        "{"
+            + "\"fqn\":\"fqn\","
+            + "\"type\":\"ATTRIBUTE\","
+            + "\"display_name\":\"Some Name\","
+            + "\"key\":\"key\","
+            + "\"id\":\"EVENT.key\","
+            + "\"value_kind\":\"TYPE_STRING\","
+            + "\"scope_string\":\"EVENT\","
+            + "\"definition\":{}"
+            + "}";
+
+    assertFalse(AttributeMetadataModel.fromJson(defaultDefinitionJson).toDTO().hasDefinition());
   }
 }

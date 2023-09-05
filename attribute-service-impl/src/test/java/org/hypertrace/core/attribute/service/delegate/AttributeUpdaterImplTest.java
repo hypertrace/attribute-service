@@ -14,7 +14,6 @@ import io.grpc.StatusRuntimeException;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.stream.IntStream;
-import org.hypertrace.core.attribute.service.v1.AttributeDefinition;
 import org.hypertrace.core.attribute.service.v1.AttributeKind;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadata;
 import org.hypertrace.core.attribute.service.v1.AttributeScope;
@@ -66,7 +65,6 @@ class AttributeUpdaterImplTest {
             .setUnit("ms")
             .setValueKind(AttributeKind.TYPE_STRING)
             .addSupportedAggregations(DISTINCT_COUNT)
-            .setDefinition(AttributeDefinition.getDefaultInstance())
             .setGroupable(true)
             .setInternal(true)
             .setCustom(true)
