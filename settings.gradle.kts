@@ -8,55 +8,11 @@ pluginManagement {
   }
 }
 
-dependencyResolutionManagement {
-  repositories {
-    mavenLocal()
-    mavenCentral()
-    maven("https://hypertrace.jfrog.io/artifactory/maven")
-  }
-  versionCatalogs {
-    create("commonLibs") {
-      from("org.hypertrace.bom:hypertrace-version-catalog:+")
-    }
-  }
-}
-gradle.allprojects {
-  pluginManager.withPlugin("java") {
-    dependencies {
-
-      configurations {
-        named("compileClasspath") {
-          resolutionStrategy.activateDependencyLocking()
-        }
-        named("runtimeClasspath") {
-          resolutionStrategy.activateDependencyLocking()
-        }
-      }
-
-      dependencyLocking {
-        lockMode.set(LockMode.STRICT)
-      }
-
-      tasks.register("resolveAndLockAll") {
-        notCompatibleWithConfigurationCache("Filters configurations at execution time")
-        doFirst {
-          require(gradle.startParameter.isWriteDependencyLocks) { "$path must be run from the command line with the `--write-locks` flag" }
-        }
-        doLast {
-          configurations.filter {
-            // Add any custom filtering on the configurations to be resolved
-            it.isCanBeResolved
-          }.forEach { it.resolve() }
-        }
-      }
-    }
-  }
-}
-
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 plugins {
   id("org.hypertrace.version-settings") version "0.2.0"
+  id("org.hypertrace.dependency-settings") version "0.1.0-SNAPSHOT"
 }
 
 include(":attribute-service-api")

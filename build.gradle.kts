@@ -2,7 +2,6 @@ import org.hypertrace.gradle.publishing.HypertracePublishExtension
 import org.hypertrace.gradle.publishing.License
 
 plugins {
-  alias(commonLibs.plugins.hypertrace.repository)
   alias(commonLibs.plugins.hypertrace.ciutils)
   alias(commonLibs.plugins.hypertrace.publish) apply false
   alias(commonLibs.plugins.hypertrace.jacoco) apply false

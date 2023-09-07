@@ -106,4 +106,4 @@ org.mongodb:mongodb-driver-sync:4.9.0=runtimeClasspath
 org.postgresql:postgresql:42.5.4=runtimeClasspath
 org.slf4j:slf4j-api:1.7.36=compileClasspath
 org.slf4j:slf4j-api:2.0.7=runtimeClasspath
-empty=
+empty=annotationProcessor

@@ -36,4 +36,4 @@ org.hypertrace.core.grpcutils:grpc-client-utils:0.12.2=compileClasspath,runtimeC
 org.hypertrace.core.grpcutils:grpc-context-utils:0.12.2=runtimeClasspath
 org.hypertrace.core.kafkastreams.framework:kafka-bom:0.3.2=compileClasspath,runtimeClasspath
 org.slf4j:slf4j-api:1.7.36=runtimeClasspath
-empty=
+empty=annotationProcessor

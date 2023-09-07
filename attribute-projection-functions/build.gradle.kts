@@ -15,3 +15,7 @@ dependencies {
 tasks.test {
   useJUnitPlatform()
 }
+
+dependencySettings {
+  autoApplyBom.set(false)
+}

@@ -9,7 +9,6 @@ dependencies {
   api(projects.attributeServiceApi)
   api(commonLibs.rxjava3)
   api(commonLibs.grpc.api)
-  api(platform(commonLibs.hypertrace.bom))
 
   implementation(commonLibs.grpc.stub)
   implementation(commonLibs.hypertrace.grpcutils.client)

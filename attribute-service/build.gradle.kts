@@ -54,7 +54,6 @@ tasks.integrationTest {
 }
 
 dependencies {
-  implementation(platform(commonLibs.hypertrace.bom))
   implementation(projects.attributeServiceFactory)
   implementation(commonLibs.hypertrace.framework.grpc)
   runtimeOnly(commonLibs.log4j.slf4j2.impl)

@@ -5,4 +5,4 @@ com.fasterxml.jackson:jackson-bom:2.15.2=compileClasspath,runtimeClasspath
 io.grpc:grpc-bom:1.57.2=compileClasspath,runtimeClasspath
 org.hypertrace.bom:hypertrace-bom:0.2.0=compileClasspath,runtimeClasspath
 org.hypertrace.core.kafkastreams.framework:kafka-bom:0.3.2=compileClasspath,runtimeClasspath
-empty=
+empty=annotationProcessor

@@ -5,7 +5,6 @@ plugins {
 }
 
 dependencies {
-  api(platform(commonLibs.hypertrace.bom))
   testImplementation(commonLibs.junit.jupiter)
 }
 

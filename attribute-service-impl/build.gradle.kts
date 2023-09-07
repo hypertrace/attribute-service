@@ -6,7 +6,6 @@ plugins {
 
 dependencies {
   api(projects.attributeServiceApi)
-  api(platform(commonLibs.hypertrace.bom))
   implementation(projects.attributeServiceTenantApi)
   implementation(commonLibs.hypertrace.documentstore)
   implementation(commonLibs.hypertrace.grpcutils.context)

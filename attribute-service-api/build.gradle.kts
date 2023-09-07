@@ -33,7 +33,6 @@ sourceSets {
 }
 
 dependencies {
-  api(platform(commonLibs.hypertrace.bom))
   api(commonLibs.grpc.stub)
   api(commonLibs.grpc.protobuf)
 

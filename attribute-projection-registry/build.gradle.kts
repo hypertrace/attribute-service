@@ -7,7 +7,6 @@ plugins {
 
 dependencies {
   api(projects.attributeServiceApi)
-  api(platform(commonLibs.hypertrace.bom))
   implementation(projects.attributeProjectionFunctions)
   implementation(commonLibs.guava)
   testImplementation(commonLibs.junit.jupiter)
