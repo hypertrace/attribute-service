@@ -330,6 +330,7 @@ public class AttributeServiceTest {
             .setCustom(true)
             .build();
 
+    // No custom def on attribute 2
     AttributeMetadata expectedAttributeMetadata2 =
         AttributeMetadata.newBuilder()
             .setFqn("name-2")
@@ -346,7 +347,6 @@ public class AttributeServiceTest {
             .addSources(AttributeSource.EDS)
             .setId("EVENT.key-2")
             .setGroupable(true)
-            .setDefinition(AttributeDefinition.newBuilder().setSourcePath("sourcepath-2"))
             .setScopeString(AttributeScope.EVENT.name())
             .build();
 

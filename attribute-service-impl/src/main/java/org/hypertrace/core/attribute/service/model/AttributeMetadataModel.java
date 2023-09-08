@@ -285,12 +285,14 @@ public class AttributeMetadataModel implements Document {
                                 AttributeSourceMetadata.newBuilder()
                                     .putAllSourceMetadata(stringMapEntry.getValue())
                                     .build())))
-            .setDefinition(this.definition)
             .setInternal(internal)
             .setCustom(!ROOT_TENANT_ID.equals(tenantId));
 
     if (unit != null) {
       builder.setUnit(unit);
+    }
+    if (!definition.equals(AttributeDefinition.getDefaultInstance())) {
+      builder.setDefinition(definition);
     }
 
     return builder;
