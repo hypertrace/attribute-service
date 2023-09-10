@@ -1,11 +1,11 @@
 plugins {
   `java-library`
   jacoco
-  id("org.hypertrace.jacoco-report-plugin")
+  alias(commonLibs.plugins.hypertrace.jacoco)
 }
 
 dependencies {
-  testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
+  testImplementation(commonLibs.junit.jupiter)
 }
 
 tasks.test {

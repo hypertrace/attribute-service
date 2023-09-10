@@ -1,15 +1,15 @@
 plugins {
   `java-library`
   jacoco
-  id("org.hypertrace.jacoco-report-plugin")
-  id("org.hypertrace.publish-plugin")
+  alias(commonLibs.plugins.hypertrace.jacoco)
+  alias(commonLibs.plugins.hypertrace.publish)
 }
 
 dependencies {
-  api(project(":attribute-service-api"))
-  implementation(project(":attribute-projection-functions"))
-  implementation("com.google.guava:guava:32.0.1-jre")
-  testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
+  api(projects.attributeServiceApi)
+  implementation(projects.attributeProjectionFunctions)
+  implementation(commonLibs.guava)
+  testImplementation(commonLibs.junit.jupiter)
 }
 
 tasks.test {

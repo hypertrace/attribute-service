@@ -1,0 +1,9 @@
+name: Update Locks
+on:
+  workflow_dispatch:
+jobs:
+  update-versions:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Update locks if needed
+        uses: ./.github/actions/raise-lock-pr

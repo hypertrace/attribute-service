@@ -9,10 +9,10 @@ plugins {
   java
   application
   jacoco
-  id("org.hypertrace.docker-java-application-plugin") version "0.9.4"
-  id("org.hypertrace.docker-publish-plugin") version "0.9.4"
-  id("org.hypertrace.integration-test-plugin")
-  id("org.hypertrace.jacoco-report-plugin")
+  alias(commonLibs.plugins.hypertrace.docker.application)
+  alias(commonLibs.plugins.hypertrace.docker.publish)
+  alias(commonLibs.plugins.hypertrace.integrationtest)
+  alias(commonLibs.plugins.hypertrace.jacoco)
 }
 
 tasks.register<DockerCreateNetwork>("createIntegrationTestNetwork") {
@@ -54,17 +54,17 @@ tasks.integrationTest {
 }
 
 dependencies {
-  implementation(project(":attribute-service-factory"))
-  implementation("org.hypertrace.core.serviceframework:platform-grpc-service-framework:0.1.58")
-  runtimeOnly("org.apache.logging.log4j:log4j-slf4j-impl:2.17.1")
-  runtimeOnly("io.grpc:grpc-netty")
+  implementation(projects.attributeServiceFactory)
+  implementation(commonLibs.hypertrace.framework.grpc)
+  runtimeOnly(commonLibs.log4j.slf4j2.impl)
+  runtimeOnly(commonLibs.grpc.netty)
 
   // Integration test dependencies
-  integrationTestImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
-  integrationTestImplementation("com.google.guava:guava:32.0.1-jre")
-  integrationTestImplementation(project(":attribute-service-client"))
-  integrationTestImplementation("org.hypertrace.core.serviceframework:integrationtest-service-framework:0.1.58")
-  integrationTestImplementation("org.hypertrace.core.grpcutils:grpc-context-utils:0.12.2")
+  integrationTestImplementation(commonLibs.junit.jupiter)
+  integrationTestImplementation(commonLibs.guava)
+  integrationTestImplementation(projects.attributeServiceClient)
+  integrationTestImplementation(commonLibs.hypertrace.integrationtest.framework)
+  integrationTestImplementation(commonLibs.hypertrace.grpcutils.context)
 }
 
 application {
