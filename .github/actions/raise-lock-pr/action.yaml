@@ -12,7 +12,9 @@ runs:
       id: git-dirty
       shell: sh
       run: |
-        echo dirty=$(test -z "$(git status --porcelain)" && echo false || echo true) >> $GITHUB_OUTPUT
+        dirty=test -n "$(git status --porcelain)" && echo true || echo false
+        echo $dirty
+        echo dirty=$dirty >> $GITHUB_OUTPUT
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v5
       if: ${{ steps.git-dirty.outputs.dirty }}
