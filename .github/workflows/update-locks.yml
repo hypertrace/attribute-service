@@ -5,5 +5,9 @@ jobs:
   update-versions:
     runs-on: ubuntu-22.04
     steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Update locks if needed
         uses: ./.github/actions/raise-lock-pr

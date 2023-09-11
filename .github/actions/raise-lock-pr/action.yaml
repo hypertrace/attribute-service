@@ -4,10 +4,6 @@ description: If any lockfiles are outdated, updates them and raises a pull reque
 runs:
   using: composite
   steps:
-    - name: Check out code
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
     - name: Update lockfiles
       uses: hypertrace/github-actions/gradle@main
       with:
