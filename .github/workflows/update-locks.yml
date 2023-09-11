@@ -1,6 +1,8 @@
 name: Update Locks
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '18 22 * * 6'
 jobs:
   update-versions:
     runs-on: ubuntu-22.04
