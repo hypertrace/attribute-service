@@ -12,10 +12,10 @@ runs:
       id: git-dirty
       shell: sh
       run: |
-        echo dirty=$(test -n "$(git status --porcelain)" && echo true || echo false)
+        echo dirty=$(test -n "$(git status --porcelain)" && echo true || echo false) >> $GITHUB_OUTPUT
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v5
-      if: ${{ steps.git-dirty.outputs.dirty }}
+      if: steps.git-dirty.outputs.dirty
       with:
         title: Update gradle locks (Automated)
         body: |
