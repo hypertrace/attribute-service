@@ -12,4 +12,4 @@ jobs:
         with:
           fetch-depth: 0
       - name: Update locks if needed
-        uses: hypertrace/raise-lock-pr/gradle@main
+        uses: hypertrace/github-actions/raise-lock-pr@main
