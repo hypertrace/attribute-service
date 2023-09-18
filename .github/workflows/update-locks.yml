@@ -18,7 +18,7 @@ jobs:
           app_id: ${{ secrets.GH_CI_APP_ID }}
           private_key: ${{ secrets.GH_CI_APP_PRIVATE_KEY }}
           repositories: >-
-            ["$GITHUB_REPOSITORY"]
+            [${{ toJson(github.repository) }}]
       - name: Update locks if needed
         uses: hypertrace/github-actions/raise-lock-pr@main
         with:
