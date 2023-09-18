@@ -11,5 +11,15 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Get Token from Github App
+        uses: tibdex/github-app-token@v2
+        id: generate-token
+        with:
+          app_id: ${{ secrets.GH_CI_APP_ID }}
+          private_key: ${{ secrets.GH_CI_APP_PRIVATE_KEY }}
+          repositories: >-
+            ["$GITHUB_REPOSITORY"]
       - name: Update locks if needed
         uses: hypertrace/github-actions/raise-lock-pr@main
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
