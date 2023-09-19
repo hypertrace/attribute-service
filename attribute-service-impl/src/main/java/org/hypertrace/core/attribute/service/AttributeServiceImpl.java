@@ -57,7 +57,11 @@ import org.hypertrace.core.documentstore.Filter.Op;
 import org.hypertrace.core.documentstore.JSONDocument;
 import org.hypertrace.core.documentstore.Key;
 import org.hypertrace.core.documentstore.Query;
+import org.hypertrace.core.documentstore.model.config.DatastoreConfig;
+import org.hypertrace.core.documentstore.model.config.TypesafeConfigDatastoreConfigExtractor;
 import org.hypertrace.core.grpcutils.context.RequestContext;
+import org.hypertrace.core.serviceframework.docstore.metrics.DocStoreMetricsRegistry;
+import org.hypertrace.core.serviceframework.spi.PlatformServiceLifecycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,8 +88,8 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
    * Initiates with a configuration. The configuration should be production configuration, but for
    * V0 The attributes type data would be stored in the configuration
    */
-  public AttributeServiceImpl(Config config) {
-    Datastore store = initDataStore(config);
+  public AttributeServiceImpl(Config config, PlatformServiceLifecycle platformServiceLifecycle) {
+    Datastore store = initDataStore(config, platformServiceLifecycle);
     this.collection = store.getCollection(ATTRIBUTE_METADATA_COLLECTION);
     this.validator = new AttributeMetadataValidator(config);
     this.converter = new AttributeMetadataConverterImpl();
@@ -99,11 +103,29 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
     this.updater = new AttributeUpdaterImpl(collection);
   }
 
-  private Datastore initDataStore(Config config) {
-    Config docStoreConfig = config.getConfig(DOC_STORE_CONFIG_KEY);
-    String dataStoreType = docStoreConfig.getString(DATA_STORE_TYPE);
-    Config dataStoreConfig = docStoreConfig.getConfig(dataStoreType);
-    return DatastoreProvider.getDatastore(dataStoreType, dataStoreConfig);
+  private Datastore initDataStore(
+      Config config, PlatformServiceLifecycle platformServiceLifecycle) {
+    final Config docStoreConfig = config.getConfig(DOC_STORE_CONFIG_KEY);
+    final String dataStoreType = docStoreConfig.getString(DATA_STORE_TYPE);
+    final DatastoreConfig datastoreConfig =
+        TypesafeConfigDatastoreConfigExtractor.from(docStoreConfig, DATA_STORE_TYPE)
+            .hostKey(dataStoreType + ".host")
+            .portKey(dataStoreType + ".port")
+            .keysForEndpoints(dataStoreType + ".endpoints", "host", "port")
+            .authDatabaseKey(dataStoreType + ".authDb")
+            .replicaSetKey(dataStoreType + ".replicaSet")
+            .databaseKey(dataStoreType + ".database")
+            .usernameKey(dataStoreType + ".user")
+            .passwordKey(dataStoreType + ".password")
+            .applicationNameKey("appName")
+            .extract();
+
+    final Datastore datastore = DatastoreProvider.getDatastore(datastoreConfig);
+    new DocStoreMetricsRegistry(datastore)
+        .withPlatformLifecycle(platformServiceLifecycle)
+        .monitor();
+
+    return datastore;
   }
 
   @Override
