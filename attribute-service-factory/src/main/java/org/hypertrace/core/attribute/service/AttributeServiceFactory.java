@@ -11,6 +11,8 @@ public class AttributeServiceFactory implements GrpcPlatformServiceFactory {
   @Override
   public List<GrpcPlatformService> buildServices(GrpcServiceContainerEnvironment environment) {
     return List.of(
-        new GrpcPlatformService(new AttributeServiceImpl(environment.getConfig(SERVICE_NAME))));
+        new GrpcPlatformService(
+            new AttributeServiceImpl(
+                environment.getConfig(SERVICE_NAME), environment.getLifecycle())));
   }
 }

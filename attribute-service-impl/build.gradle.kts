@@ -6,6 +6,7 @@ plugins {
 
 dependencies {
   api(projects.attributeServiceApi)
+  api(commonLibs.hypertrace.framework.spi)
   implementation(projects.attributeServiceTenantApi)
   implementation(commonLibs.hypertrace.documentstore)
   implementation(commonLibs.hypertrace.grpcutils.context)
@@ -14,6 +15,7 @@ dependencies {
   implementation(commonLibs.slf4j2.api)
   implementation(commonLibs.protobuf.javautil)
   implementation(commonLibs.guava)
+  implementation(commonLibs.hypertrace.framework.documentstore.metrics)
 
   testImplementation(commonLibs.mockito.core)
   testImplementation(commonLibs.junit.jupiter)
