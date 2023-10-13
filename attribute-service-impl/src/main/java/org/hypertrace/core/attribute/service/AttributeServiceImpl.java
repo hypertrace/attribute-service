@@ -118,6 +118,9 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
             .usernameKey(dataStoreType + ".user")
             .passwordKey(dataStoreType + ".password")
             .applicationNameKey("appName")
+            .poolMaxConnectionsKey("maxPoolSize")
+            .poolConnectionAccessTimeoutKey("connectionAccessTimeout")
+            .poolConnectionSurrenderTimeoutKey("connectionIdleTime")
             .extract();
 
     final Datastore datastore = DatastoreProvider.getDatastore(datastoreConfig);
