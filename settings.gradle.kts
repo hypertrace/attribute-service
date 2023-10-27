@@ -1,3 +1,5 @@
+import org.hypertrace.gradle.dependency.DependencyPluginSettingExtension
+
 rootProject.name = "attribute-service-root"
 
 pluginManagement {
@@ -12,7 +14,11 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 plugins {
   id("org.hypertrace.version-settings") version "0.2.0"
-  id("org.hypertrace.dependency-settings") version "0.1.0"
+  id("org.hypertrace.dependency-settings") version "0.1.1"
+}
+
+configure<DependencyPluginSettingExtension> {
+  catalogVersion.set("0.2.9")
 }
 
 include(":attribute-service-api")
