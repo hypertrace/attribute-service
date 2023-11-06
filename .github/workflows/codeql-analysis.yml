@@ -37,8 +37,6 @@ jobs:
           languages: ${{ matrix.language }}
 
       - uses: hypertrace/github-actions/gradle@main
-        with:
-          args: testClasses
 
       # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
       - name: Autobuild
