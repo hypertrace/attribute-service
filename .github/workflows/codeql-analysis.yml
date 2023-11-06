@@ -36,9 +36,6 @@ jobs:
 
       - uses: hypertrace/github-actions/gradle@main
 
-      - shell: bash
-        run: cat /tmp/semmleTempDir/init.gradle
-
       # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
       - name: Autobuild
         uses: github/codeql-action/autobuild@v2
