@@ -38,11 +38,3 @@ dependencies {
 
   implementation(commonLibs.javax.annotation)
 }
-
-tasks.register<Exec>("printThing") {
-  commandLine("cat", "/tmp/semmleTempDir/init.gradle")
-}
-
-tasks.clean {
-  dependsOn("printThing")
-}
