@@ -27,6 +27,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
@@ -37,6 +39,10 @@ jobs:
       - uses: hypertrace/github-actions/gradle@main
         with:
           args: testClasses
+
+      # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v2
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
