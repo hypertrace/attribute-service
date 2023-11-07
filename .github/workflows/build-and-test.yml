@@ -33,7 +33,7 @@ jobs:
         uses: hypertrace/github-actions/trivy-image-scan@main
         with:
           image: hypertrace/attribute-service
-          output-mode: log
+          output-mode: github
   test:
     runs-on: ubuntu-22.04
     steps:
