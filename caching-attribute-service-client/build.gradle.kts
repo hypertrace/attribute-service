@@ -14,8 +14,10 @@ dependencies {
   implementation(commonLibs.hypertrace.grpcutils.client)
   implementation(commonLibs.hypertrace.grpcutils.rx.client)
   implementation(commonLibs.hypertrace.grpcutils.context)
+  implementation(commonLibs.hypertrace.framework.metrics)
   implementation(commonLibs.guava)
   implementation(commonLibs.slf4j2.api)
+  implementation(commonLibs.typesafe.config)
 
   annotationProcessor(commonLibs.lombok)
   compileOnly(commonLibs.lombok)

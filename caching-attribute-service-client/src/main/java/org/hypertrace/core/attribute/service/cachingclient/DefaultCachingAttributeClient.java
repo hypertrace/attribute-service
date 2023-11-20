@@ -75,7 +75,7 @@ class DefaultCachingAttributeClient implements CachingAttributeClient {
         .mapOptional(
             table ->
                 Optional.ofNullable(this.scopeAndKeyLookup.getIfPresent(attributeId))
-                    .map(scopeAndKey -> table.get(scopeAndKey.scope, scopeAndKey.key)))
+                    .map(scopeAndKey -> table.get(scopeAndKey.getScope(), scopeAndKey.getKey())))
         .switchIfEmpty(buildAndLogErrorLazily("No attribute available for id '%s'", attributeId));
   }
 
@@ -163,15 +163,5 @@ class DefaultCachingAttributeClient implements CachingAttributeClient {
           }
           return new NoSuchElementException(String.format(message, args));
         });
-  }
-
-  private static final class AttributeScopeAndKey {
-    private final String scope;
-    private final String key;
-
-    private AttributeScopeAndKey(String scope, String key) {
-      this.scope = scope;
-      this.key = key;
-    }
   }
 }
