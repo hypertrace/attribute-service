@@ -37,14 +37,15 @@ public class AttributeServiceCachedClient {
   private final long deadlineMs;
   private final ClientCallCredentialsProvider callCredentialsProvider;
 
-  AttributeServiceCachedClient(Channel channel, AttributeServiceCachedClientConfig clientConfig) {
+  public AttributeServiceCachedClient(
+      Channel channel, AttributeServiceCachedClientConfig clientConfig) {
     this(
         channel,
         clientConfig,
         RequestContextClientCallCredsProviderFactory.getClientCallCredsProvider());
   }
 
-  AttributeServiceCachedClient(
+  public AttributeServiceCachedClient(
       Channel channel,
       AttributeServiceCachedClientConfig clientConfig,
       ClientCallCredentialsProvider callCredentialsProvider) {
