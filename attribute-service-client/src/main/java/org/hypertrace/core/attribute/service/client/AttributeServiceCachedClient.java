@@ -1,4 +1,4 @@
-package org.hypertrace.core.attribute.service.cachingclient;
+package org.hypertrace.core.attribute.service.client;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -6,19 +6,19 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableTable;
 import com.google.common.collect.Table;
-import com.google.common.util.concurrent.RateLimiter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.typesafe.config.Config;
 import io.grpc.Channel;
-import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.hypertrace.core.attribute.service.client.config.AttributeServiceCachedClientConfig;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadata;
 import org.hypertrace.core.attribute.service.v1.AttributeServiceGrpc;
 import org.hypertrace.core.attribute.service.v1.AttributeServiceGrpc.AttributeServiceBlockingStub;
@@ -30,102 +30,87 @@ import org.hypertrace.core.serviceframework.metrics.PlatformMetricsRegistry;
 
 @Slf4j
 public class AttributeServiceCachedClient {
-  private static final String DEADLINE_CONFIG_KEY = "deadline";
-  private static final String CACHE_MAX_SIZE_CONFIG_KEY = "maxSize";
-  private static final String CACHE_REFRESH_AFTER_WRITE_CONFIG_KEY = "refreshAfterWriteDuration";
-  private static final String CACHE_EXPIRE_AFTER_WRITE_CONFIG_KEY = "expireAfterWriteDuration";
-  private static final String CACHE_EXECUTOR_THREADS_CONFIG_KEY = "executorThreads";
-  private static final RateLimiter LOG_LIMITER = RateLimiter.create(1 / 60d);
   private final LoadingCache<String, Table<String, String, AttributeMetadata>> cache;
   private final Cache<String, AttributeScopeAndKey> scopeAndKeyLookup;
   private final AttributeServiceBlockingStub attributeServiceBlockingStub;
   private final long deadlineMs;
   private final ClientCallCredentialsProvider callCredentialsProvider;
 
-  AttributeServiceCachedClient(Channel channel, Config attributeServiceConfig) {
+  AttributeServiceCachedClient(Channel channel, AttributeServiceCachedClientConfig clientConfig) {
     this(
         channel,
-        attributeServiceConfig,
+        clientConfig,
         RequestContextClientCallCredsProviderFactory.getClientCallCredsProvider());
   }
 
   AttributeServiceCachedClient(
       Channel channel,
-      Config attributeServiceConfig,
+      AttributeServiceCachedClientConfig clientConfig,
       ClientCallCredentialsProvider callCredentialsProvider) {
     this.callCredentialsProvider = callCredentialsProvider;
-    deadlineMs =
-        attributeServiceConfig.hasPath(DEADLINE_CONFIG_KEY)
-            ? attributeServiceConfig.getDuration(DEADLINE_CONFIG_KEY).toMillis()
-            : Duration.ofMinutes(1).toMillis();
     this.attributeServiceBlockingStub = AttributeServiceGrpc.newBlockingStub(channel);
-    Duration expireAfterWriteDuration =
-        attributeServiceConfig.hasPath(CACHE_EXPIRE_AFTER_WRITE_CONFIG_KEY)
-            ? attributeServiceConfig.getDuration(CACHE_EXPIRE_AFTER_WRITE_CONFIG_KEY)
-            : Duration.ofHours(1);
+    deadlineMs = clientConfig.getDeadline().toMillis();
     cache =
         CacheBuilder.newBuilder()
-            .maximumSize(
-                attributeServiceConfig.hasPath(CACHE_MAX_SIZE_CONFIG_KEY)
-                    ? attributeServiceConfig.getLong(CACHE_MAX_SIZE_CONFIG_KEY)
-                    : 100)
-            .expireAfterWrite(expireAfterWriteDuration)
-            .refreshAfterWrite(
-                attributeServiceConfig.hasPath(CACHE_REFRESH_AFTER_WRITE_CONFIG_KEY)
-                    ? attributeServiceConfig.getDuration(CACHE_REFRESH_AFTER_WRITE_CONFIG_KEY)
-                    : Duration.ofMinutes(15))
+            .maximumSize(clientConfig.getMaxSize())
+            .refreshAfterWrite(clientConfig.getRefreshAfterWrite())
+            .expireAfterWrite(clientConfig.getExpireAfterAccess())
             .build(
                 CacheLoader.asyncReloading(
                     CacheLoader.from(this::loadTable),
                     Executors.newFixedThreadPool(
-                        attributeServiceConfig.hasPath(CACHE_EXECUTOR_THREADS_CONFIG_KEY)
-                            ? attributeServiceConfig.getInt(CACHE_EXECUTOR_THREADS_CONFIG_KEY)
-                            : 4,
-                        this.buildThreadFactory())));
+                        clientConfig.getExecutorThreads(), this.buildThreadFactory())));
     PlatformMetricsRegistry.registerCache(
-        AttributeServiceCachedClient.class.getName(), cache, Collections.emptyMap());
+        clientConfig.getCacheMetricsName(), cache, Collections.emptyMap());
     scopeAndKeyLookup =
-        CacheBuilder.newBuilder().expireAfterWrite(expireAfterWriteDuration).build();
+        CacheBuilder.newBuilder().expireAfterWrite(clientConfig.getExpireAfterAccess()).build();
   }
 
   public Optional<AttributeMetadata> get(
-      String tenantId, String attributeScope, String attributeKey) {
+      RequestContext requestContext, String attributeScope, String attributeKey)
+      throws ExecutionException {
     try {
-      return Optional.ofNullable(cache.getUnchecked(tenantId))
+      return getTableForRequestContext(requestContext)
           .map(table -> table.get(attributeScope, attributeKey));
-    } catch (Exception e) {
-      if (LOG_LIMITER.tryAcquire()) {
-        log.error("No attribute available for scope {} and key {}", attributeScope, attributeKey);
-      }
+    } catch (NullPointerException e) {
+      log.debug("No attribute available for scope {} and key {}", attributeScope, attributeKey);
       return Optional.empty();
     }
   }
 
-  public Optional<AttributeMetadata> getById(String tenantId, String attributeId) {
+  public Optional<AttributeMetadata> getById(RequestContext requestContext, String attributeId)
+      throws ExecutionException {
     try {
-      return Optional.ofNullable(cache.getUnchecked(tenantId))
-          .flatMap(
-              table ->
-                  Optional.ofNullable(scopeAndKeyLookup.getIfPresent(attributeId))
-                      .map(scopeAndKey -> table.get(scopeAndKey.getScope(), scopeAndKey.getKey())));
-    } catch (Exception e) {
-      if (LOG_LIMITER.tryAcquire()) {
-        log.error("No attribute available for id {}", attributeId);
-      }
+      return getTableForRequestContext(requestContext)
+          .map(
+              table -> {
+                AttributeScopeAndKey scopeAndKey = scopeAndKeyLookup.getIfPresent(attributeId);
+                return table.get(scopeAndKey.getScope(), scopeAndKey.getKey());
+              });
+    } catch (NullPointerException e) {
+      log.debug("No attribute available for id {}", attributeId);
       return Optional.empty();
     }
   }
 
-  public Optional<List<AttributeMetadata>> getAllInScope(String tenantId, String attributeScope) {
-    try {
-      return Optional.ofNullable(cache.getUnchecked(tenantId))
-          .map(table -> List.copyOf(table.row(attributeScope).values()));
-    } catch (Exception e) {
-      if (LOG_LIMITER.tryAcquire()) {
-        log.error("No attributes available for scope {}", attributeScope);
-      }
-      return Optional.empty();
-    }
+  public List<AttributeMetadata> getAllInScope(RequestContext requestContext, String attributeScope)
+      throws ExecutionException {
+    return getTableForRequestContext(requestContext)
+        .map(table -> List.copyOf(table.row(attributeScope).values()))
+        .orElse(Collections.emptyList());
+  }
+
+  private Optional<Table<String, String, AttributeMetadata>> getTableForRequestContext(
+      RequestContext requestContext) throws ExecutionException {
+    return Optional.of(
+        cache.get(
+            requestContext
+                .getTenantId()
+                .orElseThrow(
+                    () ->
+                        new ExecutionException(
+                            "No tenant id present in request context",
+                            new UnsupportedOperationException()))));
   }
 
   private Table<String, String, AttributeMetadata> loadTable(String tenantId) {
@@ -155,5 +140,11 @@ public class AttributeServiceCachedClient {
         .setDaemon(true)
         .setNameFormat("attribute-service-cached-client-%d")
         .build();
+  }
+
+  @Value
+  private static class AttributeScopeAndKey {
+    String scope;
+    String key;
   }
 }
