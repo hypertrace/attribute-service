@@ -11,7 +11,6 @@ import io.grpc.Channel;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
@@ -26,12 +25,13 @@ import org.hypertrace.core.attribute.service.v1.AttributeServiceGrpc.AttributeSe
 import org.hypertrace.core.attribute.service.v1.GetAttributesRequest;
 import org.hypertrace.core.grpcutils.client.ClientCallCredentialsProvider;
 import org.hypertrace.core.grpcutils.client.RequestContextClientCallCredsProviderFactory;
+import org.hypertrace.core.grpcutils.context.ContextualKey;
 import org.hypertrace.core.grpcutils.context.RequestContext;
 import org.hypertrace.core.serviceframework.metrics.PlatformMetricsRegistry;
 
 @Slf4j
 public class AttributeServiceCachedClient {
-  private final LoadingCache<String, Table<String, String, AttributeMetadata>> cache;
+  private final LoadingCache<ContextualKey<Void>, Table<String, String, AttributeMetadata>> cache;
   private final Cache<String, AttributeScopeAndKey> scopeAndKeyLookup;
   private final AttributeServiceBlockingStub attributeServiceBlockingStub;
   private final long deadlineMs;
@@ -55,7 +55,7 @@ public class AttributeServiceCachedClient {
         CacheBuilder.newBuilder()
             .maximumSize(clientConfig.getMaxSize())
             .refreshAfterWrite(clientConfig.getRefreshAfterWrite())
-            .expireAfterWrite(clientConfig.getExpireAfterAccess())
+            .expireAfterAccess(clientConfig.getExpireAfterAccess())
             .build(
                 CacheLoader.asyncReloading(
                     CacheLoader.from(this::loadTable),
@@ -70,57 +70,30 @@ public class AttributeServiceCachedClient {
   public Optional<AttributeMetadata> get(
       @Nonnull RequestContext requestContext,
       @Nonnull String attributeScope,
-      @Nonnull String attributeKey)
-      throws ExecutionException {
-    try {
-      return getTableForRequestContext(requestContext)
-          .map(table -> table.get(attributeScope, attributeKey));
-    } catch (NullPointerException e) {
-      log.debug("No attribute available for scope {} and key {}", attributeScope, attributeKey);
-      return Optional.empty();
-    }
+      @Nonnull String attributeKey) {
+    return Optional.ofNullable(getTable(requestContext).get(attributeScope, attributeKey));
   }
 
   public Optional<AttributeMetadata> getById(
-      @Nonnull RequestContext requestContext, @Nonnull String attributeId)
-      throws ExecutionException {
-    try {
-      return getTableForRequestContext(requestContext)
-          .map(
-              table -> {
-                AttributeScopeAndKey scopeAndKey = scopeAndKeyLookup.getIfPresent(attributeId);
-                return table.get(scopeAndKey.getScope(), scopeAndKey.getKey());
-              });
-    } catch (NullPointerException e) {
-      log.debug("No attribute available for id {}", attributeId);
-      return Optional.empty();
-    }
+      @Nonnull RequestContext requestContext, @Nonnull String attributeId) {
+    Table<String, String, AttributeMetadata> table = getTable(requestContext);
+    return Optional.ofNullable(scopeAndKeyLookup.getIfPresent(attributeId))
+        .map(scopeAndKey -> table.get(scopeAndKey.getScope(), scopeAndKey.getKey()));
   }
 
   public List<AttributeMetadata> getAllInScope(
-      @Nonnull RequestContext requestContext, @Nonnull String attributeScope)
-      throws ExecutionException {
-    return getTableForRequestContext(requestContext)
-        .map(table -> List.copyOf(table.row(attributeScope).values()))
-        .orElse(Collections.emptyList());
+      @Nonnull RequestContext requestContext, @Nonnull String attributeScope) {
+    return List.copyOf(getTable(requestContext).row(attributeScope).values());
   }
 
-  private Optional<Table<String, String, AttributeMetadata>> getTableForRequestContext(
-      RequestContext requestContext) throws ExecutionException {
-    return Optional.of(
-        cache.get(
-            requestContext
-                .getTenantId()
-                .orElseThrow(
-                    () ->
-                        new ExecutionException(
-                            "No tenant id present in request context",
-                            new UnsupportedOperationException()))));
+  private Table<String, String, AttributeMetadata> getTable(RequestContext requestContext) {
+    return cache.getUnchecked(requestContext.buildInternalContextualKey());
   }
 
-  private Table<String, String, AttributeMetadata> loadTable(String tenantId) {
+  private Table<String, String, AttributeMetadata> loadTable(ContextualKey<Void> contextualKey) {
     List<AttributeMetadata> attributeMetadataList =
-        RequestContext.forTenantId(tenantId)
+        contextualKey
+            .getContext()
             .call(
                 () ->
                     attributeServiceBlockingStub

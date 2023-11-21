@@ -4,11 +4,9 @@ import static java.util.Collections.emptyList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -23,7 +21,6 @@ import io.grpc.stub.StreamObserver;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import org.hypertrace.core.attribute.service.client.config.AttributeServiceCachedClientConfig;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadata;
 import org.hypertrace.core.attribute.service.v1.AttributeMetadataFilter;
@@ -53,7 +50,7 @@ class AttributeServiceCachedClientTest {
           .setId("second-id")
           .build();
 
-  @Mock RequestContext requestContext;
+  RequestContext requestContext;
 
   @Mock AttributeServiceGrpc.AttributeServiceImplBase mockAttributeService;
   Server grpcServer;
@@ -78,7 +75,7 @@ class AttributeServiceCachedClientTest {
     this.attributeServiceCachedClient =
         new AttributeServiceCachedClient(
             grpcChannel, AttributeServiceCachedClientConfig.from(ConfigFactory.empty()));
-    lenient().when(this.requestContext.getTenantId()).thenReturn(Optional.of("default tenant"));
+    this.requestContext = RequestContext.forTenantId("default tenant");
     this.responseMetadata = List.of(this.metadata1, this.metadata2);
     this.responseError = Optional.empty();
     this.metadataFilter = AttributeMetadataFilter.getDefaultInstance();
@@ -110,7 +107,7 @@ class AttributeServiceCachedClientTest {
   }
 
   @Test
-  void cachesConsecutiveGetAllCallsInSameContext() throws Exception {
+  void cachesConsecutiveGetAllCallsInSameContext() {
     assertSame(
         this.metadata1,
         this.attributeServiceCachedClient.get(requestContext, "EVENT", "first").get());
@@ -122,26 +119,18 @@ class AttributeServiceCachedClientTest {
   }
 
   @Test
-  void returnEmptyIfNoMatch() throws Exception {
+  void returnEmptyIfNoMatch() {
     assertTrue(this.attributeServiceCachedClient.get(requestContext, "EVENT", "fake").isEmpty());
   }
 
   @Test
-  void throwsErrorIfNoTenantIdInContext() {
-    assertThrows(
-        ExecutionException.class,
-        () -> this.attributeServiceCachedClient.get(new RequestContext(), "EVENT", "fake"));
-  }
-
-  @Test
-  void supportsMultipleConcurrentCacheKeys() throws Exception {
+  void supportsMultipleConcurrentCacheKeys() {
     AttributeMetadata defaultRetrieved =
         this.attributeServiceCachedClient.get(requestContext, "EVENT", "first").get();
     assertSame(this.metadata1, defaultRetrieved);
     verify(this.mockAttributeService, times(1)).getAttributes(any(), any());
 
-    RequestContext otherRequestContext = mock(RequestContext.class);
-    when(otherRequestContext.getTenantId()).thenReturn(Optional.of("other tenant"));
+    RequestContext otherRequestContext = RequestContext.forTenantId("other tenant");
     AttributeMetadata otherContextMetadata = AttributeMetadata.newBuilder(this.metadata1).build();
 
     this.responseMetadata = List.of(otherContextMetadata);
@@ -163,7 +152,7 @@ class AttributeServiceCachedClientTest {
   }
 
   @Test
-  void supportsCachedLookupById() throws Exception {
+  void supportsCachedLookupById() {
     assertSame(
         this.metadata1,
         this.attributeServiceCachedClient.getById(requestContext, "first-id").get());
@@ -175,7 +164,7 @@ class AttributeServiceCachedClientTest {
   }
 
   @Test
-  void sharesIdAndKeyCache() throws Exception {
+  void sharesIdAndKeyCache() {
     assertSame(
         this.metadata1,
         this.attributeServiceCachedClient.getById(requestContext, "first-id").get());
@@ -187,12 +176,12 @@ class AttributeServiceCachedClientTest {
   }
 
   @Test
-  void emptyIfNoIdMatch() throws Exception {
+  void emptyIfNoIdMatch() {
     assertTrue(this.attributeServiceCachedClient.getById(requestContext, "fakeId").isEmpty());
   }
 
   @Test
-  void getsAllAttributesInScope() throws Exception {
+  void getsAllAttributesInScope() {
     assertEquals(
         this.responseMetadata,
         this.attributeServiceCachedClient.getAllInScope(requestContext, "EVENT"));
