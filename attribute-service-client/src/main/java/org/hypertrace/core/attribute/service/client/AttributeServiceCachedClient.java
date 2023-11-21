@@ -16,6 +16,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import javax.annotation.Nonnull;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.hypertrace.core.attribute.service.client.config.AttributeServiceCachedClientConfig;
@@ -67,7 +68,9 @@ public class AttributeServiceCachedClient {
   }
 
   public Optional<AttributeMetadata> get(
-      RequestContext requestContext, String attributeScope, String attributeKey)
+      @Nonnull RequestContext requestContext,
+      @Nonnull String attributeScope,
+      @Nonnull String attributeKey)
       throws ExecutionException {
     try {
       return getTableForRequestContext(requestContext)
@@ -78,7 +81,8 @@ public class AttributeServiceCachedClient {
     }
   }
 
-  public Optional<AttributeMetadata> getById(RequestContext requestContext, String attributeId)
+  public Optional<AttributeMetadata> getById(
+      @Nonnull RequestContext requestContext, @Nonnull String attributeId)
       throws ExecutionException {
     try {
       return getTableForRequestContext(requestContext)
@@ -93,7 +97,8 @@ public class AttributeServiceCachedClient {
     }
   }
 
-  public List<AttributeMetadata> getAllInScope(RequestContext requestContext, String attributeScope)
+  public List<AttributeMetadata> getAllInScope(
+      @Nonnull RequestContext requestContext, @Nonnull String attributeScope)
       throws ExecutionException {
     return getTableForRequestContext(requestContext)
         .map(table -> List.copyOf(table.row(attributeScope).values()))
