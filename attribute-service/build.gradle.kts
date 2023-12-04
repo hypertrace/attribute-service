@@ -60,7 +60,6 @@ dependencies {
   implementation(projects.attributeServiceFactory)
   implementation(commonLibs.hypertrace.framework.grpc)
   runtimeOnly(commonLibs.log4j.slf4j2.impl)
-  runtimeOnly(commonLibs.grpc.netty)
 
   // Integration test dependencies
   integrationTestImplementation(commonLibs.junit.jupiter)
