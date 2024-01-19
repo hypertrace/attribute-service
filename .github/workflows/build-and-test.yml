@@ -30,7 +30,7 @@ jobs:
           args: assemble dockerBuildImages
 
       - name: Run Trivy vulnerability scanner
-        uses: hypertrace/github-actions/trivy-image-scan@main
+        uses: hypertrace/github-actions/trivy-image-scan@ignore-trivy-upload-failure
         with:
           image: hypertrace/attribute-service
           output-mode: github
