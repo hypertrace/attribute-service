@@ -8,7 +8,7 @@
     <cpe>cpe:/a:grpc:grpc</cpe>
     <cpe>cpe:/a:utils_project:utils</cpe>
   </suppress>
-  <suppress until="2024-01-31Z">
+  <suppress until="2023-12-31Z">
     <notes><![CDATA[
   This vulnerability is disputed, with the argument that SSL configuration is the responsibility of the client rather
   than the transport. The change in default is under consideration for the next major Netty release, revisit then.
