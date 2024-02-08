@@ -18,7 +18,7 @@ plugins {
 }
 
 configure<DependencyPluginSettingExtension> {
-  catalogVersion.set("0.3.0")
+  catalogVersion.set("0.3.12")
 }
 
 include(":attribute-service-api")
