@@ -39,6 +39,7 @@ public class AttributeMetadataModelTest {
         AttributeDefinition.newBuilder()
             .setProjection(Projection.newBuilder().setAttributeId("test"))
             .build());
+    attributeMetadataModel.setDescription("description");
     attributeMetadataModel.setInternal(true);
 
     String json = attributeMetadataModel.toJson();
@@ -59,6 +60,7 @@ public class AttributeMetadataModelTest {
             + "\"id\":\"EVENT.key\","
             + "\"value_kind\":\"TYPE_STRING\","
             + "\"display_name\":\"Some Name\","
+            +"\"description\":\"description\","
             + "\"scope_string\":\"EVENT\","
             + "\"tenant_id\":\"tenantId\""
             + "}";
@@ -82,6 +84,7 @@ public class AttributeMetadataModelTest {
             .setType(AttributeType.ATTRIBUTE)
             .setUnit("ms")
             .setValueKind(AttributeKind.TYPE_STRING)
+            .setDescription("description")
             .putAllMetadata(
                 Collections.singletonMap(
                     AttributeSource.EDS.name(),
@@ -224,7 +227,7 @@ public class AttributeMetadataModelTest {
     AttributeMetadata metadata = deserializedModel.toDTO();
     Assertions.assertEquals(AttributeDefinition.getDefaultInstance(), metadata.getDefinition());
 
-    AttributeMetadataModel modelFromMetadataWithoutDefinition =
+    AttributeMetadataModel modelFromMetadataWithoutDefinitionAndDescription =
         AttributeMetadataModel.fromDTO(
             AttributeMetadata.newBuilder()
                 .setFqn("fqn")
@@ -255,10 +258,11 @@ public class AttributeMetadataModelTest {
             + "\"id\":\"EVENT.key\","
             + "\"value_kind\":\"TYPE_STRING\","
             + "\"display_name\":\"Display\","
+            +"\"description\":\"\","
             + "\"scope_string\":\"EVENT\","
             + "\"tenant_id\":null"
             + "}";
-    Assertions.assertEquals(expectedJson, modelFromMetadataWithoutDefinition.toJson());
+    Assertions.assertEquals(expectedJson, modelFromMetadataWithoutDefinitionAndDescription.toJson());
   }
 
   @Test

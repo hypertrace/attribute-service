@@ -103,6 +103,7 @@ message AttributeMetadata {
   string scope_string = 17;
   bool internal = 18;
   bool custom = 19;
+  string description = 20;
 }
 
 message AttributeSourceMetadata {
