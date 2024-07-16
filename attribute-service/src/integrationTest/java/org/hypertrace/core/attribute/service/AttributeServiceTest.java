@@ -59,6 +59,7 @@ public class AttributeServiceTest {
           .setType(AttributeType.ATTRIBUTE)
           .setValueKind(AttributeKind.TYPE_STRING)
           .setDisplayName("Span Name")
+          .setDescription("Span Name Description")
           .addSources(AttributeSource.QS)
           .build();
   private final AttributeMetadata spanIdAttr =
@@ -70,6 +71,7 @@ public class AttributeServiceTest {
           .setType(AttributeType.ATTRIBUTE)
           .setValueKind(AttributeKind.TYPE_STRING)
           .setDisplayName("Span Id")
+          .setDescription("Span Id Description")
           .addSources(AttributeSource.QS)
           .build();
 
@@ -82,6 +84,7 @@ public class AttributeServiceTest {
           .setType(AttributeType.METRIC)
           .setValueKind(AttributeKind.TYPE_INT64)
           .setDisplayName("Duration")
+          .setDescription("Duration Description")
           .addSources(AttributeSource.QS)
           .build();
 
@@ -165,6 +168,7 @@ public class AttributeServiceTest {
             .setGroupable(true)
             .setDefinition(AttributeDefinition.newBuilder().setSourcePath("sourcepath-1"))
             .setScopeString(AttributeScope.EVENT.name())
+            .setDescription("Span Name Description")
             .setCustom(true)
             .build();
 
