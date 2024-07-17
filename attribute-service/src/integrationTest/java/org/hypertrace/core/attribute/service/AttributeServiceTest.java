@@ -61,7 +61,6 @@ public class AttributeServiceTest {
           .setDisplayName("Span Name")
           .setDescription("Span Name Description")
           .addSources(AttributeSource.QS)
-
           .build();
   private final AttributeMetadata spanIdAttr =
       AttributeMetadata.newBuilder()
