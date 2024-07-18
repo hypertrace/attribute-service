@@ -46,7 +46,6 @@ public class AttributeServiceImplTest {
           .setValueKind(AttributeKind.TYPE_STRING)
           .setGroupable(true)
           .setType(AttributeType.ATTRIBUTE)
-          .setDescription("EVENT name")
           // Add default aggregations. See SupportedAggregationsDecorator
           .addAllSupportedAggregations(List.of(AggregateFunction.DISTINCT_COUNT))
           .build();
@@ -61,7 +60,6 @@ public class AttributeServiceImplTest {
           .setValueKind(AttributeKind.TYPE_STRING)
           .setGroupable(true)
           .setType(AttributeType.ATTRIBUTE)
-          .setDescription("EVENT type")
           // Add default aggregations. See SupportedAggregationsDecorator
           .addAllSupportedAggregations(List.of(AggregateFunction.DISTINCT_COUNT))
           .setCustom(true)
@@ -77,7 +75,6 @@ public class AttributeServiceImplTest {
           .setGroupable(false)
           .setValueKind(AttributeKind.TYPE_INT64)
           .setType(AttributeType.METRIC)
-          .setDescription("EVENT duration")
           // Add default aggregations. See SupportedAggregationsDecorator
           .addAllSupportedAggregations(
               List.of(
@@ -507,10 +504,6 @@ public class AttributeServiceImplTest {
         .append(kind.name())
         .append("\",\"tenant_id\":\"")
         .append(tenantId)
-        .append("\",\"description\":\"")
-        .append(scope.name())
-        .append(" ")
-        .append(key)
         .append("\",\"display_name\":\"")
         .append(scope.name())
         .append(" ")

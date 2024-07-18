@@ -60,9 +60,9 @@ public class AttributeMetadataModelTest {
             + "\"id\":\"EVENT.key\","
             + "\"value_kind\":\"TYPE_STRING\","
             + "\"display_name\":\"Some Name\","
-            + "\"description\":\"description\","
             + "\"scope_string\":\"EVENT\","
-            + "\"tenant_id\":\"tenantId\""
+            + "\"tenant_id\":\"tenantId\","
+            + "\"description\":\"description\""
             + "}";
     Assertions.assertEquals(expectedJson, json);
     AttributeMetadataModel deserializedModel = AttributeMetadataModel.fromJson(json);
@@ -227,7 +227,7 @@ public class AttributeMetadataModelTest {
     AttributeMetadata metadata = deserializedModel.toDTO();
     Assertions.assertEquals(AttributeDefinition.getDefaultInstance(), metadata.getDefinition());
 
-    AttributeMetadataModel modelFromMetadataWithoutDefinitionAndDescription =
+    AttributeMetadataModel modelFromMetadataWithoutDefinition =
         AttributeMetadataModel.fromDTO(
             AttributeMetadata.newBuilder()
                 .setFqn("fqn")
@@ -236,6 +236,73 @@ public class AttributeMetadataModelTest {
                 .setDisplayName("Display")
                 .setMaterialized(true)
                 .setScope(AttributeScope.EVENT)
+                .setType(AttributeType.ATTRIBUTE)
+                .setUnit("ms")
+                .setValueKind(AttributeKind.TYPE_STRING)
+                .setDescription("Description")
+                .build());
+
+    String expectedJson =
+        "{"
+            + "\"fqn\":\"fqn\","
+            + "\"key\":\"key\","
+            + "\"materialized\":true,"
+            + "\"unit\":\"ms\","
+            + "\"type\":\"ATTRIBUTE\","
+            + "\"labels\":[],"
+            + "\"groupable\":false,"
+            + "\"supportedAggregations\":[],"
+            + "\"onlyAggregationsAllowed\":false,"
+            + "\"sources\":[],"
+            + "\"definition\":{},"
+            + "\"internal\":false,"
+            + "\"id\":\"EVENT.key\","
+            + "\"value_kind\":\"TYPE_STRING\","
+            + "\"display_name\":\"Display\","
+            + "\"scope_string\":\"EVENT\","
+            + "\"tenant_id\":null,"
+            + "\"description\":\"Description\""
+            + "}";
+    Assertions.assertEquals(expectedJson, modelFromMetadataWithoutDefinition.toJson());
+  }
+
+  @Test
+  public void testAttributeDescriptionBackwardsCompatibility() throws IOException {
+    String json =
+        "{"
+            + "\"fqn\":\"fqn\","
+            + "\"key\":\"key\","
+            + "\"scope\":\"EVENT\","
+            + "\"materialized\":true,"
+            + "\"unit\":\"ms\","
+            + "\"type\":\"ATTRIBUTE\","
+            + "\"labels\":[\"item1\"],"
+            + "\"groupable\":true,"
+            + "\"supportedAggregations\":[],"
+            + "\"onlyAggregationsAllowed\":false,"
+            + "\"sources\":[],"
+            + "\"definition\":{},"
+            + "\"id\":\"EVENT.key\","
+            + "\"value_kind\":\"TYPE_BOOL\","
+            + "\"display_name\":\"Some Name\","
+            + "\"tenant_id\":\"tenantId\""
+            + "}";
+
+    AttributeMetadataModel deserializedModel = AttributeMetadataModel.fromJson(json);
+    Assertions.assertEquals("", deserializedModel.getDescription());
+    AttributeMetadata metadata = deserializedModel.toDTO();
+    Assertions.assertEquals("", metadata.getDescription());
+
+    AttributeMetadataModel modelFromMetadataWithoutDescription =
+        AttributeMetadataModel.fromDTO(
+            AttributeMetadata.newBuilder()
+                .setFqn("fqn")
+                .setId("id")
+                .setKey("key")
+                .setDisplayName("Display")
+                .setMaterialized(true)
+                .setScope(AttributeScope.EVENT)
+                .setDescription(AttributeDefinition.getDefaultInstance().toString())
                 .setType(AttributeType.ATTRIBUTE)
                 .setUnit("ms")
                 .setValueKind(AttributeKind.TYPE_STRING)
@@ -258,12 +325,11 @@ public class AttributeMetadataModelTest {
             + "\"id\":\"EVENT.key\","
             + "\"value_kind\":\"TYPE_STRING\","
             + "\"display_name\":\"Display\","
-            + "\"description\":\"\","
             + "\"scope_string\":\"EVENT\","
-            + "\"tenant_id\":null"
+            + "\"tenant_id\":null,"
+            + "\"description\":\"\""
             + "}";
-    Assertions.assertEquals(
-        expectedJson, modelFromMetadataWithoutDefinitionAndDescription.toJson());
+    Assertions.assertEquals(expectedJson, modelFromMetadataWithoutDescription.toJson());
   }
 
   @Test

@@ -53,9 +53,6 @@ public class AttributeMetadataModel implements Document {
   @JsonProperty(value = "display_name")
   private String displayName;
 
-  @JsonProperty(value = "description")
-  private String description;
-
   @JsonProperty(value = "scope_string")
   private String scopeString;
 
@@ -79,6 +76,9 @@ public class AttributeMetadataModel implements Document {
   private AttributeDefinition definition = AttributeDefinition.getDefaultInstance();
 
   private boolean internal;
+
+  @JsonProperty(value = "description")
+  private String description = "";
 
   protected AttributeMetadataModel() {}
 
@@ -394,8 +394,8 @@ public class AttributeMetadataModel implements Document {
         && Objects.equals(metadata, that.metadata)
         && Objects.equals(definition, that.definition)
         && Objects.equals(scopeString, that.scopeString)
-        && description.equals(that.description)
-        && Objects.equals(internal, that.internal);
+        && Objects.equals(internal, that.internal)
+        && Objects.equals(description, that.description);
   }
 
   @Override
@@ -417,8 +417,8 @@ public class AttributeMetadataModel implements Document {
         metadata,
         definition,
         scopeString,
-        description,
-        internal);
+        internal,
+        description);
   }
 
   private static class ProtobufMessageSerializer extends JsonSerializer<Message> {
