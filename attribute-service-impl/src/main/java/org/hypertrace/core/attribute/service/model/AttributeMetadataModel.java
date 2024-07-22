@@ -78,7 +78,7 @@ public class AttributeMetadataModel implements Document {
   private boolean internal;
 
   @JsonProperty(value = "description")
-  private String description = "";
+  private String description;
 
   protected AttributeMetadataModel() {}
 

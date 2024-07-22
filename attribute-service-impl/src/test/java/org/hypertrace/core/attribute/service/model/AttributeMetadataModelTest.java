@@ -39,8 +39,8 @@ public class AttributeMetadataModelTest {
         AttributeDefinition.newBuilder()
             .setProjection(Projection.newBuilder().setAttributeId("test"))
             .build());
-    attributeMetadataModel.setDescription("description");
     attributeMetadataModel.setInternal(true);
+    attributeMetadataModel.setDescription("description");
 
     String json = attributeMetadataModel.toJson();
     String expectedJson =
@@ -289,7 +289,7 @@ public class AttributeMetadataModelTest {
             + "}";
 
     AttributeMetadataModel deserializedModel = AttributeMetadataModel.fromJson(json);
-    Assertions.assertEquals("", deserializedModel.getDescription());
+    Assertions.assertNull(deserializedModel.getDescription());
     AttributeMetadata metadata = deserializedModel.toDTO();
     Assertions.assertEquals("", metadata.getDescription());
 
