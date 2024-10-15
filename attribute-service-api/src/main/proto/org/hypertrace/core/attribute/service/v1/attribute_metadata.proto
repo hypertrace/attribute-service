@@ -104,6 +104,7 @@ message AttributeMetadata {
   bool internal = 18;
   bool custom = 19;
   string description = 20;
+  string data_extraction_path = 21;
 }
 
 message AttributeSourceMetadata {
