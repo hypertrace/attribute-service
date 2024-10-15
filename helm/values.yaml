@@ -72,19 +72,6 @@ serviceSelectorLabels:
 
 configMap:
   name: attribute-service-config
-  dataStoreType: "mongo"
-  mongo:
-    endpoints:
-      - host: mongo
-        port: 27017
-  # credentials:
-  #  secretName: <k8s secret name>
-  #  secretUsernameKey: <secret key for username>
-  #  secretPasswordKey: <secret key for password>
-  postgres:
-    host: postgres
-    port: 5432
-    url: ""
   maxCustomAttributesPerTenant: 5
 
 logConfig:
@@ -106,6 +93,3 @@ hpa:
   minReplicas: 1
   maxReplicas: 5
   targetCPUUtilizationPercentage: 80
-
-database:
-  mongoAuthEnabled: true

@@ -48,6 +48,7 @@ import org.hypertrace.core.attribute.service.v1.GetAttributesResponse;
 import org.hypertrace.core.attribute.service.v1.UpdateMetadataRequest;
 import org.hypertrace.core.attribute.service.v1.UpdateMetadataResponse;
 import org.hypertrace.core.attribute.service.validator.AttributeMetadataValidator;
+import org.hypertrace.core.documentstore.CloseableIterator;
 import org.hypertrace.core.documentstore.Collection;
 import org.hypertrace.core.documentstore.Datastore;
 import org.hypertrace.core.documentstore.DatastoreProvider;
@@ -106,22 +107,8 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
   private Datastore initDataStore(
       Config config, PlatformServiceLifecycle platformServiceLifecycle) {
     final Config docStoreConfig = config.getConfig(DOC_STORE_CONFIG_KEY);
-    final String dataStoreType = docStoreConfig.getString(DATA_STORE_TYPE);
     final DatastoreConfig datastoreConfig =
-        TypesafeConfigDatastoreConfigExtractor.from(docStoreConfig, DATA_STORE_TYPE)
-            .hostKey(dataStoreType + ".host")
-            .portKey(dataStoreType + ".port")
-            .keysForEndpoints(dataStoreType + ".endpoints", "host", "port")
-            .authDatabaseKey(dataStoreType + ".authDb")
-            .replicaSetKey(dataStoreType + ".replicaSet")
-            .databaseKey(dataStoreType + ".database")
-            .usernameKey(dataStoreType + ".user")
-            .passwordKey(dataStoreType + ".password")
-            .applicationNameKey("appName")
-            .poolMaxConnectionsKey("maxPoolSize")
-            .poolConnectionAccessTimeoutKey("connectionAccessTimeout")
-            .poolConnectionSurrenderTimeoutKey("connectionIdleTime")
-            .extract();
+        TypesafeConfigDatastoreConfigExtractor.from(docStoreConfig, DATA_STORE_TYPE).extract();
 
     final Datastore datastore = DatastoreProvider.getDatastore(datastoreConfig);
     new DocStoreMetricsRegistry(datastore)
@@ -185,10 +172,8 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
       return;
     }
 
-    try {
-      // Fetch attributes by FQN
-      Iterator<Document> documents =
-          collection.search(getQueryByTenantIdAndFQN(tenantId.get(), request.getFqn()));
+    try (final CloseableIterator<Document> documents =
+        collection.search(getQueryByTenantIdAndFQN(tenantId.get(), request.getFqn()))) {
       // For each attribute matching the FQN update the source metadata
       boolean status =
           StreamSupport.stream(Spliterators.spliteratorUnknownSize(documents, 0), false)
@@ -243,9 +228,8 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
       return;
     }
 
-    try {
-      Iterator<Document> documents =
-          collection.search(getQueryForFilter(tenantId.get(), modifiedRequest));
+    try (final CloseableIterator<Document> documents =
+        collection.search(getQueryForFilter(tenantId.get(), modifiedRequest))) {
       boolean status =
           StreamSupport.stream(Spliterators.spliteratorUnknownSize(documents, 0), false)
               .map(Document::toJson)
@@ -299,10 +283,8 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
       return;
     }
 
-    try {
-      // Fetch attributes by FQN
-      Iterator<Document> documents =
-          collection.search(getQueryByTenantIdAndFQN(tenantId.get(), request.getFqn()));
+    try (final CloseableIterator<Document> documents =
+        collection.search(getQueryByTenantIdAndFQN(tenantId.get(), request.getFqn()))) {
       // For each attribute matching the FQN update the source metadata
       boolean status =
           StreamSupport.stream(Spliterators.spliteratorUnknownSize(documents, 0), false)
@@ -354,8 +336,8 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
       return;
     }
 
-    try {
-      Iterator<Document> documents = collection.search(getQueryForFilter(tenantId.get(), request));
+    try (final CloseableIterator<Document> documents =
+        collection.search(getQueryForFilter(tenantId.get(), request))) {
       sendResult(documents, responseObserver);
     } catch (Exception e) {
       LOGGER.error("Error finding attributes with filter:" + request, e);
@@ -371,12 +353,11 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
       return;
     }
 
-    try {
-      // query with filter on Tenant id
-      Query query = new Query();
-      query.setFilter(getTenantIdInFilter(TenantUtils.getTenantHierarchy(tenantId.get())));
+    // query with filter on Tenant id
+    Query query = new Query();
+    query.setFilter(getTenantIdInFilter(TenantUtils.getTenantHierarchy(tenantId.get())));
 
-      Iterator<Document> documents = collection.search(query);
+    try (final CloseableIterator<Document> documents = collection.search(query)) {
       sendResult(documents, responseObserver);
     } catch (Exception e) {
       LOGGER.error("Error finding all attributes", e);
@@ -393,15 +374,21 @@ public class AttributeServiceImpl extends AttributeServiceGrpc.AttributeServiceI
       return;
     }
 
-    List<AttributeMetadata> attributes =
-        Streams.stream(collection.search(this.getQueryForFilter(tenantId, request.getFilter())))
-            .map(converter::convert)
-            .flatMap(Optional::stream)
-            .collect(Collectors.toUnmodifiableList());
+    try (final CloseableIterator<Document> iterator =
+        collection.search(this.getQueryForFilter(tenantId, request.getFilter()))) {
+      List<AttributeMetadata> attributes =
+          Streams.stream(iterator)
+              .map(converter::convert)
+              .flatMap(Optional::stream)
+              .collect(Collectors.toUnmodifiableList());
 
-    responseObserver.onNext(
-        GetAttributesResponse.newBuilder().addAllAttributes(attributes).build());
-    responseObserver.onCompleted();
+      responseObserver.onNext(
+          GetAttributesResponse.newBuilder().addAllAttributes(attributes).build());
+      responseObserver.onCompleted();
+    } catch (Exception e) {
+      LOGGER.error("Error getting attributes", e);
+      responseObserver.onError(e);
+    }
   }
 
   @Override
